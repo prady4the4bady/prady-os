@@ -22,7 +22,6 @@ lb config noauto \
   --iso-publisher "PradyOS" \
   --iso-volume "PRADY_OS_1_0" \
   --archive-areas "main contrib non-free non-free-firmware" \
-  --bootstrap-options "--keyring=/usr/share/keyrings/debian-archive-keyring.gpg" \
   --mirror-bootstrap "http://deb.debian.org/debian/" \
   --mirror-chroot "http://deb.debian.org/debian/" \
   --mirror-binary "http://deb.debian.org/debian/" \

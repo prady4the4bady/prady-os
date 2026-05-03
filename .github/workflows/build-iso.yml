@@ -47,6 +47,10 @@ jobs:
           curl -fsSL https://ftp-master.debian.org/keys/release-12.asc | sudo gpg --dearmor > deb12.gpg
           curl -fsSL https://ftp-master.debian.org/keys/archive-key-12.asc | sudo gpg --dearmor > deb12-archive.gpg
           cat deb12.gpg deb12-archive.gpg | sudo tee /usr/share/keyrings/debian-archive-keyring.gpg > /dev/null
+          
+          # Place keyring in the live-build config directory for auto-detection in v3
+          mkdir -p installer/live-build-config/config/bootstrap_keyrings
+          cp /usr/share/keyrings/debian-archive-keyring.gpg installer/live-build-config/config/bootstrap_keyrings/
 
       - name: Configure and Build ISO (this takes ~60-90 mins)
         run: |
@@ -56,7 +60,7 @@ jobs:
           # Force clean state
           sudo lb clean --all
           
-          # Explicit configuration to override any stale config files
+          # Explicit configuration WITHOUT problematic flags
           sudo lb config \
             --mode debian \
             --distribution bookworm \
@@ -65,7 +69,6 @@ jobs:
             --debian-installer live \
             --archive-areas "main contrib non-free non-free-firmware" \
             --apt-options "--yes --allow-downgrades" \
-            --bootstrap-options "--keyring=/usr/share/keyrings/debian-archive-keyring.gpg" \
             --mirror-bootstrap "http://deb.debian.org/debian/" \
             --mirror-chroot "http://deb.debian.org/debian/" \
             --mirror-binary "http://deb.debian.org/debian/"
