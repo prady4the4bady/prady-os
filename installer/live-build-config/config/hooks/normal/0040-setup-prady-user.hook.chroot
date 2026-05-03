@@ -3,4 +3,13 @@
 useradd -r -s /bin/false -d /var/prady prady-daemon
 mkdir -p /var/prady /var/vyrex/models /run/vyrex
 chown prady-daemon:prady-daemon /var/prady /var/vyrex
+
+# Ensure the prady user is added to the 'input' group (required for ydotool)
+# If the user 'prady' doesn't exist (e.g. created by calamares), we'll skip for now
+# or better, create it if missing for dev consistency
+if ! id "prady" &>/dev/null; then
+    useradd -m -s /bin/bash prady
+fi
+usermod -aG input prady
+
 exit 0

@@ -1,0 +1,33 @@
+#!/bin/bash
+set -e
+
+# 1. WhiteSur GTK4 theme
+git clone --depth=1 https://github.com/vinceliuice/WhiteSur-gtk-theme /tmp/WhiteSur-gtk
+bash /tmp/WhiteSur-gtk/install.sh -t all -i apple -b default --silent
+
+# 2. WhiteSur icons
+git clone --depth=1 https://github.com/vinceliuice/WhiteSur-icon-theme /tmp/WhiteSur-icons
+bash /tmp/WhiteSur-icons/install.sh --silent
+
+# 3. WhiteSur cursors
+git clone --depth=1 https://github.com/vinceliuice/WhiteSur-cursors /tmp/WhiteSur-cursors
+cp -r /tmp/WhiteSur-cursors/dist/WhiteSur-cursors /usr/share/icons/
+
+# 4. Install Wayland UI tools
+apt-get install -y --no-install-recommends \
+  waybar \
+  nwg-dock \
+  nwg-look \
+  hyprpaper \
+  hyprlock \
+  dunst \
+  rofi-wayland \
+  fonts-inter \
+  fonts-noto-color-emoji
+
+# 5. Download wallpaper
+mkdir -p /usr/share/prady
+curl -L "https://picsum.photos/seed/macos/3840/2160" \
+  -o /usr/share/prady/wallpaper.jpg
+
+exit 0

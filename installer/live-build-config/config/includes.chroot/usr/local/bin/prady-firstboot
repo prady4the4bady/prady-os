@@ -1,0 +1,138 @@
+#!/usr/bin/env python3
+"""PradyOS First-Boot Setup Wizard — GTK3"""
+import gi, os, subprocess, sys
+gi.require_version('Gtk', '3.0')
+from gi.repository import Gtk, GdkPixbuf, Pango
+
+API_KEYS_PATH = "/etc/prady/api-keys.env"
+DONE_FLAG     = "/etc/prady/.firstboot-done"
+
+class FirstBootWizard(Gtk.Window):
+    def __init__(self):
+        super().__init__(title="Welcome to PradyOS")
+        self.set_default_size(600, 440)
+        self.set_position(Gtk.WindowPosition.CENTER)
+        self.set_resizable(False)
+        self.connect("destroy", Gtk.main_quit)
+
+        self.stack = Gtk.Stack()
+        self.stack.set_transition_type(Gtk.StackTransitionType.SLIDE_LEFT)
+        self.stack.set_transition_duration(300)
+
+        self._build_page_welcome()
+        self._build_page_apikeys()
+        self._build_page_model()
+        self._build_page_finish()
+
+        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
+        box.pack_start(self.stack, True, True, 0)
+        self.add(box)
+
+    def _build_page_welcome(self):
+        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=20)
+        box.set_margin_top(60); box.set_margin_bottom(40)
+        box.set_margin_start(60); box.set_margin_end(60)
+        label = Gtk.Label(label="<span size='xx-large' weight='bold'>Welcome to PradyOS</span>")
+        label.set_use_markup(True)
+        sub = Gtk.Label(label="Your AI-powered operating system.\nAssign any task — the system handles the rest.")
+        sub.set_justify(Gtk.Justification.CENTER)
+        sub.set_line_wrap(True)
+        btn = Gtk.Button(label="Get Started →")
+        btn.connect("clicked", lambda _: self.stack.set_visible_child_name("apikeys"))
+        btn.set_halign(Gtk.Align.CENTER)
+        for w in [label, sub, btn]: box.pack_start(w, False, False, 0)
+        self.stack.add_named(box, "welcome")
+
+    def _build_page_apikeys(self):
+        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=16)
+        box.set_margin_top(40); box.set_margin_bottom(40)
+        box.set_margin_start(60); box.set_margin_end(60)
+        title = Gtk.Label(label="<span size='x-large' weight='bold'>API Keys</span>")
+        title.set_use_markup(True); title.set_halign(Gtk.Align.START)
+        sub = Gtk.Label(label="Optional — for cloud model access. Leave blank to use local models only.")
+        sub.set_halign(Gtk.Align.START); sub.set_line_wrap(True)
+        self.anthropic_entry = Gtk.Entry()
+        self.anthropic_entry.set_placeholder_text("Anthropic API Key (sk-ant-...)")
+        self.anthropic_entry.set_visibility(False)
+        self.nvidia_entry = Gtk.Entry()
+        self.nvidia_entry.set_placeholder_text("NVIDIA NIM API Key")
+        self.nvidia_entry.set_visibility(False)
+        nav = Gtk.Box(spacing=12); nav.set_halign(Gtk.Align.END)
+        back = Gtk.Button(label="← Back")
+        back.connect("clicked", lambda _: self.stack.set_visible_child_name("welcome"))
+        nxt = Gtk.Button(label="Next →")
+        nxt.connect("clicked", self._save_keys)
+        nav.pack_start(back, False, False, 0); nav.pack_start(nxt, False, False, 0)
+        for w in [title, sub, self.anthropic_entry, self.nvidia_entry, nav]:
+            box.pack_start(w, False, False, 0)
+        self.stack.add_named(box, "apikeys")
+
+    def _save_keys(self, _):
+        os.makedirs("/etc/prady", exist_ok=True)
+        with open(API_KEYS_PATH, "w") as f:
+            f.write(f"ANTHROPIC_API_KEY={self.anthropic_entry.get_text()}\n")
+            f.write(f"NVIDIA_API_KEY={self.nvidia_entry.get_text()}\n")
+        os.chmod(API_KEYS_PATH, 0o600)
+        self.stack.set_visible_child_name("model")
+
+    def _build_page_model(self):
+        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=16)
+        box.set_margin_top(40); box.set_margin_bottom(40)
+        box.set_margin_start(60); box.set_margin_end(60)
+        title = Gtk.Label(label="<span size='x-large' weight='bold'>Default Model</span>")
+        title.set_use_markup(True); title.set_halign(Gtk.Align.START)
+        self.model_combo = Gtk.ComboBoxText()
+        for m in ["nvidia/nemotron-3-super-120b (Cloud, Recommended)",
+                  "mistral-7b-instruct (Local, No Internet)",
+                  "claude-3-5-sonnet (Anthropic Cloud)",
+                  "Custom HuggingFace model"]:
+            self.model_combo.append_text(m)
+        self.model_combo.set_active(0)
+        self.hf_entry = Gtk.Entry()
+        self.hf_entry.set_placeholder_text("HuggingFace repo ID (e.g. mistralai/Mistral-7B-v0.3)")
+        nav = Gtk.Box(spacing=12); nav.set_halign(Gtk.Align.END)
+        back = Gtk.Button(label="← Back")
+        back.connect("clicked", lambda _: self.stack.set_visible_child_name("apikeys"))
+        nxt = Gtk.Button(label="Finish Setup →")
+        nxt.connect("clicked", self._finish_setup)
+        nav.pack_start(back, False, False, 0); nav.pack_start(nxt, False, False, 0)
+        for w in [title, self.model_combo, self.hf_entry, nav]:
+            box.pack_start(w, False, False, 0)
+        self.stack.add_named(box, "model")
+
+    def _finish_setup(self, _):
+        selected = self.model_combo.get_active_text()
+        with open("/etc/prady/default-model.conf", "w") as f:
+            if "Custom" in selected:
+                f.write(f"model={self.hf_entry.get_text()}\n")
+            elif "mistral" in selected:
+                f.write("model=mistral-7b-instruct\n")
+                subprocess.Popen(["ollama", "pull", "mistral"])
+            elif "claude" in selected:
+                f.write("model=claude-3-5-sonnet-20241022\n")
+            else:
+                f.write("model=nvidia/nemotron-3-super-120b\n")
+        open(DONE_FLAG, "w").close()
+        subprocess.Popen(["systemctl", "--user", "start", "prax-agent.service"])
+        self.stack.set_visible_child_name("finish")
+
+    def _build_page_finish(self):
+        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=20)
+        box.set_margin_top(80); box.set_margin_bottom(40)
+        box.set_margin_start(60); box.set_margin_end(60)
+        label = Gtk.Label(label="<span size='xx-large' weight='bold'>You're all set! 🎉</span>")
+        label.set_use_markup(True)
+        sub = Gtk.Label(label="PradyOS is ready.\nOpen the Prady terminal and type your first task.")
+        sub.set_justify(Gtk.Justification.CENTER)
+        btn = Gtk.Button(label="Launch Desktop")
+        btn.connect("clicked", lambda _: Gtk.main_quit())
+        btn.set_halign(Gtk.Align.CENTER)
+        for w in [label, sub, btn]: box.pack_start(w, False, False, 0)
+        self.stack.add_named(box, "finish")
+
+if __name__ == "__main__":
+    if os.path.exists(DONE_FLAG):
+        sys.exit(0)
+    win = FirstBootWizard()
+    win.show_all()
+    Gtk.main()

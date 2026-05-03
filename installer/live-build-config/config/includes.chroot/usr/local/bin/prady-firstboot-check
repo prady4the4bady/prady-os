@@ -1,0 +1,4 @@
+#!/bin/bash
+if [ ! -f /etc/prady/.firstboot-done ]; then
+  /usr/local/bin/prady-firstboot &
+fi

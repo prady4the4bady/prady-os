@@ -6,4 +6,16 @@ cp -r /tmp/calamares-config/* /etc/calamares/
 # Link branding  
 mkdir -p /usr/share/calamares/branding
 cp -r /etc/calamares/branding/prady /usr/share/calamares/branding/
+
+# Auto-launch calamares on live boot
+mkdir -p /etc/skel/.config/autostart
+cat <<EOF > /etc/skel/.config/autostart/calamares.desktop
+[Desktop Entry]
+Type=Application
+Name=Install PradyOS
+Exec=sudo calamares
+Icon=calamares
+Terminal=false
+EOF
+
 exit 0

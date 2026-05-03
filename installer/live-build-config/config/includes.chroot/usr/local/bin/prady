@@ -1,0 +1,103 @@
+#!/usr/bin/env python3
+"""Prady CLI — PradyOS AI Agent Controller"""
+import sys, os, subprocess, json, argparse
+from pathlib import Path
+
+MODELS_HF  = Path("/opt/models/huggingface")
+MODELS_GH  = Path("/opt/models/github")
+PRADY_CONF = Path("/etc/prady")
+VYREX_SOCK = "/run/vyrex/api.sock"
+
+def cmd_model(args):
+    sub = args.subcommand
+    if sub == "pull":
+        uri = args.uri
+        if uri.startswith("hf://"):
+            repo_id = uri[5:]
+            print(f"[prady] Pulling from HuggingFace: {repo_id}")
+            MODELS_HF.mkdir(parents=True, exist_ok=True)
+            try:
+                from huggingface_hub import snapshot_download
+                dest = snapshot_download(
+                    repo_id,
+                    local_dir=str(MODELS_HF / repo_id.replace("/", "--")),
+                    resume_download=True
+                )
+                print(f"[prady] Model saved to: {dest}")
+                _register_model(dest, repo_id)
+            except ImportError:
+                print("[prady] Installing huggingface_hub...")
+                subprocess.run([sys.executable, "-m", "pip", "install", "huggingface_hub", "-q"])
+                os.execv(sys.executable, [sys.executable] + sys.argv)
+        elif uri.startswith("github://"):
+            owner_repo = uri[9:]
+            print(f"[prady] Pulling from GitHub: {owner_repo}")
+            MODELS_GH.mkdir(parents=True, exist_ok=True)
+            dest = str(MODELS_GH / owner_repo.replace("/", "--"))
+            subprocess.run(["git", "clone", "--depth=1",
+                f"https://github.com/{owner_repo}", dest], check=True)
+            print(f"[prady] Model saved to: {dest}")
+            _register_model(dest, owner_repo)
+        else:
+            print(f"[prady] Unknown URI scheme. Use hf:// or github://")
+            sys.exit(1)
+    elif sub == "list":
+        print("\n[prady] Installed Models:\n")
+        for d in list(MODELS_HF.glob("*")) + list(MODELS_GH.glob("*")):
+            if d.is_dir():
+                print(f"  -  {d.name}")
+        conf = PRADY_CONF / "default-model.conf"
+        if conf.exists():
+            print(f"\n  Default: {conf.read_text().strip()}")
+    elif sub == "set-default":
+        with open(PRADY_CONF / "default-model.conf", "w") as f:
+            f.write(f"model={args.name}\n")
+        print(f"[prady] Default model set to: {args.name}")
+
+def _register_model(path: str, name: str):
+    registry = PRADY_CONF / "model-registry.json"
+    data = json.loads(registry.read_text()) if registry.exists() else {}
+    data[name] = {"path": path, "registered": True}
+    registry.write_text(json.dumps(data, indent=2))
+    print(f"[prady] Registered model: {name}")
+
+def cmd_status(_):
+    print("[prady] Checking service status...")
+    for svc in ["prax-agent", "vyrex", "ydotoold"]:
+        r = subprocess.run(["systemctl", "is-active", f"{svc}.service"],
+                           capture_output=True, text=True)
+        status = r.stdout.strip()
+        icon = "✅" if status == "active" else "❌"
+        print(f"  {icon} {svc}: {status}")
+
+def cmd_task(args):
+    task = " ".join(args.task)
+    print(f"[prady] Sending task to Prady agent: {task}")
+    subprocess.run(["prax-agent-cli", "task", "--input", task])
+
+def main():
+    parser = argparse.ArgumentParser(prog="prady", description="PradyOS AI Agent Controller")
+    sub = parser.add_subparsers(dest="command")
+
+    # prady model pull hf://... | github://...
+    m = sub.add_parser("model", help="Manage AI models")
+    ms = m.add_subparsers(dest="subcommand")
+    pull = ms.add_parser("pull"); pull.add_argument("uri")
+    ms.add_parser("list")
+    sd = ms.add_parser("set-default"); sd.add_argument("name")
+
+    # prady status
+    sub.add_parser("status", help="Check service status")
+
+    # prady task "do something"
+    t = sub.add_parser("task", help="Assign a task to the AI agent")
+    t.add_argument("task", nargs="+")
+
+    args = parser.parse_args()
+    if args.command == "model":   cmd_model(args)
+    elif args.command == "status": cmd_status(args)
+    elif args.command == "task":   cmd_task(args)
+    else: parser.print_help()
+
+if __name__ == "__main__":
+    main()

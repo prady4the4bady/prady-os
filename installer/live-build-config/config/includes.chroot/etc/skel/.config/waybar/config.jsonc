@@ -1,0 +1,15 @@
+{
+  "layer": "top",
+  "position": "top",
+  "height": 32,
+  "spacing": 6,
+  "modules-left": ["hyprland/workspaces", "hyprland/window"],
+  "modules-center": ["clock"],
+  "modules-right": ["pulseaudio", "network", "battery", "tray", "custom/prady"],
+  "hyprland/workspaces": { "format": "{icon}", "format-icons": {"default": "●"} },
+  "clock": { "format": "{:%a %b %d  %I:%M %p}", "tooltip-format": "<big>{:%Y %B}</big>\n<tt>{calendar}</tt>" },
+  "network": { "format-wifi": " {essid}", "format-disconnected": "⚠ Disconnected" },
+  "battery": { "format": "{icon} {capacity}%", "format-icons": ["", "", "", "", ""] },
+  "pulseaudio": { "format": "{icon} {volume}%", "format-icons": { "default": ["", "", ""] } },
+  "custom/prady": { "format": " Prady", "on-click": "prady status", "tooltip": true }
+}

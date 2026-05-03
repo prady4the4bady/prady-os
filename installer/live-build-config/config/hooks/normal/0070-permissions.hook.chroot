@@ -1,0 +1,9 @@
+#!/bin/bash
+set -e
+
+# Ensure binaries are executable
+chmod +x /usr/local/bin/prady
+chmod +x /usr/local/bin/prady-firstboot
+chmod +x /usr/local/bin/prady-firstboot-check
+
+exit 0

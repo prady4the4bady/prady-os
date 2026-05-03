@@ -1,0 +1,15 @@
+* { font-family: Inter, sans-serif; font-size: 13px; }
+window#waybar {
+  background: rgba(20,20,20,0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  color: #ffffff;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+#clock { font-weight: 600; }
+#workspaces button {
+  padding: 0 8px; color: rgba(255,255,255,0.6);
+  border-radius: 6px; transition: all 0.2s;
+}
+#workspaces button.active { color: #fff; background: rgba(255,255,255,0.15); }
+#custom-prady { color: #64d2ff; font-weight: 600; padding: 0 12px; }
