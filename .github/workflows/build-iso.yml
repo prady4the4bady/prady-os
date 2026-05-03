@@ -1,105 +1,84 @@
-# Build PradyOS ISO - Force New Run with Mirror Fixes
 name: Build PradyOS ISO
+
 on:
   push:
-    branches: [main]
-  workflow_dispatch:
-    inputs:
-      skip_kernel:
-        description: 'Skip custom kernel build (faster)'
-        required: false
-        default: 'true'
+      branches: [ "main" ]
+        pull_request:
+            branches: [ "main" ]
 
-jobs:
-  build-iso:
-    runs-on: ubuntu-22.04
-    timeout-minutes: 120
-    
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        
-      - name: Cache apt packages
-        uses: actions/cache@v4
-        with:
-          path: /var/cache/apt/archives
-          key: apt-${{ runner.os }}-${{ hashFiles('config/package-lists/**') }}
-          restore-keys: apt-${{ runner.os }}-
+            jobs:
+              build-iso:
+                  runs-on: ubuntu-latest
+                      steps:
+                            - name: Checkout repository
+                                    uses: actions/checkout@v4
+                                            with:
+                                                      submodules: false # Disable submodule sync to avoid the fatal error
 
-      - name: Cache pip packages  
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/pip
-          key: pip-${{ hashFiles('config/hooks/**') }}
+                                                            - name: Install live-build tools
+                                                                    run: |
+                                                                              sudo apt-get update
+                                                                                        sudo apt-get install -y live-build debootstrap curl gpg
 
-      - name: Install live-build tools
-        run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y --no-install-recommends \
-            live-build debootstrap squashfs-tools isolinux \
-            syslinux syslinux-efi grub-efi-amd64-bin grub-pc-bin \
-            mtools xorriso git curl python3-pip nodejs npm \
-            debian-archive-keyring
-            
-      - name: Fix Debian Keyring
-        run: |
-          sudo mkdir -p /usr/share/keyrings
-          curl -fsSL https://ftp-master.debian.org/keys/release-12.asc | sudo gpg --dearmor > deb12.gpg
-          curl -fsSL https://ftp-master.debian.org/keys/archive-key-12.asc | sudo gpg --dearmor > deb12-archive.gpg
-          cat deb12.gpg deb12-archive.gpg | sudo tee /usr/share/keyrings/debian-archive-keyring.gpg > /dev/null
-          
-          # Place keyring in the live-build config directory for auto-detection in v3
-          mkdir -p installer/live-build-config/config/bootstrap_keyrings
-          cp /usr/share/keyrings/debian-archive-keyring.gpg installer/live-build-config/config/bootstrap_keyrings/
-
-      - name: Configure and Build ISO (this takes ~60-90 mins)
-        run: |
-          cd installer/live-build-config
-          chmod +x auto/config
-          
-          # Force clean state
-          sudo lb clean --all
-          
-          # Explicit configuration WITHOUT problematic flags
-          sudo lb config \
-            --mode debian \
-            --distribution bookworm \
-            --architecture amd64 \
-            --binary-images iso-hybrid \
-            --debian-installer live \
-            --archive-areas "main contrib non-free non-free-firmware" \
-            --apt-options "--yes --allow-downgrades" \
-            --mirror-bootstrap "http://deb.debian.org/debian/" \
-            --mirror-chroot "http://deb.debian.org/debian/" \
-            --mirror-binary "http://deb.debian.org/debian/"
-
-          # Build with pipefail to catch errors
-          set -o pipefail
-          sudo lb build 2>&1 | tee /tmp/lb-build.log
-        timeout-minutes: 100
-        
-      - name: Find and rename ISO
-        run: |
-          ISO=$(find installer/live-build-config -name "*.hybrid.iso" | head -1)
-          if [ -z "$ISO" ]; then
-            echo "ERROR: ISO not found. Build log:"
-            tail -100 /tmp/lb-build.log
-            exit 1
-          fi
-          cp "$ISO" prady-os-1.0-amd64.iso
-          echo "ISO_PATH=prady-os-1.0-amd64.iso" >> $GITHUB_ENV
-          
-      - name: Upload ISO artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: prady-os-1.0-iso
-          path: prady-os-1.0-amd64.iso
-          retention-days: 14
-          
-      - name: Upload build log (on failure)
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: build-log
-          path: /tmp/lb-build.log
-          retention-days: 3
+                                                                                              - name: Fix Debian Keyring
+                                                                                                      run: |
+                                                                                                                sudo mkdir -p /usr/share/keyrings
+                                                                                                                          curl -fsSL https://ftp-master.debian.org/keys/release-12.asc | sudo gpg --dearmor > deb12.gpg
+                                                                                                                                    curl -fsSL https://ftp-master.debian.org/keys/archive-key-12.asc | sudo gpg --dearmor > deb12-archive.gpg
+                                                                                                                                              cat deb12.gpg deb12-archive.gpg | sudo tee /usr/share/keyrings/debian-archive-keyring.gpg > /dev/null
+                                                                                                                                                        
+                                                                                                                                                                  # Place keyring in the live-build config directory for auto-detection in v3
+                                                                                                                                                                            mkdir -p installer/live-build-config/config/bootstrap_keyrings
+                                                                                                                                                                                      cp /usr/share/keyrings/debian-archive-keyring.gpg installer/live-build-config/config/bootstrap_keyrings/
+                                                                                                                                                                                      
+                                                                                                                                                                                            - name: Configure and Build ISO (this takes ~60-90 mins)
+                                                                                                                                                                                                    run: |
+                                                                                                                                                                                                              cd installer/live-build-config
+                                                                                                                                                                                                                        chmod +x auto/config
+                                                                                                                                                                                                                                  
+                                                                                                                                                                                                                                            # Force clean state
+                                                                                                                                                                                                                                                      sudo lb clean --all
+                                                                                                                                                                                                                                                                
+                                                                                                                                                                                                                                                                          # Explicit configuration WITHOUT problematic flags and WITHOUT trailing slashes
+                                                                                                                                                                                                                                                                                    sudo lb config \
+                                                                                                                                                                                                                                                                                                --mode debian \
+                                                                                                                                                                                                                                                                                                            --distribution bookworm \
+                                                                                                                                                                                                                                                                                                                        --architecture amd64 \
+                                                                                                                                                                                                                                                                                                                                    --binary-images iso-hybrid \
+                                                                                                                                                                                                                                                                                                                                                --debian-installer live \
+                                                                                                                                                                                                                                                                                                                                                            --archive-areas "main contrib non-free non-free-firmware" \
+                                                                                                                                                                                                                                                                                                                                                                        --apt-options "--yes --allow-downgrades" \
+                                                                                                                                                                                                                                                                                                                                                                                    --mirror-bootstrap "http://deb.debian.org/debian" \
+                                                                                                                                                                                                                                                                                                                                                                                                --mirror-chroot "http://deb.debian.org/debian" \
+                                                                                                                                                                                                                                                                                                                                                                                                            --mirror-binary "http://deb.debian.org/debian"
+                                                                                                                                                                                                                                                                                                                                                                                                                      
+                                                                                                                                                                                                                                                                                                                                                                                                                                # Build with pipefail to catch errors
+                                                                                                                                                                                                                                                                                                                                                                                                                                          set -o pipefail
+                                                                                                                                                                                                                                                                                                                                                                                                                                                    sudo lb build 2>&1 | tee /tmp/lb-build.log
+                                                                                                                                                                                                                                                                                                                                                                                                                                                            timeout-minutes: 100
+                                                                                                                                                                                                                                                                                                                                                                                                                                                            
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                  - name: Find and rename ISO
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                          run: |
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    ISO=$(find installer/live-build-config -name "*.hybrid.iso" | head -1)
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              if [ -z "$ISO" ]; then
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          echo "ERROR: ISO not found. Build log:"
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      tail -100 /tmp/lb-build.log
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  exit 1
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            fi
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      cp "$ISO" prady-os-1.0-amd64.iso
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                echo "ISO_PATH=prady-os-1.0-amd64.iso" >> $GITHUB_ENV
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      - name: Upload ISO artifact
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              uses: actions/upload-artifact@v4
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      with:
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                name: prady-os-iso
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          path: prady-os-1.0-amd64.iso
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    retention-days: 5
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          - name: Upload build log on failure
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  if: failure()
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          uses: actions/upload-artifact@v4
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  with:
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            name: build-log
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      path: /tmp/lb-build.log
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      
