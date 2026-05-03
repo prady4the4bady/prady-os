@@ -51,7 +51,27 @@ jobs:
       - name: Configure and Build ISO (this takes ~60-90 mins)
         run: |
           cd installer/live-build-config
-          # Using lb build directly which triggers auto/config
+          chmod +x auto/config
+          
+          # Force clean state
+          sudo lb clean --all
+          
+          # Explicit configuration to override any stale config files
+          sudo lb config \
+            --mode debian \
+            --distribution bookworm \
+            --architecture amd64 \
+            --binary-images iso-hybrid \
+            --debian-installer live \
+            --archive-areas "main contrib non-free non-free-firmware" \
+            --apt-options "--yes --allow-downgrades" \
+            --debootstrap-options "--keyring=/usr/share/keyrings/debian-archive-keyring.gpg" \
+            --mirror-bootstrap "http://deb.debian.org/debian/" \
+            --mirror-chroot "http://deb.debian.org/debian/" \
+            --mirror-binary "http://deb.debian.org/debian/"
+
+          # Build with pipefail to catch errors
+          set -o pipefail
           sudo lb build 2>&1 | tee /tmp/lb-build.log
         timeout-minutes: 100
         
