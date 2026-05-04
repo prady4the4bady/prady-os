@@ -42,9 +42,8 @@ jobs:
             | sudo tee /usr/local/bin/genisoimage > /dev/null
           printf '%s\n' '#!/bin/sh' 'exec /usr/bin/mkisofs -allow-limited-size "$@"' \
             | sudo tee /usr/local/bin/mkisofs > /dev/null
-          printf '%s\n' '#!/bin/sh' 'exec /usr/bin/xorrisofs -allow-limited-size "$@"' \
-            | sudo tee /usr/local/bin/xorrisofs > /dev/null
-          sudo chmod +x /usr/local/bin/genisoimage /usr/local/bin/mkisofs /usr/local/bin/xorrisofs
+          # xorrisofs (xorriso) handles large files natively via Rock Ridge — no wrapper needed
+          sudo chmod +x /usr/local/bin/genisoimage /usr/local/bin/mkisofs
           echo "Wrappers installed:"
           cat /usr/local/bin/genisoimage
           cat /usr/local/bin/mkisofs
@@ -68,10 +67,10 @@ jobs:
             echo "=== Before patch (genisoimage/mkisofs lines in $LB_BINARY_ISO) ==="
             grep -n 'genisoimage\|mkisofs\|xorrisofs\|allow-limited' "$LB_BINARY_ISO" || echo "(none)"
 
+            # xorrisofs handles large files natively; only patch genisoimage/mkisofs
             sudo sed -i \
               -e 's/genisoimage /genisoimage -allow-limited-size /g' \
               -e 's/mkisofs /mkisofs -allow-limited-size /g' \
-              -e 's/xorrisofs /xorrisofs -allow-limited-size /g' \
               "$LB_BINARY_ISO"
 
             echo "=== After patch ==="
