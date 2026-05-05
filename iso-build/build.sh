@@ -63,6 +63,7 @@ lb config \
   --mirror-chroot-security "http://deb.debian.org/debian-security/" \
   --mirror-binary "http://deb.debian.org/debian/" \
   --mirror-binary-security "http://deb.debian.org/debian-security/" \
+  --security false \
   --bootappend-live "boot=live components quiet splash" \
   --initramfs live-boot \
   --system normal \
