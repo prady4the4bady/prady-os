@@ -15,6 +15,22 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y live-build debootstrap rsync xorriso grub-pc-bin grub-efi-amd64-bin isolinux syslinux-common
 
+      - name: Disable live-build syslinux stage
+        run: |
+          # Ubuntu's live-build fork invokes a syslinux stage that is brittle in CI.
+          # Force GRUB-only image generation by making syslinux helper scripts no-op.
+          mapfile -t SYSLINUX_SCRIPTS < <(find /usr -type f \( -name "lb_binary_syslinux" -o -name "binary_syslinux" \) 2>/dev/null)
+          if [ "${#SYSLINUX_SCRIPTS[@]}" -eq 0 ]; then
+            echo "ERROR: could not find live-build syslinux helper scripts"
+            exit 1
+          fi
+          for script in "${SYSLINUX_SCRIPTS[@]}"; do
+            echo "Disabling $script"
+            sudo cp "$script" "$script.bak"
+            printf '#!/bin/sh\nexit 0\n' | sudo tee "$script" >/dev/null
+            sudo chmod +x "$script"
+          done
+
       - name: Stage syslinux assets
         run: |
           # The Ubuntu live-build lb_binary_syslinux script expects syslinux files at /root/isolinux/.
