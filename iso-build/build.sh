@@ -74,6 +74,17 @@ if [[ "${CONFIG_ONLY}" -eq 1 ]]; then
   exit 0
 fi
 
+# live-build's syslinux stage may expect these files under /root/isolinux.
+mkdir -p /root/isolinux
+if [[ -f /usr/lib/ISOLINUX/isolinux.bin ]]; then
+  cp -f /usr/lib/ISOLINUX/isolinux.bin /root/isolinux/isolinux.bin
+fi
+if [[ -f /usr/lib/syslinux/modules/bios/vesamenu.c32 ]]; then
+  cp -f /usr/lib/syslinux/modules/bios/vesamenu.c32 /root/isolinux/vesamenu.c32
+elif [[ -f /usr/lib/syslinux/vesamenu.c32 ]]; then
+  cp -f /usr/lib/syslinux/vesamenu.c32 /root/isolinux/vesamenu.c32
+fi
+
 lb build
 
 ISO_FILE="$(find . -maxdepth 1 -type f -name '*.iso' | head -n 1 || true)"
