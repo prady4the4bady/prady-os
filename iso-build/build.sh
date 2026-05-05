@@ -51,6 +51,9 @@ echo "[4/5] Running lb clean ..."
 lb clean --all
 
 echo "[5/5] Running lb config + lb build ..."
+# Use grub-pc for BIOS and grub-efi for EFI (avoids the syslinux asset issue)
+export LB_BOOTLOADER_BIOS="grub-pc"
+export LB_BOOTLOADER_EFI="grub-efi"
 lb config \
   --mode debian \
   --distribution bookworm \
@@ -67,8 +70,7 @@ lb config \
   --bootappend-live "boot=live components quiet splash" \
   --initramfs live-boot \
   --system normal \
-  --linux-packages none \
-  --bootloaders grub-efi
+  --linux-packages none
 
 if [[ "${CONFIG_ONLY}" -eq 1 ]]; then
   echo "lb config completed. Skipping lb build (--config-only)."
