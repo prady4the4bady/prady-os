@@ -76,14 +76,37 @@ fi
 
 # live-build's syslinux stage may expect these files under /root/isolinux.
 mkdir -p /root/isolinux
-if [[ -f /usr/lib/ISOLINUX/isolinux.bin ]]; then
-  cp -f /usr/lib/ISOLINUX/isolinux.bin /root/isolinux/isolinux.bin
+
+find_first_existing() {
+  for p in "$@"; do
+    if [[ -f "${p}" ]]; then
+      printf '%s\n' "${p}"
+      return 0
+    fi
+  done
+  return 1
+}
+
+ISOLINUX_BIN="$(find_first_existing \
+  /usr/lib/ISOLINUX/isolinux.bin \
+  /usr/lib/syslinux/isolinux.bin \
+  /usr/lib/syslinux/modules/bios/isolinux.bin || true)"
+
+VESAMENU_C32="$(find_first_existing \
+  /usr/lib/syslinux/modules/bios/vesamenu.c32 \
+  /usr/lib/syslinux/vesamenu.c32 || true)"
+
+if [[ -z "${ISOLINUX_BIN}" || -z "${VESAMENU_C32}" ]]; then
+  echo "Error: missing syslinux assets required by live-build." >&2
+  echo "  ISOLINUX_BIN=${ISOLINUX_BIN:-NOT_FOUND}" >&2
+  echo "  VESAMENU_C32=${VESAMENU_C32:-NOT_FOUND}" >&2
+  echo "  Hint: ensure host packages 'isolinux' and 'syslinux-common' are installed." >&2
+  exit 1
 fi
-if [[ -f /usr/lib/syslinux/modules/bios/vesamenu.c32 ]]; then
-  cp -f /usr/lib/syslinux/modules/bios/vesamenu.c32 /root/isolinux/vesamenu.c32
-elif [[ -f /usr/lib/syslinux/vesamenu.c32 ]]; then
-  cp -f /usr/lib/syslinux/vesamenu.c32 /root/isolinux/vesamenu.c32
-fi
+
+cp -f "${ISOLINUX_BIN}" /root/isolinux/isolinux.bin
+cp -f "${VESAMENU_C32}" /root/isolinux/vesamenu.c32
+ls -l /root/isolinux
 
 lb build
 
