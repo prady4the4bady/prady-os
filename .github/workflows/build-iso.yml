@@ -17,7 +17,7 @@ jobs:
 
       - name: Build ISO
         working-directory: iso-build
-        run: make build
+        run: sudo make build
 
       - name: Upload ISO artifact
         uses: actions/upload-artifact@v7
