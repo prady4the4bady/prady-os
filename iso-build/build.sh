@@ -61,7 +61,6 @@ lb config \
   --bootappend-live "boot=live components quiet splash" \
   --initramfs live-boot \
   --system normal \
-  --init-system systemd \
   --linux-flavours amd64 \
   --apt-indices false
 
