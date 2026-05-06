@@ -87,12 +87,10 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "20"
-          cache: "npm"
-          cache-dependency-path: desktop/aqua-shell/package-lock.json
 
       - name: Install dependencies
         working-directory: desktop/aqua-shell
-        run: npm ci
+        run: npm install
 
       - name: Run tests
         working-directory: desktop/aqua-shell

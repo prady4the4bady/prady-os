@@ -1,9 +1,13 @@
 name: E2E
 
 on:
+  workflow_dispatch:
   push:
-    branches: ["**"]
+    branches:
+      - main
   pull_request:
+    branches:
+      - main
 
 jobs:
   e2e-hn-task:
@@ -25,8 +29,21 @@ jobs:
       - name: Start stack
         run: make dev-up
 
-      - name: Run E2E test headless
-        run: xvfb-run -a make test-e2e
+      - name: Wait for orchestration service
+        run: |
+          echo "Waiting for workflow-engine to be ready..."
+          for i in $(seq 1 30); do
+            if curl -sf http://127.0.0.1:11431/healthz > /dev/null 2>&1; then
+              echo "Orchestration service is up after ${i}x5s"
+              break
+            fi
+            echo "  attempt $i/30 — sleeping 5s"
+            sleep 5
+          done
+          curl -sf http://127.0.0.1:11431/healthz || { echo "Service never became healthy"; exit 1; }
+
+      - name: Run E2E test
+        run: make test-e2e
 
       - name: Dump service logs on failure
         if: failure()
