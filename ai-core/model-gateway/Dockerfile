@@ -12,7 +12,11 @@ COPY app/ app/
 COPY config/ config/
 
 # Create logs directory
-RUN mkdir -p logs
+RUN mkdir -p logs && \
+    useradd -m -u 1000 app && \
+    chown -R app:app /app
+    
+USER app
 
 EXPOSE 8000
 

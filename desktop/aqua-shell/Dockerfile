@@ -75,6 +75,11 @@ WORKDIR /opt/aqua-shell
 
 COPY --from=rust-build /app/src-tauri/target/release/aqua-shell .
 
+RUN useradd -m -u 1000 app && \
+  chown -R app:app /opt/aqua-shell
+
+USER app
+
 # Notification server port
 EXPOSE 11435
 

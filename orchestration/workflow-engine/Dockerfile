@@ -17,7 +17,11 @@ COPY --from=builder /install /usr/local
 
 COPY app/ app/
 
-RUN mkdir -p logs
+RUN mkdir -p logs && \
+	useradd -m -u 1000 app && \
+	chown -R app:app /app
+
+USER app
 
 EXPOSE 8000
 

@@ -7,7 +7,11 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY app/ ./app/
 COPY config/ ./config/
-RUN mkdir -p /app/data/chroma
+RUN mkdir -p /app/data/chroma && \
+	useradd -m -u 1000 app && \
+	chown -R app:app /app
+
+USER app
 
 EXPOSE 11436
 

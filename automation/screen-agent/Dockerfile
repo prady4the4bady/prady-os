@@ -23,7 +23,12 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY app/ ./app/
 
 # ── Screenshot output directory ───────────────────────────────────────────────
-RUN mkdir -p /tmp/screenshots
+RUN mkdir -p /tmp/screenshots && \
+    useradd -m -u 1000 app && \
+    chown -R app:app /tmp/screenshots && \
+    chown -R app:app /app
+
+USER app
 
 EXPOSE 8000
 
