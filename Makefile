@@ -2,7 +2,7 @@ COMPOSE_FILE := docker-compose.dev.yml
 PYTHON := python3
 NODE := node
 DOCKER := docker
-DOCKER_COMPOSE := docker-compose
+DOCKER_COMPOSE := docker compose
 
 .PHONY: up down logs test-all test-phase1 test-phase2 test-phase3 test-phase4 test-phase5 dev-up dev-down test-e2e doctor validate check-updates audit-deps audit-node-deps lint health restart clean
 
