@@ -1,0 +1,17 @@
+version: 1
+name: task-executor-policy
+terms:
+  - include: task-executor-policy
+egress:
+  allow_domains:
+    - localhost
+network:
+  default: deny
+  allow_localhost:
+    - 8000
+    - 8091
+    - 8092
+    - 8093
+    - 8094
+notes:
+  - Task executor communicates only with local platform services on known ports.

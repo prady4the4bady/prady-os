@@ -31,7 +31,7 @@ async def real_fake_bus() -> MessageBus:
 
 
 async def test_publish_and_read(real_fake_bus: MessageBus):
-    stream = "prady:stream:test"
+    stream = "kryos:stream:test"
     await real_fake_bus.publish(stream, {"hello": "world"})
     messages = await real_fake_bus.read_new(stream, "grp", "consumer1")
     assert len(messages) == 1
@@ -40,7 +40,7 @@ async def test_publish_and_read(real_fake_bus: MessageBus):
 
 
 async def test_ack_removes_message(real_fake_bus: MessageBus):
-    stream = "prady:stream:ack_test"
+    stream = "kryos:stream:ack_test"
     await real_fake_bus.publish(stream, {"key": "val"})
     messages = await real_fake_bus.read_new(stream, "grp", "c1")
     assert len(messages) == 1
@@ -172,7 +172,8 @@ async def test_approval_gating_blocks_until_decision(
             await asyncio.sleep(0.1)
             await approvals.submit(ApprovalDecision(approval_id=approval_id, approved=True))
 
-        asyncio.create_task(approve())
+        approval_task = asyncio.create_task(approve())
+        _ = approval_task
 
         # Give background task time to finish after approval
         await asyncio.sleep(0.5)

@@ -15,6 +15,8 @@ class ModelEntry:
     capabilities: List[str] = field(default_factory=list)
     privacy_level: str = "cloud"   # private | internal | cloud
     latency_profile: str = "medium"  # fast | medium | slow
+    user_pullable: bool = False
+    checksum: Optional[str] = None
 
 
 class ModelRegistry:
@@ -33,6 +35,8 @@ class ModelRegistry:
                 capabilities=item.get("capabilities") or [],
                 privacy_level=item.get("privacy_level", "cloud"),
                 latency_profile=item.get("latency_profile", "medium"),
+                user_pullable=bool(item.get("user_pullable", False)),
+                checksum=item.get("checksum"),
             )
             self._models[entry.id] = entry
 

@@ -1,0 +1,15 @@
+{
+  "version": "1.0.1",
+  "slot": "b",
+  "sha256_full": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "sha256_delta": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "size_full": 0,
+  "size_delta": 0,
+  "delta_base_version": "1.0.0",
+  "changelog": [
+    "Kernel hardening telemetry improvements",
+    "Stability fixes for watchdog and scheduler"
+  ],
+  "min_version": "1.0.0",
+  "released_at": "2026-05-10T00:00:00Z"
+}

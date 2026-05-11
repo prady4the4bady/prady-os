@@ -11,18 +11,18 @@ import { SessionMemory } from './memory/session.js';
 import { VyrexClient } from './vyrex-client.js';
 import { TaskResult, TaskSession } from './types.js';
 
-export interface PradyConfig {
+export interface KryosConfig {
   dbPath?: string;
   socketPath?: string;
 }
 
-export class PradyAgent {
+export class PraxAgent {
   private loop: ReactLoop;
   private memory: SessionMemory;
   private registry: ToolRegistry;
   private vyrex: VyrexClient;
 
-  constructor(config?: PradyConfig) {
+  constructor(config?: KryosConfig) {
     this.memory = new SessionMemory(config?.dbPath);
     this.vyrex = new VyrexClient(config?.socketPath);
     this.registry = new ToolRegistry();
@@ -60,7 +60,7 @@ export class PradyAgent {
 
 // CLI entrypoint for testing
 if (process.argv[2] && process.argv[1].endsWith('index.js')) {
-  const agent = new PradyAgent();
+  const agent = new PraxAgent();
   const goal = process.argv.slice(2).join(' ');
   console.log(`Starting autonomous task: "${goal}"`);
   

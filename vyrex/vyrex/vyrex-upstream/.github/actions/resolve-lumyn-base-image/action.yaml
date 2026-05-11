@@ -1,0 +1,19 @@
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
+name: resolve-lumyn-base-image
+description: Resolve the Lumyn sandbox base image from GHCR, falling back to a local Dockerfile.base build.
+
+runs:
+  using: composite
+  steps:
+    - name: Resolve Lumyn sandbox base image
+      shell: bash
+      run: |
+        if docker pull ghcr.io/nvidia/vyrex/lumyn-sandbox-base:latest 2>/dev/null; then
+          echo "LUMYN_BASE_IMAGE=ghcr.io/nvidia/vyrex/lumyn-sandbox-base:latest" >> "$GITHUB_ENV"
+        else
+          echo "::warning::GHCR Lumyn base image not available, building locally"
+          docker build -f agents/lumyn/Dockerfile.base -t vyrex-lumyn-base-local .
+          echo "LUMYN_BASE_IMAGE=vyrex-lumyn-base-local" >> "$GITHUB_ENV"
+        fi

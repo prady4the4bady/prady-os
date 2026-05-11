@@ -52,12 +52,12 @@ services:
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
       - /run/user:/run/user:rw
-      - ${HOME:-/root}/.prady:/root/.prady:ro
+      - ${HOME:-/root}/.kryos:/root/.kryos:ro
     restart: unless-stopped
 
-  lumyn:
+  lumyn-agent:
     build: ../agents/lumyn
-    container_name: lumyn
+    container_name: lumyn-agent
     ports:
       - "11436:11436"
     environment:

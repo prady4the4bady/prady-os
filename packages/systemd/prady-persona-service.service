@@ -1,0 +1,20 @@
+[Unit]
+Description=Prady Persona Service
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/prady/platform/persona-service
+ExecStart=/usr/local/bin/uvicorn persona_service:app --host 0.0.0.0 --port 8114
+Restart=on-failure
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+Environment=PYTHONUNBUFFERED=1
+Environment=DATA_DIR=/data
+Environment=NOTIFICATION_BUS_URL=http://localhost:8111
+Environment=VYREX_URL=http://localhost:8105
+Environment=MEMORY_SERVICE_URL=http://localhost:8108
+
+[Install]
+WantedBy=multi-user.target

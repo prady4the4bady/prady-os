@@ -15,7 +15,20 @@ class Config:
     playwright_runner_url: str
     log_dir: Path
     gateway_model: str
+    planner_model: str
+    screen_backend: str
+    screen_ocr_enabled: bool
+    screen_screenshot_dir: Path
     approval_timeout_seconds: float
+
+
+def _parse_bool(value: str, default: bool = True) -> bool:
+    lowered = value.strip().lower()
+    if lowered in {"1", "true", "yes", "on"}:
+        return True
+    if lowered in {"0", "false", "no", "off"}:
+        return False
+    return default
 
 
 def load_config() -> Config:
@@ -29,6 +42,12 @@ def load_config() -> Config:
         ),
         log_dir=Path(os.getenv("ACTIVITY_LOG_DIR", str(_DEFAULT_LOG_DIR))),
         gateway_model=os.getenv("GATEWAY_MODEL", "llama3.2:3b"),
+        planner_model=os.getenv("PLANNER_MODEL", "lumyn-agent"),
+        screen_backend=os.getenv("SCREEN_BACKEND", "auto"),
+        screen_ocr_enabled=_parse_bool(os.getenv("SCREEN_OCR_ENABLED", "true"), True),
+        screen_screenshot_dir=Path(
+            os.getenv("SCREEN_SCREENSHOT_DIR", "/tmp/kryos-screenshots")
+        ),
         approval_timeout_seconds=float(
             os.getenv("APPROVAL_TIMEOUT_SECONDS", "300")
         ),

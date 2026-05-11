@@ -3,9 +3,9 @@ import { useHealthStatus } from "../../hooks/useHealthStatus";
 import type { HealthStatus } from "../../types";
 
 const STATUS_LABEL: Record<HealthStatus, string> = {
-  healthy:  "Prady AI",
-  degraded: "Prady AI",
-  down:     "Prady AI",
+  healthy:  "Kryos AI",
+  degraded: "Kryos AI",
+  down:     "Kryos AI",
 };
 
 export default function AiStatus() {

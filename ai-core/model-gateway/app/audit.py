@@ -92,8 +92,11 @@ class AuditLogger:
     async def _append(self, record: Dict[str, Any]) -> None:
         line = json.dumps(record, ensure_ascii=False) + "\n"
         async with self._lock:
-            with open(self._path, "a", encoding="utf-8") as fh:
-                fh.write(line)
+            await asyncio.to_thread(self._append_sync, line)
+
+    def _append_sync(self, line: str) -> None:
+        with open(self._path, "a", encoding="utf-8") as fh:
+            fh.write(line)
 
     @property
     def log_path(self) -> Path:

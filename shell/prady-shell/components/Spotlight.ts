@@ -19,7 +19,7 @@ export const Spotlight = () => Widget.Window({
                 children: [
                     Widget.Entry({
                         className: 'spotlight-input',
-                        placeholderText: 'App search or ask Prady...',
+                        placeholderText: 'App search or ask Kryos...',
                         onAccept: (self) => {
                             console.log(`Executing task: ${self.text}`);
                             // Trigger prax-agent via socket or command

@@ -1,0 +1,41 @@
+name: loop-runner
+terms:
+  - include: loop-runner-operations
+version: "1.0"
+description: "Vyrex security policy for the autonomous Loop Runner service"
+
+rules:
+  - id: loop-runner.queue.access
+    description: "Loop runner may read from and write to the Redis task queue via memory-store"
+    effect: allow
+    subjects: ["loop-runner"]
+    actions: ["http:get", "http:post", "http:delete"]
+    resources: ["http:internal:memory-store:*/api/queue/*"]
+
+  - id: loop-runner.swarm.execute
+    description: "Loop runner may submit tasks to kryos-swarm for execution"
+    effect: allow
+    subjects: ["loop-runner"]
+    actions: ["http:post"]
+    resources: ["http:internal:kryos-swarm:*/task/execute", "http:internal:kryos-swarm:*/agentnet/publish"]
+
+  - id: loop-runner.api.expose
+    description: "Loop runner may expose its control API on port 8011"
+    effect: allow
+    subjects: ["loop-runner"]
+    actions: ["http:listen"]
+    resources: ["http:0.0.0.0:8011"]
+
+  - id: loop-runner.pause.required
+    description: "Loop runner MUST honour pause requests — must not run away"
+    effect: allow
+    subjects: ["system", "user"]
+    actions: ["http:post"]
+    resources: ["http:internal:loop-runner:*/api/loop/pause"]
+
+  - id: loop-runner.deny.external
+    description: "Loop runner must not make requests to external internet endpoints"
+    effect: deny
+    subjects: ["loop-runner"]
+    actions: ["http:*"]
+    resources: ["http:external:*"]

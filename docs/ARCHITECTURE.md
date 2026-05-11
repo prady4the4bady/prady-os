@@ -1,13 +1,13 @@
 ┌─────────────────────────────────────────────────────┐
 │                   USER INTERFACE                     │
-│  PradyBar (AGS) │ PradyDock (AGS) │ Spotlight (AGS) │
-│  PradyAssistant (AGS) │ System Preferences           │
+│  KryosBar (AGS) │ KryosDock (AGS) │ Spotlight (AGS) │
+│  KryosAssistant (AGS) │ System Preferences           │
 ├─────────────────────────────────────────────────────┤
 │              WAYLAND COMPOSITOR                      │
-│         Hyprland + prady-hyprland-config             │
+│         Hyprland + kryos-hyprland-config             │
 │    blur │ rounded corners │ spring animations         │
 ├─────────────────────────────────────────────────────┤
-│              PRADY AGENT (TypeScript)                │
+│              KRYOS AGENT (TypeScript)                │
 │  ReAct Loop │ Lumyn Planner │ Tool Registry          │
 │  mouse/keyboard/screen tools via ydotool/grim        │
 ├─────────────────────────────────────────────────────┤

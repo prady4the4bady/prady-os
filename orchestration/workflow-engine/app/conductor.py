@@ -24,6 +24,7 @@ from app.activity_log import ActivityLogger
 from app.agents.browser_agent import BrowserAgent
 from app.agents.file_agent import FileAgent
 from app.agents.research_agent import ResearchAgent
+from app.agents.screen_agent import ScreenAgent
 from app.agents.shell_agent import ShellAgent
 from app.approvals import ApprovalStore
 from app.bus import CONDUCTOR_RESULTS_STREAM, MessageBus, agent_stream
@@ -41,18 +42,25 @@ from app.schemas import (
 logger = logging.getLogger(__name__)
 
 _DECOMPOSE_SYSTEM_PROMPT = """\
-You are an AI orchestration planner. Given a user goal, decompose it into the
-minimal set of concrete subtasks that can be executed by automated agents.
+You are Lumyn Planner, the orchestration planner for Kryos.
+Given a user goal, decompose it into the minimal set of concrete subtasks.
 
 Available agents and their supported actions:
+        screen   : move_cursor(x,y), click(button, clicks), type_text(text), screenshot(path),
+                             ocr_region(x,y,width,height,path), scroll(amount), key_press(key)
   browser  : navigate(url), search(query), extract_text(selector), screenshot(path)
              extract_hn_top_story(url, selector)
   shell    : run(command), which(program)
   file     : read(path), write(path, content), list(path), exists(path)
   research : summarize(content, question), analyze(content), extract_info(content, fields), question(context, question)
 
+Planning requirements:
+    - Prefer screen/browser/file subtasks whenever possible.
+    - Use shell/research only when browser/file/screen cannot complete the goal.
+    - Keep params concrete and execution-ready.
+
 Respond ONLY with a valid JSON array (no markdown, no explanation). Each element must have:
-  "agent_type" : one of [browser, shell, file, research]
+    "agent_type" : one of [screen, browser, shell, file, research]
   "action"     : action name from the list above
   "params"     : dict of parameters
   "depends_on" : list of 0-based indices of subtasks this one depends on
@@ -73,6 +81,10 @@ class Conductor:
         gateway_url: str,
         playwright_runner_url: str,
         gateway_model: str,
+        planner_model: str = "lumyn-agent",
+        screen_backend: str = "auto",
+        screen_ocr_enabled: bool = True,
+        screen_screenshot_dir: str = "/tmp/kryos-screenshots",
         approval_timeout: float = 300.0,
     ) -> None:
         self._bus = bus
@@ -80,10 +92,16 @@ class Conductor:
         self._activity = activity
         self._gateway_url = gateway_url.rstrip("/")
         self._model = gateway_model
+        self._planner_model = planner_model
         self._approval_timeout = approval_timeout
         self._tasks: Dict[str, TaskRecord] = {}
         self._background_tasks: set[asyncio.Task[Any]] = set()
         self._agents = {
+            "screen": ScreenAgent(
+                backend=screen_backend,
+                ocr_enabled=screen_ocr_enabled,
+                screenshot_dir=screen_screenshot_dir,
+            ),
             "browser": BrowserAgent(playwright_runner_url),
             "shell": ShellAgent(),
             "file": FileAgent(),
@@ -357,59 +375,48 @@ class Conductor:
 
     async def _decompose(self, goal: str, task_id: str) -> List[Subtask]:
         """Call the model gateway to decompose *goal* into a list of Subtask objects."""
-        normalized_goal = goal.lower()
-        if "news.ycombinator.com" in normalized_goal and "top-story.txt" in normalized_goal:
-            top_story_subtask_id = str(uuid.uuid4())
-            write_subtask_id = str(uuid.uuid4())
-            await self._activity.log("task_decomposed", task_id, subtask_count=2, planner="deterministic-hn")
-            return [
-                Subtask(
-                    subtask_id=top_story_subtask_id,
-                    parent_task_id=task_id,
-                    agent_type="browser",
-                    action="extract_hn_top_story",
-                    params={
-                        "url": "https://news.ycombinator.com",
-                        "selector": ".athing .titleline > a",
-                    },
-                    depends_on=[],
-                ),
-                Subtask(
-                    subtask_id=write_subtask_id,
-                    parent_task_id=task_id,
-                    agent_type="file",
-                    action="write",
-                    params={
-                        "path": "~/Desktop/top-story.txt",
-                        "content_from_subtask": top_story_subtask_id,
-                        "content_field": "top_story_title",
-                    },
-                    depends_on=[top_story_subtask_id],
-                ),
-            ]
-
         raw_items: Optional[List[Dict[str, Any]]] = None
-        try:
-            async with httpx.AsyncClient(timeout=60.0) as client:
-                resp = await client.post(
-                    f"{self._gateway_url}/v1/chat/completions",
-                    json={
-                        "model": self._model,
-                        "messages": [
-                            {"role": "system", "content": _DECOMPOSE_SYSTEM_PROMPT},
-                            {"role": "user", "content": f"Goal: {goal}"},
-                        ],
-                    },
+        planner_used = ""
+
+        planner_models = [self._planner_model]
+        if self._model and self._model != self._planner_model:
+            planner_models.append(self._model)
+
+        for model in planner_models:
+            try:
+                async with httpx.AsyncClient(timeout=60.0) as client:
+                    resp = await client.post(
+                        f"{self._gateway_url}/v1/chat/completions",
+                        json={
+                            "model": model,
+                            "messages": [
+                                {"role": "system", "content": _DECOMPOSE_SYSTEM_PROMPT},
+                                {"role": "user", "content": goal},
+                            ],
+                        },
+                    )
+                    resp.raise_for_status()
+                    data = resp.json()
+                    text = data["choices"][0]["message"]["content"]
+                    parsed_items = self._parse_json_array(text)
+                    if parsed_items:
+                        raw_items = [item for item in parsed_items if isinstance(item, dict)]
+                        planner_used = model
+                        if raw_items:
+                            break
+            except Exception as exc:
+                logger.warning(
+                    "Decompose gateway call failed for task %s with model %s: %s",
+                    task_id,
+                    model,
+                    exc,
                 )
-                resp.raise_for_status()
-                data = resp.json()
-                text = data["choices"][0]["message"]["content"]
-                raw_items = self._parse_json_array(text)
-        except Exception as exc:
-            logger.warning(
-                "Decompose gateway call failed for task %s: %s", task_id, exc
-            )
-            await self._activity.log("decompose_failed", task_id, error=str(exc))
+                await self._activity.log(
+                    "decompose_failed",
+                    task_id,
+                    planner_model=model,
+                    error=str(exc),
+                )
 
         if not raw_items:
             # Fallback: single research subtask that analyses the goal directly
@@ -443,7 +450,10 @@ class Conductor:
             subtasks.append(st)
 
         await self._activity.log(
-            "task_decomposed", task_id, subtask_count=len(subtasks)
+            "task_decomposed",
+            task_id,
+            subtask_count=len(subtasks),
+            planner=planner_used or "fallback",
         )
         return subtasks
 

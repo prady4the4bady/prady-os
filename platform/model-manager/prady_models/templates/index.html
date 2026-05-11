@@ -25,14 +25,14 @@
     <div class="card">
       <h2>Routing Policy Editor</h2>
       <form id="routing-form">
-        <label>Mode</label>
-        <select name="mode">
+        <label for="mode-select">Mode</label>
+        <select id="mode-select" name="mode">
           <option value="local-first" {% if routing.mode == 'local-first' %}selected{% endif %}>local-first</option>
           <option value="local-only" {% if routing.mode == 'local-only' %}selected{% endif %}>local-only</option>
           <option value="cloud-only" {% if routing.mode == 'cloud-only' %}selected{% endif %}>cloud-only</option>
         </select>
-        <label>Fallback providers (comma separated)</label>
-        <input name="fallback_order" value="{{ routing.fallback_order | join(', ') }}" />
+        <label for="fallback-input">Fallback providers (comma separated)</label>
+        <input id="fallback-input" name="fallback_order" value="{{ routing.fallback_order | join(', ') }}" />
         <button class="btn" type="submit">Save Policy</button>
       </form>
     </div>
@@ -41,12 +41,12 @@
       <div class="card grow">
         <h2>Install from Hugging Face</h2>
         <form id="hf-form">
-          <label>HF Repo</label>
-          <input name="hf_repo" placeholder="TheBloke/Mistral-7B-Instruct-v0.2-GGUF" required />
-          <label>File</label>
-          <input name="file_name" placeholder="mistral-7b-instruct-v0.2.Q4_K_M.gguf" required />
-          <label>SHA256 (optional)</label>
-          <input name="sha256" />
+          <label for="hf-repo">HF Repo</label>
+          <input id="hf-repo" name="hf_repo" placeholder="TheBloke/Mistral-7B-Instruct-v0.2-GGUF" required />
+          <label for="hf-file">File</label>
+          <input id="hf-file" name="file_name" placeholder="mistral-7b-instruct-v0.2.Q4_K_M.gguf" required />
+          <label for="hf-sha256">SHA256 (optional)</label>
+          <input id="hf-sha256" name="sha256" />
           <button class="btn" type="submit">Install</button>
         </form>
       </div>
@@ -54,10 +54,10 @@
       <div class="card grow">
         <h2>Install from GitHub</h2>
         <form id="gh-form">
-          <label>GitHub URL</label>
-          <input name="github_url" placeholder="https://github.com/org/repo/releases/download/v1/model.gguf" required />
-          <label>SHA256 (optional)</label>
-          <input name="sha256" />
+          <label for="gh-url">GitHub URL</label>
+          <input id="gh-url" name="github_url" placeholder="https://github.com/org/repo/releases/download/v1/model.gguf" required />
+          <label for="gh-sha256">SHA256 (optional)</label>
+          <input id="gh-sha256" name="sha256" />
           <button class="btn" type="submit">Install</button>
         </form>
       </div>

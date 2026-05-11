@@ -50,10 +50,22 @@ async def test_valid_json_array_produces_subtasks(conductor_no_bus: Conductor):
         {"agent_type": "file", "action": "write", "params": {"path": "/tmp/out.txt", "content": "done"}, "depends_on": [0]},
     ]
     with respx.mock:
-        _mock_gateway_response(items, respx)
+        route = respx.post("http://gateway/v1/chat/completions").mock(
+            return_value=httpx.Response(
+                200,
+                json={
+                    "choices": [
+                        {"message": {"content": json.dumps(items)}}
+                    ]
+                },
+            )
+        )
         subtasks = await conductor_no_bus._decompose("list files and save", "task-1")
 
     assert len(subtasks) == 2
+    assert route.called
+    req_payload = json.loads(route.calls.last.request.read().decode("utf-8"))
+    assert req_payload["model"] == "lumyn-agent"
     assert subtasks[0].agent_type == "shell"
     assert subtasks[0].action == "run"
     assert subtasks[0].depends_on == []
@@ -70,6 +82,32 @@ async def test_gateway_failure_produces_fallback(conductor_no_bus: Conductor):
 
     assert len(subtasks) == 1
     assert subtasks[0].agent_type == "research"
+
+
+async def test_planner_falls_back_to_gateway_model(conductor_no_bus: Conductor):
+    items = [
+        {"agent_type": "browser", "action": "search", "params": {"query": "kryos"}, "depends_on": []}
+    ]
+
+    with respx.mock:
+        def _side_effect(request: httpx.Request) -> httpx.Response:
+            payload = json.loads(request.read().decode("utf-8"))
+            if payload["model"] == "lumyn-agent":
+                return httpx.Response(500, text="unknown model")
+            if payload["model"] == "test-model":
+                return httpx.Response(
+                    200,
+                    json={"choices": [{"message": {"content": json.dumps(items)}}]},
+                )
+            return httpx.Response(400, text="unexpected model")
+
+        route = respx.post("http://gateway/v1/chat/completions").mock(side_effect=_side_effect)
+        subtasks = await conductor_no_bus._decompose("search kryos", "task-fallback")
+
+    assert len(subtasks) == 1
+    assert subtasks[0].agent_type == "browser"
+    assert route.called
+    assert len(route.calls) == 2
 
 
 async def test_invalid_json_produces_fallback(conductor_no_bus: Conductor):
@@ -119,7 +157,7 @@ async def test_independent_subtasks_have_no_deps(conductor_no_bus: Conductor):
     assert all(len(st.depends_on) == 0 for st in subtasks)
 
 
-async def test_parse_json_array_direct():
+def test_parse_json_array_direct():
     assert Conductor._parse_json_array("[1, 2]") == [1, 2]
     assert Conductor._parse_json_array("not json") is None
     assert Conductor._parse_json_array('prefix [{"a": 1}] suffix') == [{"a": 1}]

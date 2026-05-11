@@ -1,0 +1,146 @@
+.voiceBar {
+  position: fixed;
+  bottom: 100px;
+  right: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  z-index: 999;
+}
+
+.transcriptBubble,
+.responseBubble {
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(10px);
+  border-radius: 12px;
+  padding: 12px 16px;
+  max-width: 300px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  animation: slideIn 0.3s ease-out;
+}
+
+.responseBubble {
+  background: rgba(59, 130, 246, 0.9);
+  color: #0b1220;
+}
+
+.bubbleTitle {
+  font-size: 12px;
+  font-weight: 600;
+  opacity: 0.7;
+  margin-bottom: 4px;
+}
+
+.bubbleText {
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.controlBar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-radius: 12px;
+  padding: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+}
+
+.button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 8px;
+  background: rgba(200, 200, 200, 0.5);
+  color: rgb(80, 80, 80);
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 0;
+}
+
+.button:hover:not(:disabled) {
+  background: rgba(180, 180, 180, 0.7);
+  transform: scale(1.05);
+}
+
+.button:active:not(:disabled) {
+  transform: scale(0.95);
+}
+
+.button.active {
+  background: rgb(59, 130, 246);
+  color: #0b1220;
+}
+
+.button.processing {
+  background: rgb(168, 85, 247);
+  color: #000000;
+}
+
+.button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.waveform {
+  animation: wave 0.6s ease-in-out infinite;
+}
+
+@keyframes wave {
+  0%, 100% {
+    transform: scaleY(1);
+  }
+  50% {
+    transform: scaleY(1.2);
+  }
+}
+
+.statusIndicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: 8px;
+}
+
+.spinner {
+  width: 12px;
+  height: 12px;
+  border: 2px solid rgba(59, 130, 246, 0.3);
+  border-top-color: rgb(59, 130, 246);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.statusText {
+  font-size: 12px;
+  font-weight: 500;
+  color: rgb(80, 80, 80);
+}
+
+.latency {
+  font-size: 11px;
+  color: rgb(120, 120, 120);
+  text-align: right;
+  padding-right: 8px;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

@@ -1,0 +1,34 @@
+name: watchdog
+version: "1.0"
+terms:
+  - include: watchdog
+description: "Vyrex security policy for the Watchdog service"
+
+rules:
+  - id: watchdog.docker.access
+    description: "Watchdog may access Docker socket for container restart only"
+    effect: allow
+    subjects: ["watchdog"]
+    actions: ["docker:container.restart", "docker:container.inspect"]
+    resources: ["docker:container:*"]
+
+  - id: watchdog.health.poll
+    description: "Watchdog may poll /health endpoints on internal services"
+    effect: allow
+    subjects: ["watchdog"]
+    actions: ["http:get"]
+    resources: ["http:internal:*/health"]
+
+  - id: watchdog.api.expose
+    description: "Watchdog may expose its own status/restart API on port 8010"
+    effect: allow
+    subjects: ["watchdog"]
+    actions: ["http:listen"]
+    resources: ["http:0.0.0.0:8010"]
+
+  - id: watchdog.deny.external
+    description: "Watchdog must not make requests to external internet endpoints"
+    effect: deny
+    subjects: ["watchdog"]
+    actions: ["http:*"]
+    resources: ["http:external:*"]

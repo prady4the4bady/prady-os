@@ -1,0 +1,14 @@
+version: 1
+name: model-manager-egress-policy
+terms:
+  - include: model-manager-egress
+
+egress:
+  allow_domains:
+    - huggingface.co
+    - github.com
+    - objects.githubusercontent.com
+    - release-assets.githubusercontent.com
+
+notes:
+  - Allows model-manager to fetch model artifacts and metadata from HuggingFace and GitHub.

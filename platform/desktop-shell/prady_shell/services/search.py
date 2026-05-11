@@ -17,6 +17,22 @@ class SearchService:
     def __init__(self) -> None:
         self._apps = self._load_desktop_apps()
 
+    @staticmethod
+    def _parse_desktop_entry(entry: Path) -> SearchItem | None:
+        name = ""
+        exec_cmd = ""
+        lines = entry.read_text(encoding="utf-8", errors="ignore").splitlines()
+        for line in lines:
+            if line.startswith("Name="):
+                name = line.split("=", 1)[1].strip()
+            elif line.startswith("Exec="):
+                exec_cmd = line.split("=", 1)[1].strip().split("%", 1)[0].strip()
+
+        if not name or not exec_cmd:
+            return None
+
+        return SearchItem("app", name, exec_cmd, {"exec": exec_cmd})
+
     def _load_desktop_apps(self) -> list[SearchItem]:
         results: list[SearchItem] = []
         desktop_paths = [
@@ -27,15 +43,9 @@ class SearchService:
             if not root.exists():
                 continue
             for entry in root.glob("*.desktop"):
-                name = ""
-                exec_cmd = ""
-                for line in entry.read_text(encoding="utf-8", errors="ignore").splitlines():
-                    if line.startswith("Name="):
-                        name = line.split("=", 1)[1].strip()
-                    elif line.startswith("Exec="):
-                        exec_cmd = line.split("=", 1)[1].strip().split("%", 1)[0].strip()
-                if name and exec_cmd:
-                    results.append(SearchItem("app", name, exec_cmd, {"exec": exec_cmd}))
+                app_entry = self._parse_desktop_entry(entry)
+                if app_entry is not None:
+                    results.append(app_entry)
         return results
 
     def _candidate_files(self) -> Iterable[Path]:

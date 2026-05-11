@@ -1,0 +1,38 @@
+# .github/CODEOWNERS
+#
+# Auto-assigns reviewers to PRs. Each line maps a path pattern to one or more
+# GitHub teams. Last matching pattern wins. GitHub round-robins review requests
+# within each team to spread the load.
+#
+# Docs: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# ── Fallback: maintainers review anything not matched below ──
+*                                   @NVIDIA/vyrex-maintainer
+
+# ── CLI plugin (Node/TS) ──
+/vyrex/                          @NVIDIA/vyrex-maintainer
+/vyrex/src/onboard/              @NVIDIA/vyrex-engineer
+
+# ── Blueprint & sandbox policy (Python) ──
+/vyrex-blueprint/                @NVIDIA/vyrex-maintainer
+/vyrex-blueprint/policies/       @NVIDIA/vyrex-security
+
+# ── Shell scripts & installers ──
+/bin/                               @NVIDIA/vyrex-maintainer
+/scripts/                           @NVIDIA/vyrex-maintainer
+/install.sh                         @NVIDIA/vyrex-maintainer
+/uninstall.sh                       @NVIDIA/vyrex-maintainer
+
+# ── Container ──
+/Dockerfile                         @NVIDIA/vyrex-security @NVIDIA/vyrex-maintainer
+
+# ── Docs ──
+/docs/                              @NVIDIA/vyrex-engineer
+/spark-install.md                   @NVIDIA/vyrex-engineer
+
+# ── Tests ──
+/test/                              @NVIDIA/vyrex-engineer
+
+# ── CI / GitHub config ──
+/.github/                           @NVIDIA/vyrex-maintainer
+/ci/                                @NVIDIA/vyrex-maintainer

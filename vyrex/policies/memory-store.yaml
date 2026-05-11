@@ -1,0 +1,13 @@
+version: 1
+name: memory-store-policy
+terms:
+  - include: memory-store-policy
+filesystem:
+  allow_write:
+    - /app/data/
+  deny_write_outside:
+    - /app/data/
+network:
+  default: deny
+notes:
+  - Memory store: write only within /app/data/, no network egress.

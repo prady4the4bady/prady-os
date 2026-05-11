@@ -1,0 +1,661 @@
+# Prady OS — Production Compose
+# Phase 33: Production ISO Build
+#
+# Key differences from docker-compose.dev.yml:
+#   - All services use kryos/<service>:1.0.0 image tags (pre-built images)
+#   - No source-code volume mounts (images are self-contained)
+#   - restart: always on every service
+#   - mem_limit enforced on every service
+#   - Designed to run from /etc/kryos/ on bare-metal Prady OS
+#
+# 38-Phase plan: 33/38 complete after this phase
+# For development: use docker-compose.dev.yml in the repo root
+
+services:
+
+  # ── Infrastructure ─────────────────────────────────────────────────────────
+
+  redis:
+    image: redis:7-alpine
+    restart: always
+    mem_limit: 512m
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  postgres:
+    image: postgres:16-alpine
+    restart: always
+    mem_limit: 512m
+    environment:
+      POSTGRES_DB: kryos_models
+      POSTGRES_USER: kryos
+      POSTGRES_PASSWORD: kryos
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U kryos"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── AI Core ────────────────────────────────────────────────────────────────
+
+  model-gateway:
+    image: kryos/model-gateway:1.0.0
+    restart: always
+    mem_limit: 512m
+    depends_on:
+      - redis
+    environment:
+      MG_LISTEN_HOST: 0.0.0.0
+      MG_PORT: "8000"
+      MG_REGISTRY_PATH: /app/config/model-registry.yaml
+      MG_POLICY_PATH: /app/config/routing-policy.yaml
+      VYREX_ENABLED: "${VYREX_ENABLED:-false}"
+      VYREX_ENDPOINT: "${VYREX_ENDPOINT:-http://vyrex-proxy:8105}"
+      MODEL_STORAGE_DIR: /opt/kryos/models
+      HUGGINGFACE_TOKEN: "${HUGGINGFACE_TOKEN:-}"
+    ports:
+      - "11430:8000"
+    volumes:
+      - model-gateway-config:/app/config
+      - model-storage:/opt/kryos/models
+
+  vyrex:
+    image: nvidia/cuda:12.4.1-runtime-ubuntu22.04
+    restart: always
+    mem_limit: 8g
+    profiles: ["gpu"]
+    command: ["bash", "-lc", "python3 -m http.server 8000"]
+    ports:
+      - "11433:8000"
+    volumes:
+      - model-storage:/opt/kryos/models
+
+  vyrex-proxy:
+    image: kryos/vyrex-proxy:1.0.0
+    restart: always
+    mem_limit: 8g
+    depends_on:
+      - model-gateway
+      - auth-service
+    environment:
+      OLLAMA_URL: http://model-gateway:8000
+      DEFAULT_MODEL: llama3
+      AUTH_SERVICE_URL: http://auth-service:8013
+    ports:
+      - "8105:8105"
+
+  # ── Orchestration ──────────────────────────────────────────────────────────
+
+  playwright-runner:
+    image: kryos/playwright-runner:1.0.0
+    restart: always
+    mem_limit: 512m
+    environment:
+      PORT: "3000"
+      HEADLESS: "true"
+
+  workflow-engine:
+    image: kryos/workflow-engine:1.0.0
+    restart: always
+    mem_limit: 512m
+    depends_on:
+      - redis
+      - model-gateway
+      - playwright-runner
+    environment:
+      REDIS_URL: redis://redis:6379
+      MODEL_GATEWAY_URL: http://model-gateway:8000
+      PLAYWRIGHT_RUNNER_URL: http://playwright-runner:3000
+      GATEWAY_MODEL: llama3.2:3b
+      ACTIVITY_LOG_DIR: /app/logs
+    ports:
+      - "11431:8000"
+    volumes:
+      - workflow-logs:/app/logs
+
+  model-manager:
+    image: kryos/model-manager:1.0.0
+    restart: always
+    mem_limit: 512m
+    depends_on:
+      - postgres
+    environment:
+      MODEL_REGISTRY_PATH: /app/config/model-registry.yaml
+      ROUTING_POLICY_PATH: /app/config/routing-policy.yaml
+      STAGING_ROOT: /data/staging
+      BACKUP_ROOT: /data/backups
+      AUDIT_LOG_PATH: /data/audit/audit.log
+      MODEL_STORAGE_DIR: /opt/kryos/models
+      MODEL_GATEWAY_URL: http://model-gateway:8000
+      DATABASE_URL: ${DATABASE_URL:-postgresql+psycopg://kryos:kryos@postgres:5432/kryos_models}
+      QUANTIZATION_FORMAT: ${QUANTIZATION_FORMAT:-Q4_K_M}
+    ports:
+      - "8002:8000"
+    volumes:
+      - model-manager-data:/data
+      - model-storage:/opt/kryos/models
+
+  kryos-swarm:
+    image: kryos/kryos-swarm:1.0.0
+    restart: always
+    mem_limit: 2g
+    depends_on:
+      - model-gateway
+      - workflow-engine
+    environment:
+      SWARM_MODEL: "${SWARM_MODEL:-lumyn-agent}"
+      WORKFLOW_ENGINE_URL: http://workflow-engine:8000
+      MODEL_GATEWAY_URL: http://model-gateway:8000
+      CHROMADB_PATH: /opt/kryos/chromadb
+      MAX_SWARM_AGENTS: "${MAX_SWARM_AGENTS:-10}"
+      KRYOS_LOG_LEVEL: "${KRYOS_LOG_LEVEL:-INFO}"
+    ports:
+      - "8004:8000"
+    volumes:
+      - chromadb-data:/opt/kryos/chromadb
+
+  agent-runtime:
+    image: kryos/agent-runtime:1.0.0
+    restart: always
+    mem_limit: 2g
+    depends_on:
+      - model-gateway
+      - notification-bus
+      - system-health
+    environment:
+      DATA_DIR: /data
+      MODEL_HUB_URL: http://model-hub:8113
+      MEMORY_SERVICE_URL: http://memory-service:8108
+      PERSONA_SERVICE_URL: http://persona-service:8114
+      SCHEDULER_SERVICE_URL: http://task-scheduler:8110
+      NOTIFICATION_BUS_URL: http://notification-bus:8111
+      AUDIT_LOG_URL: http://audit-log:8112
+      WATCHDOG_URL: http://watchdog:8115
+      PACKAGE_MANAGER_URL: http://package-manager:8116
+      SECURITY_POLICY_URL: http://security-policy:8117
+      OTA_SERVICE_URL: http://ota-service:8012
+      VOICE_SERVICE_URL: http://voice-service:8012
+      AUTH_SERVICE_URL: http://auth-service:8013
+      SELF_LEARNING_URL: http://self-learning:8018
+      HARDWARE_INTEL_URL: http://hardware-intel:8019
+      SDK_REGISTRY_URL: http://sdk-registry:8020
+      SYSTEM_HEALTH_URL: http://system-health:8021
+    ports:
+      - "8100:8100"
+    volumes:
+      - agent-models-data:/root/.kryos/models
+
+  # ── Desktop Shell ──────────────────────────────────────────────────────────
+
+  desktop-shell:
+    image: kryos/desktop-shell:1.0.0
+    restart: always
+    mem_limit: 512m
+    depends_on:
+      - kryos-swarm
+      - model-gateway
+      - workflow-engine
+      - model-manager
+    ports:
+      - "3000:3000"
+
+  # ── Platform Services ──────────────────────────────────────────────────────
+
+  bot-bridge:
+    image: kryos/bot-bridge:1.0.0
+    restart: always
+    mem_limit: 512m
+    depends_on:
+      - kryos-swarm
+      - model-manager
+    environment:
+      TELEGRAM_BOT_TOKEN: "${TELEGRAM_BOT_TOKEN:-}"
+      DISCORD_BOT_TOKEN: "${DISCORD_BOT_TOKEN:-}"
+      KRYOS_SWARM_URL: http://kryos-swarm:8000
+      MODEL_MANAGER_URL: http://model-manager:8000
+    ports:
+      - "8090:8090"
+
+  vision-agent:
+    image: kryos/vision-agent:1.0.0
+    restart: always
+    mem_limit: 512m
+    depends_on:
+      - model-gateway
+    environment:
+      MODEL_GATEWAY_URL: http://model-gateway:8000
+    ports:
+      - "8091:8091"
+
+  input-controller:
+    image: kryos/input-controller:1.0.0
+    restart: always
+    mem_limit: 512m
+    depends_on:
+      - kryos-swarm
+    environment:
+      KRYOS_SWARM_URL: http://kryos-swarm:8000
+    ports:
+      - "8092:8092"
+
+  process-manager:
+    image: kryos/process-manager:1.0.0
+    restart: always
+    mem_limit: 512m
+    ports:
+      - "8093:8093"
+
+  memory-store:
+    image: kryos/memory-store:1.0.0
+    restart: always
+    mem_limit: 512m
+    ports:
+      - "8094:8094"
+    volumes:
+      - memory-store-data:/app/data
+
+  memory-service:
+    image: kryos/memory-service:1.0.0
+    restart: always
+    mem_limit: 512m
+    ports:
+      - "8108:8108"
+    volumes:
+      - memory-service-data:/data
+
+  task-scheduler:
+    image: kryos/task-scheduler:1.0.0
+    restart: always
+    mem_limit: 512m
+    depends_on:
+      - notification-bus
+    ports:
+      - "8110:8110"
+    environment:
+      DATA_DIR: /data
+      PERSONA_SERVICE_URL: http://persona-service:8114
+      MEMORY_SERVICE_URL: http://memory-service:8108
+      AGENT_RUNTIME_URL: http://agent-runtime:8100
+      NOTIFICATION_BUS_URL: http://notification-bus:8111
+      AUTH_SERVICE_URL: http://auth-service:8013
+    volumes:
+      - scheduler-data:/data
+
+  notification-bus:
+    image: kryos/notification-bus:1.0.0
+    restart: always
+    mem_limit: 512m
+    ports:
+      - "8111:8111"
+    environment:
+      DATA_DIR: /data
+    volumes:
+      - notification-data:/data
+
+  audit-log:
+    image: kryos/audit-log:1.0.0
+    restart: always
+    mem_limit: 512m
+    depends_on:
+      - notification-bus
+    ports:
+      - "8112:8112"
+    environment:
+      DATA_DIR: /data
+      NOTIFICATION_BUS_URL: http://notification-bus:8111
+      AGENT_RUNTIME_URL: http://agent-runtime:8100
+    volumes:
+      - audit-data:/data
+
+  model-hub:
+    image: kryos/model-hub:1.0.0
+    restart: always
+    mem_limit: 512m
+    depends_on:
+      - notification-bus
+    ports:
+      - "8113:8113"
+    environment:
+      DATA_DIR: /data
+      MODELS_DIR: /models
+      NOTIFICATION_BUS_URL: http://notification-bus:8111
+      SECURITY_POLICY_URL: http://security-policy:8117
+      VYREX_URL: http://vyrex-proxy:8105
+      AUTH_SERVICE_URL: http://auth-service:8013
+    volumes:
+      - model-hub-data:/data
+      - model-hub-models:/models
+
+  persona-service:
+    image: kryos/persona-service:1.0.0
+    restart: always
+    mem_limit: 512m
+    depends_on:
+      - notification-bus
+    ports:
+      - "8114:8114"
+    environment:
+      DATA_DIR: /data
+      NOTIFICATION_BUS_URL: http://notification-bus:8111
+      SECURITY_POLICY_URL: http://security-policy:8117
+      VYREX_URL: http://vyrex-proxy:8105
+      MEMORY_SERVICE_URL: http://memory-service:8108
+      AUTH_SERVICE_URL: http://auth-service:8013
+    volumes:
+      - persona-data:/data
+
+  watchdog:
+    image: kryos/watchdog:1.0.0
+    restart: always
+    mem_limit: 512m
+    depends_on:
+      - notification-bus
+      - audit-log
+    ports:
+      - "8115:8115"
+    environment:
+      DATA_DIR: /data
+      NOTIFICATION_BUS_URL: http://notification-bus:8111
+      AGENT_RUNTIME_URL: http://agent-runtime:8100
+      AUDIT_LOG_URL: http://audit-log:8112
+      MODEL_HUB_URL: http://model-hub:8113
+      PERSONA_SERVICE_URL: http://persona-service:8114
+      SCHEDULER_SERVICE_URL: http://task-scheduler:8110
+      MEMORY_SERVICE_URL: http://memory-service:8108
+      HARDWARE_INTEL_URL: http://hardware-intel:8019
+      SECURITY_POLICY_URL: http://security-policy:8117
+      OTA_SERVICE_URL: http://ota-service:8012
+      AUTH_SERVICE_URL: http://auth-service:8013
+    volumes:
+      - watchdog-data:/data
+
+  package-manager:
+    image: kryos/package-manager:1.0.0
+    restart: always
+    mem_limit: 512m
+    depends_on:
+      - notification-bus
+    ports:
+      - "8116:8116"
+    environment:
+      DATA_DIR: /data
+      CATALOG_DIR: /catalog
+      NOTIFICATION_BUS_URL: http://notification-bus:8111
+      SECURITY_POLICY_URL: http://security-policy:8117
+      AUTH_SERVICE_URL: http://auth-service:8013
+    volumes:
+      - package-data:/data
+      - package-catalog:/catalog
+
+  security-policy:
+    image: kryos/security-policy:1.0.0
+    restart: always
+    mem_limit: 512m
+    ports:
+      - "8117:8117"
+    environment:
+      DATA_DIR: /data
+    volumes:
+      - security-data:/data
+
+  ebpf-hardening:
+    image: kryos/ebpf-hardening:1.0.0
+    restart: always
+    mem_limit: 512m
+    privileged: true
+    cap_add:
+      - SYS_ADMIN
+      - NET_ADMIN
+      - SYS_PTRACE
+      - SYS_RESOURCE
+    depends_on:
+      - audit-log
+      - watchdog
+    ports:
+      - "8118:8118"
+    environment:
+      DATA_DIR: /data
+      AUDIT_LOG_URL: http://audit-log:8112
+    volumes:
+      - /sys/kernel/btf/vmlinux:/sys/kernel/btf/vmlinux:ro
+      - /sys/fs/bpf:/sys/fs/bpf
+      - ebpf-hardening-data:/data
+
+  ota-service:
+    image: kryos/ota-service:1.0.0
+    restart: always
+    mem_limit: 512m
+    depends_on:
+      - audit-log
+      - watchdog
+    ports:
+      - "8012:8012"
+    volumes:
+      - ota-data:/data/ota
+    environment:
+      MANIFEST_URL: "${OTA_MANIFEST_URL:-https://github.com/prady4the4bady/prady-os/releases/latest/download/manifest.json}"
+      SLOT_DB_PATH: /data/ota/slot_state.db
+      STAGING_DIR: /data/ota/staging
+      AUDIT_LOG_URL: http://audit-log:8006
+      WATCHDOG_URL: http://watchdog:8004
+      EBPF_HARDENING_URL: http://ebpf-hardening:8118
+
+  auth-service:
+    image: kryos/auth-service:1.0.0
+    restart: always
+    mem_limit: 512m
+    depends_on:
+      - audit-log
+      - security-policy
+    ports:
+      - "8013:8013"
+    cap_add:
+      - DAC_READ_SEARCH
+    environment:
+      AUTH_DB_PATH: /data/auth.db
+      JWT_PRIVATE_KEY_PATH: /run/secrets/kryos-jwt-private.pem
+      JWT_PUBLIC_KEY_PATH: /run/secrets/kryos-jwt-public.pem
+    volumes:
+      - auth-db:/data
+
+  voice-service:
+    image: kryos/voice-service:1.0.0
+    restart: always
+    mem_limit: 512m
+    depends_on:
+      - audit-log
+      - vyrex-proxy
+      - security-policy
+    ports:
+      - "8014:8012"
+    environment:
+      PORT: 8012
+      VYREX_URL: http://vyrex-proxy:8105
+      SECURITY_POLICY_URL: http://security-policy:8117
+      AUDIT_LOG_URL: http://audit-log:8112
+      AUTH_SERVICE_URL: http://auth-service:8013
+      WAKE_WORD: hey_kryos
+      WAKE_WORD_THRESHOLD: 0.5
+      DEFAULT_STT_MODEL: base
+      DEFAULT_TTS_VOICE: en_US-lessac-medium
+      MODELS_DIR: /root/.kryos/models
+    volumes:
+      - kryos-models:/root/.kryos/models
+
+  bios-ai:
+    image: kryos/bios-ai:1.0.0
+    restart: always
+    mem_limit: 512m
+    depends_on:
+      - audit-log
+      - notification-bus
+    ports:
+      - "8017:8017"
+    environment:
+      DATA_DIR: /var/kryos/bios-ai
+      AUDIT_LOG_URL: http://audit-log:8112
+      NOTIFICATION_BUS_URL: http://notification-bus:8111
+    volumes:
+      - bios-ai-data:/var/kryos/bios-ai
+
+  self-learning:
+    image: kryos/self-learning:1.0.0
+    restart: always
+    mem_limit: 512m
+    depends_on:
+      - vyrex-proxy
+      - audit-log
+    ports:
+      - "8018:8018"
+    environment:
+      DATA_DIR: /data
+      VYREX_URL: http://vyrex-proxy:8105
+      AUDIT_LOG_URL: http://audit-log:8112
+    volumes:
+      - self-learning-data:/data
+
+  hardware-intel:
+    image: kryos/hardware-intel:1.0.0
+    restart: always
+    mem_limit: 512m
+    cpu_shares: 256
+    depends_on:
+      - audit-log
+      - notification-bus
+    ports:
+      - "8019:8019"
+    environment:
+      PORT: "8019"
+      AUDIT_LOG_URL: http://audit-log:8006
+      NOTIFICATION_BUS_URL: http://notification-bus:8007
+      SENSOR_POLL_INTERVAL: "30"
+      ANOMALY_THRESHOLD: "0.3"
+      ALERT_COOLDOWN_MINUTES: "5"
+    volumes:
+      - hardware-intel-data:/data/hardware_intel
+
+  sdk-registry:
+    image: kryos/sdk-registry:1.0.0
+    restart: always
+    mem_limit: 1g
+    cpu_shares: 512
+    depends_on:
+      - audit-log
+      - notification-bus
+      - security-policy
+      - vyrex-proxy
+    ports:
+      - "8020:8020"
+    environment:
+      PORT: "8020"
+      AUDIT_LOG_URL: http://audit-log:8006
+      NOTIFICATION_BUS_URL: http://notification-bus:8007
+      SECURITY_POLICY_URL: http://security-policy:8117
+      VYREX_URL: http://vyrex-proxy:8000
+      SELF_LEARNING_URL: http://self-learning:8018
+      WORKSPACE_BASE: /home/user/kryos-apps
+      SDK_NET: kryos-sdk-net
+    volumes:
+      - sdk-registry-data:/data/sdk_registry
+      - sdk-apps-workspace:/home/user/kryos-apps
+      - /var/run/docker.sock:/var/run/docker.sock
+
+  loop-runner:
+    image: kryos/loop-runner:1.0.0
+    restart: always
+    mem_limit: 512m
+    depends_on:
+      - redis
+      - kryos-swarm
+      - memory-store
+    environment:
+      REDIS_URL: redis://redis:6379
+      SWARM_URL: http://kryos-swarm:8000
+      MEMORY_STORE_URL: http://memory-store:8094
+      MODEL_GATEWAY_URL: http://model-gateway:8000
+    ports:
+      - "8011:8011"
+
+  oobe-service:
+    image: kryos/oobe-service:1.0.0
+    restart: always
+    mem_limit: 512m
+    environment:
+      KRYOS_CONFIG_DIR: /opt/kryos-os/config
+      OOBE_DIST: /app/dist
+    ports:
+      - "8099:8099"
+
+  system-health:
+    image: kryos/system-health:1.0.0
+    restart: always
+    mem_limit: 256m
+    environment:
+      RELEASE_NAME: Prady OS
+      RELEASE_VERSION: "1.0.0"
+      RELEASE_CHANNEL: stable
+    ports:
+      - "8021:8021"
+
+  automation-service:
+    image: kryos/automation-service:1.0.0
+    restart: always
+    mem_limit: 512m
+    ports:
+      - "8101:8101"
+
+  computer-use:
+    image: kryos/computer-use:1.0.0
+    restart: always
+    mem_limit: 512m
+    depends_on:
+      - vyrex-proxy
+      - notification-bus
+    environment:
+      VYREX_PROXY_URL: http://vyrex-proxy:8105
+      COMPUTER_USE_MODEL: llama3
+      TASK_JOURNAL_PATH: /data/task_journal.db
+      MEMORY_SERVICE_URL: http://memory-service:8108
+      NOTIFICATION_BUS_URL: http://notification-bus:8111
+      SECURITY_POLICY_URL: http://security-policy:8117
+    volumes:
+      - computer-use-data:/data
+
+volumes:
+  redis-data:
+  postgres-data:
+  model-gateway-config:
+  model-storage:
+  chromadb-data:
+  workflow-logs:
+  model-manager-data:
+  agent-models-data:
+  memory-store-data:
+  memory-service-data:
+  scheduler-data:
+  notification-data:
+  audit-data:
+  model-hub-data:
+  model-hub-models:
+  persona-data:
+  watchdog-data:
+  package-data:
+  package-catalog:
+  security-data:
+  ebpf-hardening-data:
+  ota-data:
+  auth-db:
+  kryos-models:
+  computer-use-data:
+  bios-ai-data:
+  self-learning-data:
+  hardware-intel-data:
+  sdk-registry-data:
+  sdk-apps-workspace:

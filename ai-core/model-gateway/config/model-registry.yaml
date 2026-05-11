@@ -5,42 +5,84 @@
 # capabilities: chat | completion | embeddings | function_calling | vision | code
 
 models:
+  # --- Vyrex secured planner / runtime models ---
+  - id: lumyn-agent
+    provider: vyrex
+    capabilities: [chat, completion, code]
+    privacy_level: internal
+    latency_profile: medium
+    user_pullable: false
+
+  - id: huggingface:mistralai/Mistral-7B-v0.1
+    provider: vyrex
+    capabilities: [chat, completion, code]
+    privacy_level: private
+    latency_profile: medium
+    user_pullable: true
+
+  - id: huggingface:meta-llama/Meta-Llama-3-8B-Instruct
+    provider: vyrex
+    capabilities: [chat, completion, code]
+    privacy_level: private
+    latency_profile: medium
+    user_pullable: true
+
+  - id: huggingface:Qwen/Qwen2.5-7B-Instruct
+    provider: vyrex
+    capabilities: [chat, completion, code]
+    privacy_level: private
+    latency_profile: medium
+    user_pullable: true
+
+  - id: huggingface:microsoft/Phi-3-medium-4k-instruct
+    provider: vyrex
+    capabilities: [chat, completion, code]
+    privacy_level: private
+    latency_profile: fast
+    user_pullable: true
+
   # --- Local / Ollama models ---
   - id: llama3.2:3b
     provider: ollama
     capabilities: [chat, completion]
     privacy_level: private
     latency_profile: fast
+    user_pullable: true
 
   - id: llama3.2:1b
     provider: ollama
     capabilities: [chat, completion]
     privacy_level: private
     latency_profile: fast
+    user_pullable: true
 
   - id: llama3.1:8b
     provider: ollama
     capabilities: [chat, completion, code]
     privacy_level: private
     latency_profile: medium
+    user_pullable: true
 
   - id: mistral:7b
     provider: ollama
     capabilities: [chat, completion, code]
     privacy_level: private
     latency_profile: medium
+    user_pullable: true
 
   - id: codellama:7b
     provider: ollama
     capabilities: [chat, completion, code]
     privacy_level: private
     latency_profile: medium
+    user_pullable: true
 
   - id: nomic-embed-text
     provider: ollama
     capabilities: [embeddings]
     privacy_level: private
     latency_profile: fast
+    user_pullable: true
 
   # --- OpenAI cloud models ---
   - id: gpt-4o

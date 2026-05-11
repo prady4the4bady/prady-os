@@ -1,0 +1,13 @@
+name: screen-control
+terms:
+  - include: screen-control-access
+version: "1.0"
+allowed_apps:
+  - "*"
+max_actions_per_minute: 120
+screenshot_allowed: true
+block_sensitive_windows:
+  - "*password*"
+  - "*1password*"
+  - "*keychain*"
+  - "*bitwarden*"

@@ -6,7 +6,7 @@ interface Props {
   onDismiss: (id: string) => void;
 }
 
-export default function NotificationQueue({ notifications, onDismiss }: Props) {
+export default function NotificationQueue({ notifications, onDismiss }: Readonly<Props>) {
   if (notifications.length === 0) return null;
 
   return (

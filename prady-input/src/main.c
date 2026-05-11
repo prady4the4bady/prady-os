@@ -32,7 +32,7 @@ int init_uinput() {
     ioctl(uinput_fd, UI_SET_RELBIT, REL_Y);
 
     memset(&uidev, 0, sizeof(uidev));
-    snprintf(uidev.name, UINPUT_MAX_NAME_SIZE, "Prady Virtual AI Controller");
+    snprintf(uidev.name, UINPUT_MAX_NAME_SIZE, "Kryos Virtual AI Controller");
     uidev.id.bustype = BUS_USB;
     uidev.id.vendor  = 0x1234;
     uidev.id.product = 0x5678;
@@ -75,8 +75,8 @@ static int method_move_mouse(sd_bus_message *m, void *userdata, sd_bus_error *re
     return sd_bus_reply_method_return(m, "b", 1);
 }
 
-/* D-Bus vtable for org.prady.Input */
-static const sd_bus_vtable prady_vtable[] = {
+/* D-Bus vtable for org.kryos.Input */
+static const sd_bus_vtable kryos_vtable[] = {
     SD_BUS_VTABLE_START(0),
     SD_BUS_METHOD("MoveMouse", "ii", "b", method_move_mouse, SD_BUS_VTABLE_UNPRIVILEGED),
     SD_BUS_VTABLE_END
@@ -87,7 +87,7 @@ int main(int argc, char *argv[]) {
     sd_bus *bus = NULL;
     int r;
 
-    printf("Starting prady-input daemon...\n");
+    printf("Starting kryos-input daemon...\n");
 
     if (init_uinput() < 0) {
         fprintf(stderr, "Warning: Running without uinput kernel support\n");
@@ -101,22 +101,22 @@ int main(int argc, char *argv[]) {
 
     r = sd_bus_add_object_vtable(bus,
                                  &slot,
-                                 "/org/prady/Input",
-                                 "org.prady.Input",
-                                 prady_vtable,
+                                 "/org/kryos/Input",
+                                 "org.kryos.Input",
+                                 kryos_vtable,
                                  NULL);
     if (r < 0) {
         fprintf(stderr, "Failed to issue method call: %s\n", strerror(-r));
         goto finish;
     }
 
-    r = sd_bus_request_name(bus, "org.prady.Input", 0);
+    r = sd_bus_request_name(bus, "org.kryos.Input", 0);
     if (r < 0) {
         fprintf(stderr, "Failed to acquire service name: %s\n", strerror(-r));
         goto finish;
     }
 
-    printf("Listening on D-Bus (org.prady.Input)\n");
+    printf("Listening on D-Bus (org.kryos.Input)\n");
 
     for (;;) {
         r = sd_bus_process(bus, NULL);

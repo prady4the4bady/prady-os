@@ -112,3 +112,21 @@ class ErrorDetail(BaseModel):
 
 class ErrorResponse(BaseModel):
     error: ErrorDetail
+
+
+class PullModelRequest(BaseModel):
+    source: str
+    checksum: Optional[str] = None
+
+
+class PullModelResponse(BaseModel):
+    status: str
+    source: str
+    model_id: Optional[str] = None
+    path: Optional[str] = None
+    provider: Optional[str] = None
+    detail: Optional[str] = None
+
+
+class LoadedModelsResponse(BaseModel):
+    loaded_models: List[Dict[str, Any]]

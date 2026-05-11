@@ -1,0 +1,11 @@
+terms:
+  - include: swarm-policy
+max_concurrent_agents: 10
+max_subtasks_per_task: 20
+allowed_task_types:
+  - general
+  - automation
+  - research
+  - code
+require_user_confirmation_above_agents: 5
+max_task_duration_s: 600

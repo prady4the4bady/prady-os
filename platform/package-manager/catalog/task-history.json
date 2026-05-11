@@ -1,0 +1,1 @@
+{"package_id": "task-history", "name": "Task History", "version": "1.0.0", "type": "panel", "description": "Audit log viewer for all agent task runs with replay and status filtering.", "entrypoint": "http://localhost:8100", "service_name": "task-history", "dependencies": [], "permissions": ["audit:read"], "healthcheck_path": "/api/audit/health", "source": "kryos-core"}

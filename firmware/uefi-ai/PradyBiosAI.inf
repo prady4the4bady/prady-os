@@ -1,0 +1,28 @@
+[Defines]
+  INF_VERSION                    = 0x0001001B
+  BASE_NAME                      = KryosBiosAI
+  FILE_GUID                      = 49c4bcb3-0c6e-4554-9650-dfc60972d4c4
+  MODULE_TYPE                    = UEFI_APPLICATION
+  VERSION_STRING                 = 1.0.0
+  ENTRY_POINT                    = UefiMain
+
+[Sources]
+  KryosBiosAI.c
+  HardwareScanner.c
+  ModelRunner.c
+  EfiVarWriter.c
+
+[Packages]
+  MdePkg/MdePkg.dec
+
+[LibraryClasses]
+  UefiApplicationEntryPoint
+  UefiLib
+  UefiBootServicesTableLib
+  UefiRuntimeServicesTableLib
+  BaseLib
+  BaseMemoryLib
+  PrintLib
+
+[Depex]
+  TRUE

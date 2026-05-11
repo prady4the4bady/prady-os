@@ -1,0 +1,36 @@
+name: oobe
+terms:
+  - include: oobe-policy
+version: "1.0"
+description: "Vyrex policy for Kryos OOBE service"
+
+rules:
+  - id: oobe.config.read
+    effect: allow
+    subjects: ["oobe-service"]
+    actions: ["fs:read"]
+    resources: ["/opt/kryos-os/config/*"]
+
+  - id: oobe.config.write
+    effect: allow
+    subjects: ["oobe-service"]
+    actions: ["fs:write", "fs:create", "fs:chmod"]
+    resources: ["/opt/kryos-os/config/*"]
+
+  - id: oobe.models.load
+    effect: allow
+    subjects: ["oobe-service", "oobe-wizard"]
+    actions: ["http:post"]
+    resources: ["http://localhost:8000/api/models/load"]
+
+  - id: oobe.net.deny-other
+    effect: deny
+    subjects: ["oobe-service", "oobe-wizard"]
+    actions: ["http:*", "tcp:*", "udp:*"]
+    resources: ["*"]
+
+  - id: oobe.exec.scope
+    effect: deny
+    subjects: ["oobe-service"]
+    actions: ["proc:exec"]
+    resources: ["! /opt/kryos-os/*"]

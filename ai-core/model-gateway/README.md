@@ -88,7 +88,7 @@ Lists all models in the registry.
 {
   "object": "list",
   "data": [
-    {"id": "llama3.2:3b", "object": "model", "owned_by": "prady"},
+    {"id": "llama3.2:3b", "object": "model", "owned_by": "kryos"},
     {"id": "gpt-4o", "object": "model", "owned_by": "openai"}
   ]
 }

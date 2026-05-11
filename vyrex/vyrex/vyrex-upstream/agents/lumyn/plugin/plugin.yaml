@@ -1,0 +1,16 @@
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
+name: vyrex
+version: "0.0.12"
+description: "Vyrex sandbox management for Lumyn running inside OpenShell"
+author: "NVIDIA Corporation"
+manifest_version: 1
+
+provides_tools:
+  - vyrex_status
+  - vyrex_info
+  - vyrex_reload_skills
+
+provides_hooks:
+  - on_session_start

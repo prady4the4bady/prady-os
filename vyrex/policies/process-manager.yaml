@@ -1,0 +1,20 @@
+version: 1
+name: process-manager-policy
+terms:
+  - include: process-manager-lifecycle
+process:
+  deny_launch:
+    - /bin/rm
+    - /usr/bin/sudo
+    - /usr/bin/su
+    - /usr/bin/passwd
+  deny_launch_prefixes:
+    - /sbin/
+    - /usr/sbin/
+  allow_launch_prefixes:
+    - /usr/bin/
+    - /usr/local/bin/
+    - /opt/
+  deny_kill_pids_below: 100
+notes:
+  - Process manager: deny system binary launch, deny kill of system PIDs below 100.

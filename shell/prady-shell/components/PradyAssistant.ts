@@ -2,8 +2,8 @@ import { Widget, Variable, App } from 'ags';
 
 const taskStream = Variable('Awaiting tasks...');
 
-export const PradyAssistant = () => Widget.Window({
-    name: 'prady-assistant',
+export const KryosAssistant = () => Widget.Window({
+    name: 'kryos-assistant',
     anchor: ['top', 'bottom', 'right'],
     visible: false,
     child: Widget.Box({
@@ -13,7 +13,7 @@ export const PradyAssistant = () => Widget.Window({
         children: [
             Widget.Label({
                 className: 'assistant-title',
-                label: 'Prady AI Assistant',
+                label: 'Kryos AI Assistant',
                 xalign: 0
             }),
             Widget.Scrollable({

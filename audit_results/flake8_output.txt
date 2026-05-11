@@ -1,0 +1,335 @@
+ai-core/model-gateway\app\registry.py:61:9: F401 'app.config.load_model_registry_data as lmrd' imported but unused
+ai-core/model-gateway\tests\conftest.py:10:1: F401 'tempfile' imported but unused
+ai-core/model-gateway\tests\conftest.py:13:1: F401 'unittest.mock.MagicMock' imported but unused
+ai-core/model-gateway\tests\conftest.py:18:1: F401 'app.audit.reset_audit_logger' imported but unused
+ai-core/model-gateway\tests\conftest.py:19:1: F401 'app.config.ProviderConfig' imported but unused
+ai-core/model-gateway\tests\test_gateway.py:6:1: F401 'uuid' imported but unused
+ai-core/model-gateway\tests\test_gateway.py:12:1: F401 'app.gateway.ModelGateway' imported but unused
+ai-core/model-gateway\tests\test_gateway.py:13:1: F401 'app.policy.RoutingPolicyEngine' imported but unused
+ai-core/model-gateway\tests\test_policy.py:81:5: F401 'app.config.RoutingPolicyConfig' imported but unused
+platform/agent-runtime\agent_api.py:194:13: F841 local variable 'words' is assigned to but never used
+platform/agent-runtime\agent_api.py:249:121: E501 line too long (176 > 120 characters)
+platform/agent-runtime\agent_api.py:724:121: E501 line too long (142 > 120 characters)
+platform/agent-runtime\agent_api.py:1025:9: E303 too many blank lines (2)
+platform/agent-runtime\agent_api.py:1030:9: E303 too many blank lines (2)
+platform/agent-runtime\agent_api.py:1040:9: E303 too many blank lines (2)
+platform/agent-runtime\agent_api.py:1044:121: E501 line too long (121 > 120 characters)
+platform/agent-runtime\agent_api.py:1050:9: E303 too many blank lines (2)
+platform/agent-runtime\agent_api.py:1060:9: E303 too many blank lines (2)
+platform/agent-runtime\agent_api.py:1070:9: E303 too many blank lines (2)
+platform/agent-runtime\agent_api.py:1080:9: E303 too many blank lines (2)
+platform/agent-runtime\agent_api.py:1091:9: E303 too many blank lines (2)
+platform/agent-runtime\agent_api.py:1101:9: E303 too many blank lines (2)
+platform/agent-runtime\agent_api.py:1111:9: E303 too many blank lines (2)
+platform/agent-runtime\agent_api.py:1121:9: E303 too many blank lines (2)
+platform/agent-runtime\agent_api.py:1131:9: E303 too many blank lines (2)
+platform/agent-runtime\agent_api.py:1141:9: E303 too many blank lines (2)
+platform/agent-runtime\agent_api.py:1382:1: W293 blank line contains whitespace
+platform/agent-runtime\tests\test_agent_manager.py:11:1: F401 'os' imported but unused
+platform/agent-runtime\tests\test_agent_manager.py:25:1: F401 'vyrex.runtime.agent_manager.AgentHandle' imported but unused
+platform/agent-runtime\tests\test_agent_manager.py:25:1: E402 module level import not at top of file
+platform/agent-runtime\tests\test_agent_manager.py:26:1: F401 'vyrex.runtime.model_registry.ModelEntry' imported but unused
+platform/agent-runtime\tests\test_agent_manager.py:26:1: E402 module level import not at top of file
+platform/agent-runtime\tests\test_agent_manager.py:86:9: F401 'io' imported but unused
+platform/agentnet\identity.py:8:1: F401 'typing.Optional' imported but unused
+platform/agentnet\message_bus.py:75:121: E501 line too long (128 > 120 characters)
+platform/agentnet\tests\test_identity.py:5:1: F401 'tempfile' imported but unused
+platform/agentnet\tests\test_identity.py:6:1: F401 'pathlib.Path' imported but unused
+platform/agentnet\tests\test_identity.py:68:5: F841 local variable 'ident1' is assigned to but never used
+platform/agentnet\tests\test_message_bus.py:5:1: F401 'pathlib.Path' imported but unused
+platform/agentnet\tests\test_message_bus.py:78:32: E741 ambiguous variable name 'l'
+platform/audit-log\tests\test_audit_log_service.py:14:1: E402 module level import not at top of file
+platform/audit-log\tests\test_audit_log_service.py:15:1: E402 module level import not at top of file
+platform/auth-service\tests\test_auth_service.py:10:1: F401 'jwt_utils.generate_keypair' imported but unused
+platform/auth-service\tests\test_auth_service.py:10:1: F401 'jwt_utils.sign_token' imported but unused
+platform/auth-service\tests\test_auth_service.py:11:1: F401 'user_db.get_or_create_user' imported but unused
+platform/auth-service\tests\test_auth_service.py:11:1: F401 'user_db.init_db' imported but unused
+platform/auth-service\tests\test_auth_service.py:11:1: F401 'user_db.revoke_refresh_token' imported but unused
+platform/auth-service\tests\test_auth_service.py:78:1: W293 blank line contains whitespace
+platform/auth-service\tests\test_pam_bridge.py:54:9: F824 `nonlocal called` is unused: name is never assigned in scope
+platform/auth-service\user_db.py:4:1: F401 'sqlite3' imported but unused
+platform/auth-service\user_db.py:58:121: E501 line too long (195 > 120 characters)
+platform/auth-service\user_db.py:83:121: E501 line too long (152 > 120 characters)
+platform/auth-service\user_db.py:142:121: E501 line too long (131 > 120 characters)
+platform/automation\automation_service.py:6:1: F401 'json' imported but unused
+platform/automation\tests\test_automation_service.py:18:1: E402 module level import not at top of file
+platform/automation\tests\test_automation_service.py:103:121: E501 line too long (136 > 120 characters)
+platform/automation\tests\test_automation_service.py:177:121: E501 line too long (139 > 120 characters)
+platform/automation\tests\test_automation_service.py:184:121: E501 line too long (140 > 120 characters)
+platform/automation\tests\test_automation_service.py:191:9: E306 expected 1 blank line before a nested definition, found 0
+platform/automation\tests\test_automation_service.py:203:121: E501 line too long (135 > 120 characters)
+platform/automation\tests\test_automation_service.py:212:9: E306 expected 1 blank line before a nested definition, found 0
+platform/automation\tests\test_automation_service.py:224:121: E501 line too long (139 > 120 characters)
+platform/automation\tests\test_automation_service.py:240:121: E501 line too long (141 > 120 characters)
+platform/automation\tests\test_automation_service.py:267:5: F401 'os as _os' imported but unused
+platform/bot-bridge\main.py:15:1: F401 'hashlib' imported but unused
+platform/bot-bridge\main.py:16:1: F401 'hmac' imported but unused
+platform/bot-bridge\main.py:20:1: F401 'time' imported but unused
+platform/bot-bridge\main.py:119:17: F541 f-string is missing placeholders
+platform/bot-bridge\tests\test_bot_bridge.py:4:1: F401 'json' imported but unused
+platform/bot-bridge\tests\test_bot_bridge.py:6:1: F401 'unittest.mock.AsyncMock' imported but unused
+platform/bot-bridge\tests\test_bot_bridge.py:8:1: F401 'pytest' imported but unused
+platform/bot-bridge\tests\test_bot_bridge.py:17:1: E402 module level import not at top of file
+platform/computer-use\computer_use_service.py:3:1: F401 'asyncio' imported but unused
+platform/computer-use\computer_use_service.py:13:1: F401 'pathlib.Path' imported but unused
+platform/computer-use\task_loop.py:96:6: E999 IndentationError: expected an indented block after class definition on line 95
+platform/computer-use\tests\test_computer_use.py:3:1: F401 'os' imported but unused
+platform/computer-use\tests\test_computer_use.py:7:1: F401 'unittest.mock.AsyncMock' imported but unused
+platform/computer-use\tests\test_computer_use.py:17:1: E402 module level import not at top of file
+platform/computer-use\tests\test_computer_use.py:18:1: E402 module level import not at top of file
+platform/computer-use\tests\test_computer_use.py:19:1: E402 module level import not at top of file
+platform/computer-use\tests\test_computer_use.py:168:121: E501 line too long (147 > 120 characters)
+platform/desktop-shell\prady_shell\app.py:7:1: E402 module level import not at top of file
+platform/desktop-shell\prady_shell\app.py:9:1: E402 module level import not at top of file
+platform/desktop-shell\prady_shell\app.py:10:1: E402 module level import not at top of file
+platform/desktop-shell\prady_shell\app.py:11:1: E402 module level import not at top of file
+platform/desktop-shell\prady_shell\services\search.py:83:121: E501 line too long (121 > 120 characters)
+platform/desktop-shell\prady_shell\services\search.py:84:121: E501 line too long (127 > 120 characters)
+platform/desktop-shell\prady_shell\services\window_state.py:4:1: F401 'typing.Optional' imported but unused
+platform/ebpf-hardening\ebpf_loader.py:10:1: F401 'json' imported but unused
+platform/ebpf-hardening\ebpf_loader.py:14:1: F401 'time' imported but unused
+platform/ebpf-hardening\ebpf_loader.py:21:1: F401 'httpx' imported but unused
+platform/ebpf-hardening\ebpf_loader.py:46:1: E302 expected 2 blank lines, found 1
+platform/ebpf-hardening\ebpf_loader.py:69:1: E302 expected 2 blank lines, found 1
+platform/ebpf-hardening\ebpf_loader.py:76:1: E302 expected 2 blank lines, found 1
+platform/ebpf-hardening\ebpf_loader.py:78:1: W293 blank line contains whitespace
+platform/ebpf-hardening\ebpf_loader.py:81:1: W293 blank line contains whitespace
+platform/ebpf-hardening\ebpf_loader.py:87:1: W293 blank line contains whitespace
+platform/ebpf-hardening\ebpf_loader.py:90:1: W293 blank line contains whitespace
+platform/ebpf-hardening\ebpf_loader.py:95:9: F841 local variable 'result' is assigned to but never used
+platform/ebpf-hardening\ebpf_loader.py:122:1: W293 blank line contains whitespace
+platform/ebpf-hardening\ebpf_loader.py:127:1: W293 blank line contains whitespace
+platform/ebpf-hardening\ebpf_loader.py:131:1: W293 blank line contains whitespace
+platform/ebpf-hardening\ebpf_loader.py:202:1: W293 blank line contains whitespace
+platform/ebpf-hardening\ebpf_loader.py:219:1: W293 blank line contains whitespace
+platform/ebpf-hardening\ebpf_loader.py:223:1: W293 blank line contains whitespace
+platform/ebpf-hardening\ebpf_loader.py:233:1: W293 blank line contains whitespace
+platform/ebpf-hardening\ebpf_loader.py:246:1: W293 blank line contains whitespace
+platform/ebpf-hardening\ebpf_loader.py:250:1: W293 blank line contains whitespace
+platform/ebpf-hardening\ebpf_loader.py:264:1: W293 blank line contains whitespace
+platform/ebpf-hardening\ebpf_loader.py:272:1: W293 blank line contains whitespace
+platform/ebpf-hardening\ebpf_loader.py:276:1: W293 blank line contains whitespace
+platform/ebpf-hardening\ebpf_loader.py:296:1: W293 blank line contains whitespace
+platform/ebpf-hardening\ebpf_loader.py:304:1: W293 blank line contains whitespace
+platform/ebpf-hardening\ebpf_loader.py:308:1: W293 blank line contains whitespace
+platform/ebpf-hardening\ebpf_loader.py:326:1: W293 blank line contains whitespace
+platform/ebpf-hardening\ebpf_loader.py:338:1: W293 blank line contains whitespace
+platform/ebpf-hardening\tests\test_ebpf_loader.py:6:1: F401 'subprocess' imported but unused
+platform/ebpf-hardening\tests\test_ebpf_loader.py:8:1: F401 'unittest.mock.AsyncMock' imported but unused
+platform/ebpf-hardening\tests\test_ebpf_loader.py:8:1: F401 'unittest.mock.call' imported but unused
+platform/ebpf-hardening\tests\test_ebpf_loader.py:13:1: F401 'httpx.AsyncClient' imported but unused
+platform/ebpf-hardening\tests\test_ebpf_loader.py:19:1: E402 module level import not at top of file
+platform/ebpf-hardening\tests\test_ebpf_loader.py:53:1: W293 blank line contains whitespace
+platform/ebpf-hardening\tests\test_ebpf_loader.py:56:1: W293 blank line contains whitespace
+platform/ebpf-hardening\tests\test_ebpf_loader.py:65:1: W293 blank line contains whitespace
+platform/ebpf-hardening\tests\test_ebpf_loader.py:73:1: W293 blank line contains whitespace
+platform/ebpf-hardening\tests\test_ebpf_loader.py:82:1: W293 blank line contains whitespace
+platform/ebpf-hardening\tests\test_ebpf_loader.py:87:1: W293 blank line contains whitespace
+platform/ebpf-hardening\tests\test_ebpf_loader.py:97:1: W293 blank line contains whitespace
+platform/ebpf-hardening\tests\test_ebpf_loader.py:104:1: W293 blank line contains whitespace
+platform/ebpf-hardening\tests\test_ebpf_loader.py:107:1: W293 blank line contains whitespace
+platform/ebpf-hardening\tests\test_ebpf_loader.py:124:1: W293 blank line contains whitespace
+platform/ebpf-hardening\tests\test_ebpf_loader.py:135:1: W293 blank line contains whitespace
+platform/ebpf-hardening\tests\test_ebpf_loader.py:151:1: W293 blank line contains whitespace
+platform/ebpf-hardening\tests\test_ebpf_loader.py:160:1: W293 blank line contains whitespace
+platform/ebpf-hardening\tests\test_ebpf_loader.py:167:1: W293 blank line contains whitespace
+platform/ebpf-hardening\tests\test_ebpf_loader.py:180:1: W293 blank line contains whitespace
+platform/ebpf-hardening\tests\test_ebpf_loader.py:182:1: W293 blank line contains whitespace
+platform/ebpf-hardening\tests\test_ebpf_loader.py:189:1: W293 blank line contains whitespace
+platform/ebpf-hardening\tests\test_ebpf_loader.py:194:1: W293 blank line contains whitespace
+platform/ebpf-hardening\tests\test_ebpf_loader.py:202:1: W293 blank line contains whitespace
+platform/ebpf-hardening\tests\test_ebpf_loader.py:204:1: W293 blank line contains whitespace
+platform/ebpf-hardening\tests\test_ebpf_loader.py:211:1: W293 blank line contains whitespace
+platform/ebpf-hardening\tests\test_ebpf_loader.py:216:1: W293 blank line contains whitespace
+platform/ebpf-hardening\tests\test_ebpf_loader.py:221:1: W293 blank line contains whitespace
+platform/ebpf-hardening\tests\test_ebpf_loader.py:225:1: W293 blank line contains whitespace
+platform/ebpf-hardening\tests\test_ebpf_loader.py:233:1: W293 blank line contains whitespace
+platform/ebpf-hardening\tests\test_ebpf_loader.py:235:1: W293 blank line contains whitespace
+platform/ebpf-hardening\tests\test_ebpf_loader.py:240:1: W293 blank line contains whitespace
+platform/ebpf-hardening\tests\test_ebpf_loader.py:248:1: W293 blank line contains whitespace
+platform/ebpf-hardening\tests\test_ebpf_loader.py:263:1: W293 blank line contains whitespace
+platform/ebpf-hardening\tests\test_ebpf_loader.py:269:1: W293 blank line contains whitespace
+platform/ebpf-hardening\tests\test_ebpf_loader.py:276:1: W293 blank line contains whitespace
+platform/lumyn-bridge\lumyn_bridge.py:73:121: E501 line too long (123 > 120 characters)
+platform/lumyn-bridge\lumyn_bridge.py:412:44: W292 no newline at end of file
+platform/lumyn-bridge\tests\test_lumyn_bridge.py:4:1: F401 'subprocess' imported but unused
+platform/lumyn-bridge\tests\test_lumyn_bridge.py:18:1: E402 module level import not at top of file
+platform/lumyn-bridge\tests\test_lumyn_bridge.py:71:121: E501 line too long (142 > 120 characters)
+platform/lumyn-bridge\tests\test_lumyn_bridge.py:84:121: E501 line too long (140 > 120 characters)
+platform/lumyn-bridge\tests\test_lumyn_bridge.py:134:121: E501 line too long (143 > 120 characters)
+platform/lumyn-bridge\tests\test_lumyn_bridge.py:165:5: F841 local variable 'model' is assigned to but never used
+platform/input-controller\input_controller.py:7:1: F401 'os' imported but unused
+platform/input-controller\input_controller.py:14:1: F401 'typing.List' imported but unused
+platform/input-controller\tests\test_input_controller.py:5:1: F401 'pathlib.Path' imported but unused
+platform/input-controller\tests\test_input_controller.py:8:1: F401 'pytest' imported but unused
+platform/loop-runner\tests\test_loop_runner.py:9:15: E401 multiple imports on one line
+platform/memory-service\memory_service.py:177:121: E501 line too long (144 > 120 characters)
+platform/memory-service\memory_service.py:192:121: E501 line too long (144 > 120 characters)
+platform/memory-service\memory_service.py:247:121: E501 line too long (129 > 120 characters)
+platform/memory-service\memory_service.py:307:121: E501 line too long (129 > 120 characters)
+platform/memory-service\memory_service.py:320:121: E501 line too long (142 > 120 characters)
+platform/memory-service\memory_service.py:367:121: E501 line too long (135 > 120 characters)
+platform/memory-service\memory_service.py:380:121: E501 line too long (135 > 120 characters)
+platform/memory-service\memory_service.py:522:121: E501 line too long (128 > 120 characters)
+platform/memory-service\memory_service.py:532:121: E501 line too long (128 > 120 characters)
+platform/memory-service\memory_service.py:552:121: E501 line too long (198 > 120 characters)
+platform/memory-service\memory_service.py:565:121: E501 line too long (198 > 120 characters)
+platform/memory-service\memory_service.py:588:121: E501 line too long (145 > 120 characters)
+platform/memory-service\memory_service.py:599:121: E501 line too long (145 > 120 characters)
+platform/memory-service\tests\test_memory_service.py:15:1: E402 module level import not at top of file
+platform/memory-service\tests\test_memory_service.py:16:1: E402 module level import not at top of file
+platform/memory-service\tests\test_memory_service.py:155:121: E501 line too long (122 > 120 characters)
+platform/memory-store\memory_store.py:9:1: F401 'dataclasses.field' imported but unused
+platform/memory-store\memory_store_router.py:11:1: E402 module level import not at top of file
+platform/memory-store\memory_store_router.py:13:1: E402 module level import not at top of file
+platform/memory-store\memory_store_router.py:14:1: E402 module level import not at top of file
+platform/memory-store\memory_store_router.py:16:1: E402 module level import not at top of file
+platform/memory-store\router.py:4:1: F401 'pathlib.Path' imported but unused
+platform/memory-store\tests\test_memory_store.py:4:1: F401 'asyncio' imported but unused
+platform/memory-store\tests\test_memory_store.py:5:1: F401 'time' imported but unused
+platform/memory-store\tests\test_memory_store.py:6:1: F401 'pathlib.Path' imported but unused
+platform/memory-store\tests\test_memory_store.py:9:1: F401 'pytest_asyncio' imported but unused
+platform/memory-store\tests\test_task_queue.py:3:1: F401 'unittest.mock.MagicMock' imported but unused
+platform/memory-store\tests\test_task_queue.py:16:15: E401 multiple imports on one line
+platform/model-hub\model_hub_service.py:16:1: F401 'urllib.parse.urlparse' imported but unused
+platform/model-hub\model_hub_service.py:27:1: E402 module level import not at top of file
+platform/model-hub\model_hub_service.py:558:9: F821 undefined name 'log'
+platform/model-hub\tests\test_model_hub.py:16:1: E402 module level import not at top of file
+platform/model-hub\tests\test_model_hub.py:17:1: E402 module level import not at top of file
+platform/model-hub\tests\test_model_hub.py:221:9: E306 expected 1 blank line before a nested definition, found 0
+platform/model-manager\main.py:2:1: F401 'prady_models.platform_api.app' imported but unused
+platform/model-manager\prady_models\platform_api.py:14:1: F401 'fastapi.Request' imported but unused
+platform/model-manager\prady_models\platform_api.py:164:121: E501 line too long (130 > 120 characters)
+platform/model-manager\prady_models\warmup.py:3:1: F401 'os' imported but unused
+platform/vyrex-proxy\vyrex_proxy.py:19:1: F401 'dataclasses.field' imported but unused
+platform/vyrex-proxy\vyrex_proxy.py:21:1: F401 'typing.Optional' imported but unused
+platform/vyrex-proxy\vyrex_proxy.py:33:1: E402 module level import not at top of file
+platform/vyrex-proxy\vyrex_proxy.py:49:1: E302 expected 2 blank lines, found 1
+platform/vyrex-proxy\tests\test_vyrex_proxy.py:11:1: F401 'unittest.mock.patch' imported but unused
+platform/vyrex-proxy\tests\test_vyrex_proxy.py:14:1: F401 'pytest_asyncio' imported but unused
+platform/vyrex-proxy\tests\test_vyrex_proxy.py:22:1: E402 module level import not at top of file
+platform/vyrex-proxy\tests\test_vyrex_proxy.py:23:1: E402 module level import not at top of file
+platform/vyrex-proxy\tests\test_vyrex_proxy.py:28:1: E302 expected 2 blank lines, found 1
+platform/vyrex-proxy\tests\test_vyrex_proxy.py:176:13: E306 expected 1 blank line before a nested definition, found 0
+platform/vyrex-proxy\tests\test_vyrex_proxy.py:178:13: E306 expected 1 blank line before a nested definition, found 0
+platform/vyrex-proxy\tests\test_vyrex_proxy.py:238:121: E501 line too long (124 > 120 characters)
+platform/vyrex-proxy\tests\test_vyrex_proxy.py:337:9: E306 expected 1 blank line before a nested definition, found 0
+platform/vyrex-proxy\tests\test_vyrex_proxy.py:339:9: E306 expected 1 blank line before a nested definition, found 0
+platform/notification-bus\notification_service.py:14:1: F401 'httpx' imported but unused
+platform/notification-bus\tests\test_notification_service.py:7:1: F401 'unittest.mock.patch' imported but unused
+platform/notification-bus\tests\test_notification_service.py:14:1: E402 module level import not at top of file
+platform/notification-bus\tests\test_notification_service.py:15:1: E402 module level import not at top of file
+platform/notification-bus\tests\test_notification_service.py:21:1: E302 expected 2 blank lines, found 1
+platform/notification-bus\tests\test_notification_service.py:74:121: E501 line too long (126 > 120 characters)
+platform/notification-bus\tests\test_notification_service.py:75:121: E501 line too long (129 > 120 characters)
+platform/notification-bus\tests\test_notification_service.py:86:9: F841 local variable 'r1' is assigned to but never used
+platform/notification-bus\tests\test_notification_service.py:86:121: E501 line too long (131 > 120 characters)
+platform/notification-bus\tests\test_notification_service.py:87:121: E501 line too long (132 > 120 characters)
+platform/notification-bus\tests\test_notification_service.py:101:121: E501 line too long (154 > 120 characters)
+platform/notification-bus\tests\test_notification_service.py:119:121: E501 line too long (135 > 120 characters)
+platform/notification-bus\tests\test_notification_service.py:140:121: E501 line too long (129 > 120 characters)
+platform/notification-bus\tests\test_notification_service.py:154:121: E501 line too long (137 > 120 characters)
+platform/notification-bus\tests\test_notification_service.py:173:121: E501 line too long (129 > 120 characters)
+platform/notification-bus\tests\test_notification_service.py:185:121: E501 line too long (129 > 120 characters)
+platform/oobe\tests\test_oobe_service.py:4:1: F401 'pathlib.Path' imported but unused
+platform/ota-service\ota_service.py:248:86: E202 whitespace before '}'
+platform/ota-service\slot_manager.py:103:121: E501 line too long (123 > 120 characters)
+platform/ota-service\slot_manager.py:171:121: E501 line too long (121 > 120 characters)
+platform/ota-service\tests\__init__.py:6:1: W191 indentation contains tabs
+platform/ota-service\tests\test_ota_service.py:3:1: F401 'json' imported but unused
+platform/package-manager\package_manager_service.py:24:1: F401 'fastapi.responses.JSONResponse' imported but unused
+platform/package-manager\package_manager_service.py:31:1: F401 'auth_middleware.require_auth' imported but unused
+platform/package-manager\package_manager_service.py:31:1: E402 module level import not at top of file
+platform/package-manager\tests\test_package_manager_service.py:98:5: E306 expected 1 blank line before a nested definition, found 0
+platform/persona-service\persona_service.py:22:1: E402 module level import not at top of file
+platform/persona-service\persona_service.py:424:9: F841 local variable 'persona' is assigned to but never used
+platform/persona-service\persona_service.py:508:121: E501 line too long (128 > 120 characters)
+platform/persona-service\tests\test_persona_service.py:15:1: E402 module level import not at top of file
+platform/persona-service\tests\test_persona_service.py:16:1: E402 module level import not at top of file
+platform/process-manager\process_manager.py:4:1: F401 'json' imported but unused
+platform/process-manager\process_manager.py:12:1: F401 'pathlib.Path' imported but unused
+platform/process-manager\process_manager_router.py:12:1: E402 module level import not at top of file
+platform/process-manager\process_manager_router.py:14:1: E402 module level import not at top of file
+platform/process-manager\process_manager_router.py:15:1: E402 module level import not at top of file
+platform/process-manager\process_manager_router.py:17:1: F401 'process_manager.ProcessHandle' imported but unused
+platform/process-manager\process_manager_router.py:17:1: F401 'process_manager.ProcessInfo' imported but unused
+platform/process-manager\process_manager_router.py:17:1: F401 'process_manager.WindowInfo' imported but unused
+platform/process-manager\process_manager_router.py:17:1: E402 module level import not at top of file
+platform/process-manager\router.py:9:1: F401 '.process_manager.ProcessHandle' imported but unused
+platform/process-manager\router.py:9:1: F401 '.process_manager.ProcessInfo' imported but unused
+platform/process-manager\router.py:9:1: F401 '.process_manager.WindowInfo' imported but unused
+platform/process-manager\tests\test_process_manager.py:4:1: F401 'subprocess' imported but unused
+platform/process-manager\tests\test_process_manager.py:10:1: F401 'process_manager.ProcessInfo' imported but unused
+platform/process-manager\tests\test_process_manager.py:22:80: F841 local variable 'mock_p' is assigned to but never used
+platform/process-manager\tests\test_process_manager.py:94:5: F401 'psutil as _psutil' imported but unused
+platform/security-policy\tests\test_security_policy_service.py:10:1: E402 module level import not at top of file
+platform/security-policy\tests\test_security_policy_service.py:11:1: E402 module level import not at top of file
+platform/security-policy\tests\test_security_policy_service.py:12:1: E402 module level import not at top of file
+platform/security-policy\tests\test_security_policy_service.py:14:1: E402 module level import not at top of file
+platform/soul\soul_manager.py:17:1: F401 'typing.Optional' imported but unused
+platform/soul\tests\test_soul_manager.py:4:1: F401 'json' imported but unused
+platform/soul\tests\test_soul_manager.py:5:1: F401 'pathlib.Path' imported but unused
+platform/soul\tests\test_soul_manager.py:47:5: F811 redefinition of unused 'json' from line 4
+platform/soul\tests\test_soul_manager.py:58:5: F811 redefinition of unused 'json' from line 4
+platform/soul\tests\test_soul_router.py:6:1: F401 'unittest.mock.patch' imported but unused
+platform/soul\tests\test_soul_router.py:6:1: F401 'unittest.mock.MagicMock' imported but unused
+platform/soul\tests\test_soul_router.py:14:1: E402 module level import not at top of file
+platform/swarm-coordinator\swarm_coordinator.py:5:1: F401 'datetime' imported but unused
+platform/swarm-coordinator\tests\test_swarm_coordinator.py:16:1: E402 module level import not at top of file
+platform/swarm-coordinator\tests\test_swarm_coordinator.py:17:1: E402 module level import not at top of file
+platform/swarm-coordinator\tests\test_swarm_coordinator.py:25:121: E501 line too long (135 > 120 characters)
+platform/swarm-coordinator\tests\test_swarm_coordinator.py:81:16: E401 multiple imports on one line
+platform/swarm-coordinator\tests\test_swarm_coordinator.py:84:121: E501 line too long (129 > 120 characters)
+platform/swarm-coordinator\tests\test_swarm_coordinator.py:98:16: E401 multiple imports on one line
+platform/swarm-coordinator\tests\test_swarm_coordinator.py:114:16: E401 multiple imports on one line
+platform/swarm-coordinator\tests\test_swarm_coordinator.py:116:121: E501 line too long (126 > 120 characters)
+platform/swarm-coordinator\tests\test_swarm_coordinator.py:142:16: E401 multiple imports on one line
+platform/task-scheduler\scheduler_service.py:15:1: F401 'fastapi.Response' imported but unused
+platform/task-scheduler\scheduler_service.py:23:1: E402 module level import not at top of file
+platform/task-scheduler\scheduler_service.py:205:13: E306 expected 1 blank line before a nested definition, found 0
+platform/task-scheduler\scheduler_service.py:233:13: E306 expected 1 blank line before a nested definition, found 0
+platform/task-scheduler\scheduler_service.py:325:13: E306 expected 1 blank line before a nested definition, found 0
+platform/task-scheduler\tests\test_scheduler_service.py:16:1: E402 module level import not at top of file
+platform/task-scheduler\tests\test_scheduler_service.py:17:1: E402 module level import not at top of file
+platform/task-scheduler\tests\test_scheduler_service.py:233:77: F841 local variable 'mock_exec' is assigned to but never used
+platform/vision-agent\tests\test_vision_agent.py:4:1: F401 'base64' imported but unused
+platform/vision-agent\tests\test_vision_agent.py:38:5: F841 local variable 'png' is assigned to but never used
+platform/voice-service\stt_engine.py:54:1: W293 blank line contains whitespace
+platform/voice-service\stt_engine.py:100:1: W293 blank line contains whitespace
+platform/voice-service\tests\test_stt_engine.py:4:1: F401 'struct' imported but unused
+platform/voice-service\tests\test_stt_engine.py:5:1: F401 'pathlib.Path' imported but unused
+platform/voice-service\tests\test_tts_engine.py:4:1: F401 'struct' imported but unused
+platform/voice-service\tests\test_tts_engine.py:6:1: F401 'unittest.mock.MagicMock' imported but unused
+platform/voice-service\tests\test_tts_engine.py:6:1: F401 'unittest.mock.patch' imported but unused
+platform/voice-service\tests\test_voice_service.py:8:1: F401 'httpx' imported but unused
+platform/voice-service\tts_engine.py:78:1: W293 blank line contains whitespace
+platform/voice-service\voice_service.py:8:1: F401 'asyncio' imported but unused
+platform/voice-service\voice_service.py:20:1: F401 'fastapi.Request' imported but unused
+platform/voice-service\voice_service.py:28:1: E402 module level import not at top of file
+platform/voice-service\voice_service.py:30:1: E402 module level import not at top of file
+platform/voice-service\voice_service.py:31:1: E402 module level import not at top of file
+platform/voice-service\voice_service.py:32:1: E402 module level import not at top of file
+platform/voice-service\voice_service.py:33:1: E402 module level import not at top of file
+platform/watchdog\tests\test_watchdog.py:6:11: E401 multiple imports on one line
+platform/watchdog\tests\test_watchdog.py:8:1: F401 'watchdog.SERVICES' imported but unused
+platform/watchdog\tests\test_watchdog.py:8:1: E402 module level import not at top of file
+platform/watchdog\tests\test_watchdog_service.py:4:1: F401 'subprocess' imported but unused
+platform/watchdog\tests\test_watchdog_service.py:19:1: E402 module level import not at top of file
+platform/watchdog\tests\test_watchdog_service.py:20:1: E402 module level import not at top of file
+platform/watchdog\tests\test_watchdog_service.py:68:5: E306 expected 1 blank line before a nested definition, found 0
+platform/watchdog\watchdog.py:32:121: E501 line too long (123 > 120 characters)
+platform/watchdog\watchdog.py:33:121: E501 line too long (121 > 120 characters)
+platform/watchdog\watchdog.py:34:121: E501 line too long (122 > 120 characters)
+platform/watchdog\watchdog.py:35:121: E501 line too long (126 > 120 characters)
+platform/watchdog\watchdog.py:36:121: E501 line too long (125 > 120 characters)
+platform/watchdog\watchdog.py:37:121: E501 line too long (122 > 120 characters)
+platform/watchdog\watchdog_service.py:31:1: E402 module level import not at top of file
+platform/watchdog\watchdog_service.py:66:67: E231 missing whitespace after ','
+platform/wayland-mcp\tests\test_wayland_mcp.py:8:1: F401 'unittest.mock.MagicMock' imported but unused
+platform/wayland-mcp\tests\test_wayland_mcp.py:11:1: F401 'pytest_asyncio' imported but unused
+platform/wayland-mcp\tests\test_wayland_mcp.py:19:1: E402 module level import not at top of file
+platform/wayland-mcp\tests\test_wayland_mcp.py:20:1: E402 module level import not at top of file
+platform/wayland-mcp\tests\test_wayland_mcp.py:120:5: F841 local variable 'call_count' is assigned to but never used
+platform/wayland-mcp\tests\test_wayland_mcp.py:135:121: E501 line too long (189 > 120 characters)
+platform/wayland-mcp\tests\test_wayland_mcp.py:151:121: E501 line too long (128 > 120 characters)
+platform/wayland-mcp\tests\test_wayland_mcp.py:171:5: F841 local variable 'call_n' is assigned to but never used

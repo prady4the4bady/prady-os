@@ -175,7 +175,7 @@ class LumynTools:
         payload = {
             "goal": goal,
             "priority": priority,
-            "metadata": {"source": "lumyn"},
+            "metadata": {"source": "lumyn-agent"},
         }
         resp = await self.client.post(f"{self.workflow_engine_url}/tasks", json=payload)
         resp.raise_for_status()

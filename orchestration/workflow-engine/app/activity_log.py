@@ -15,6 +15,11 @@ from typing import Any
 logger = logging.getLogger(__name__)
 
 
+def _append_json_line(path: Path, record: dict[str, Any]) -> None:
+    with open(path, "a", encoding="utf-8") as fh:
+        fh.write(json.dumps(record, default=str) + "\n")
+
+
 class ActivityLogger:
     def __init__(self, log_dir: Path) -> None:
         log_dir.mkdir(parents=True, exist_ok=True)
@@ -32,10 +37,9 @@ class ActivityLogger:
                 record[k] = v
         await self._append(record)
 
-    async def _append(self, record: dict) -> None:
+    async def _append(self, record: dict[str, Any]) -> None:
         async with self._lock:
-            with open(self._path, "a", encoding="utf-8") as fh:
-                fh.write(json.dumps(record, default=str) + "\n")
+            await asyncio.to_thread(_append_json_line, self._path, record)
 
     @property
     def log_path(self) -> Path:

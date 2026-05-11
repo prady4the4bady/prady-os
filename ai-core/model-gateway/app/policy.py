@@ -45,6 +45,7 @@ class RoutingPolicyEngine:
         Currently the decision is purely mode-driven.
         """
         mode = self.policy.mode
+        model_name = model_id.strip() or "unknown"
 
         if mode == "local-only":
             return PolicyDecision(
@@ -72,7 +73,7 @@ class RoutingPolicyEngine:
         return PolicyDecision(
             allowed=False,
             backends=[],
-            reason=f"unknown routing mode '{mode}': request blocked",
+            reason=f"unknown routing mode '{mode}' for model '{model_name}': request blocked",
         )
 
     def is_local_only(self) -> bool:

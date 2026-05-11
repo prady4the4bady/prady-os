@@ -70,13 +70,15 @@ MODEL_REGISTRY_DATA = {
     ]
 }
 
+_ROUTING_POLICY_FILENAME = "routing-policy.yaml"
+
 
 @pytest.fixture()
 def config_dir(tmp_path: Path) -> Generator[Path, None, None]:
     """Write minimal YAML config files into a temp directory and point the
     GATEWAY_CONFIG_DIR env var at it.  Resets singleton caches after the test.
     """
-    (tmp_path / "routing-policy.yaml").write_text(
+    (tmp_path / _ROUTING_POLICY_FILENAME).write_text(
         yaml.dump(ROUTING_POLICY_LOCAL_FIRST), encoding="utf-8"
     )
     (tmp_path / "model-registry.yaml").write_text(
@@ -121,7 +123,7 @@ def policy_local_first(config_dir: Path) -> RoutingPolicyConfig:
 @pytest.fixture()
 def policy_local_only(config_dir: Path, tmp_path: Path) -> RoutingPolicyConfig:
     data = {**ROUTING_POLICY_LOCAL_FIRST, "mode": "local-only"}
-    (config_dir / "routing-policy.yaml").write_text(yaml.dump(data), encoding="utf-8")
+    (config_dir / _ROUTING_POLICY_FILENAME).write_text(yaml.dump(data), encoding="utf-8")
     reset_config_cache()
     from app.config import load_routing_policy
 
@@ -131,7 +133,7 @@ def policy_local_only(config_dir: Path, tmp_path: Path) -> RoutingPolicyConfig:
 @pytest.fixture()
 def policy_cloud_only(config_dir: Path) -> RoutingPolicyConfig:
     data = {**ROUTING_POLICY_LOCAL_FIRST, "mode": "cloud-only"}
-    (config_dir / "routing-policy.yaml").write_text(yaml.dump(data), encoding="utf-8")
+    (config_dir / _ROUTING_POLICY_FILENAME).write_text(yaml.dump(data), encoding="utf-8")
     reset_config_cache()
     from app.config import load_routing_policy
 

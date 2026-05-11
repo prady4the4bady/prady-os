@@ -7,7 +7,7 @@ interface Props {
   onLaunch: (app: DockAppConfig) => void;
 }
 
-export default function DockItem({ app, bouncing, onLaunch }: Props) {
+export default function DockItem({ app, bouncing, onLaunch }: Readonly<Props>) {
   const handleClick = () => {
     onLaunch(app);
     invoke("launch_dock_app", { app: app.id }).catch((err) => {
@@ -16,16 +16,14 @@ export default function DockItem({ app, bouncing, onLaunch }: Props) {
   };
 
   return (
-    <div
-      role="button"
+    <button
+      type="button"
       aria-label={`Launch ${app.label}`}
       className={`dock-item${bouncing ? " dock-item--bouncing" : ""}`}
       onClick={handleClick}
-      onKeyDown={(e) => e.key === "Enter" && handleClick()}
-      tabIndex={0}
     >
       <div className="dock-item__icon">{app.icon}</div>
       <span className="dock-item__label">{app.label}</span>
-    </div>
+    </button>
   );
 }

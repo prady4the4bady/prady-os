@@ -10,8 +10,8 @@
 
 ```bash
 # Clone and setup
-git clone https://github.com/prady/prady-os-v2.git
-cd prady-os-v2
+git clone https://github.com/kryos/prady-os.git
+cd prady-os
 
 # Create .env from template
 cp .env.example .env
@@ -23,7 +23,7 @@ make dev-up
 curl http://localhost:11430/healthz  # model-gateway
 curl http://localhost:11431/healthz  # workflow-engine
 curl http://localhost:11433/healthz  # screen-agent
-curl http://localhost:11436/healthz  # lumyn
+curl http://localhost:11436/healthz  # lumyn-agent
 
 # Run end-to-end tests
 make test-e2e
@@ -53,7 +53,7 @@ docker-compose exec redis redis-cli ping
 curl http://model-gateway:8000/healthz
 curl http://workflow-engine:8000/healthz
 curl http://screen-agent:8000/healthz
-curl http://lumyn:8000/healthz
+curl http://lumyn-agent:8000/healthz
 ```
 
 ---
@@ -84,7 +84,7 @@ This command:
 2. Waits for Redis health check (10s max)
 3. Starts model-gateway with 15s startup timeout
 4. Waits for model-gateway health check
-5. Starts workflow-engine, screen-agent, lumyn
+5. Starts workflow-engine, screen-agent, lumyn-agent
 6. Waits for all health checks
 
 #### Production
@@ -158,7 +158,7 @@ docker-compose logs | grep "ERROR\|WARN"
 curl http://localhost:11430/healthz  # model-gateway
 curl http://localhost:11431/healthz  # workflow-engine
 curl http://localhost:11433/healthz  # screen-agent
-curl http://localhost:11436/healthz  # lumyn
+curl http://localhost:11436/healthz  # lumyn-agent
 ```
 
 #### Detailed Health
@@ -385,7 +385,7 @@ docker-compose restart screen-agent
 cat ./automation/screen-agent/config/policy.yaml
 ```
 
-### Lumyn Issues
+### Lumyn Agent Issues
 
 #### Symptom: "Session lost after restart"
 
@@ -441,7 +441,7 @@ docker-compose restart workflow-engine
 
 2. **Service Health:**
    ```bash
-   for svc in model-gateway workflow-engine screen-agent lumyn; do
+   for svc in model-gateway workflow-engine screen-agent lumyn-agent; do
      curl -s http://localhost:8000/healthz || echo "$svc DOWN"
    done
    ```
@@ -470,7 +470,7 @@ services:
     logging:
       driver: "awslogs"
       options:
-        awslogs-group: "prady-model-gateway"
+        awslogs-group: "kryos-model-gateway"
         awslogs-region: "us-east-1"
 ```
 
@@ -827,18 +827,18 @@ When one or more system components fail, Prady OS enters a "degraded mode" where
    docker-compose restart redis
    docker-compose exec redis redis-cli PING  # Wait for PONG
    sleep 5
-   docker-compose restart workflow-engine lumyn
+   docker-compose restart workflow-engine lumyn-agent
    ```
 
 2. **If Data Lost (no backup):**
    ```bash
    # Accept data loss and rebuild
    docker-compose down redis
-   docker volume rm prady-os-v2_redis-data
+   docker volume rm prady-os_redis-data
    docker-compose up -d redis
    
    # Restart dependent services
-   docker-compose restart workflow-engine lumyn
+   docker-compose restart workflow-engine lumyn-agent
    ```
 
 3. **If Backup Available:**
@@ -931,7 +931,7 @@ redis:
 2. **Reduce Load (Temporarily):**
    ```bash
    # Stop non-critical services
-   docker-compose stop screen-agent lumyn  # Keep model-gateway running
+   docker-compose stop screen-agent lumyn-agent  # Keep model-gateway running
    
    # Or, reduce concurrency
    export GATEWAY_MAX_CONCURRENT_REQUESTS=5  # Default 20
@@ -967,7 +967,7 @@ redis:
 
 2. **Recreate Network:**
    ```bash
-   docker network rm prady-net
+   docker network rm kryos-net
    docker-compose down --remove-orphans
    docker-compose up -d
    ```
@@ -1131,7 +1131,7 @@ docker-compose exec redis redis-cli INFO      # Full statistics
 curl http://localhost:11430/healthz           # model-gateway
 curl http://localhost:11431/healthz           # workflow-engine
 curl http://localhost:11433/healthz           # screen-agent
-curl http://localhost:11436/healthz           # lumyn
+curl http://localhost:11436/healthz           # lumyn-agent
 ```
 
 ---

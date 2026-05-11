@@ -9,7 +9,7 @@ services:
       retries: 5
       start_period: 5s
     networks:
-      - prady-net
+      - kryos-net
 
   model-gateway:
     build:
@@ -35,7 +35,7 @@ services:
       retries: 5
       start_period: 15s
     networks:
-      - prady-net
+      - kryos-net
 
   workflow-engine:
     build:
@@ -64,7 +64,7 @@ services:
       retries: 5
       start_period: 15s
     networks:
-      - prady-net
+      - kryos-net
 
   screen-agent:
     build:
@@ -95,9 +95,9 @@ services:
       retries: 5
       start_period: 20s
     networks:
-      - prady-net
+      - kryos-net
 
-  lumyn:
+  lumyn-agent:
     build:
       context: ./agents/lumyn
     restart: unless-stopped
@@ -124,7 +124,7 @@ services:
       retries: 5
       start_period: 20s
     networks:
-      - prady-net
+      - kryos-net
 
   aqua-shell:
     build:
@@ -133,7 +133,7 @@ services:
     ports:
       - "11435:11435"
     depends_on:
-      lumyn:
+      lumyn-agent:
         condition: service_healthy
     environment:
       MODEL_GATEWAY_URL: ${AQUA_MODEL_GATEWAY_URL:-http://model-gateway:8000}
@@ -144,7 +144,7 @@ services:
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
       - /run/user:/run/user:rw
-      - ${HOME:-/root}/.prady:/root/.prady:ro
+      - ${HOME:-/root}/.kryos:/root/.kryos:ro
     healthcheck:
       test: ["CMD-SHELL", "grep -aq aqua-shell /proc/1/cmdline"]
       interval: 20s
@@ -152,8 +152,8 @@ services:
       retries: 5
       start_period: 20s
     networks:
-      - prady-net
+      - kryos-net
 
 networks:
-  prady-net:
-    name: prady-net
+  kryos-net:
+    name: kryos-net

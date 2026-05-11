@@ -1,0 +1,38 @@
+[Unit]
+Description=Prady Watchdog Service
+After=network.target prady-notification-bus.service
+Wants=prady-notification-bus.service
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/prady/platform/watchdog
+ExecStart=/usr/local/bin/uvicorn watchdog_service:app --host 0.0.0.0 --port 8115
+Restart=on-failure
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+Environment=PYTHONUNBUFFERED=1
+Environment=DATA_DIR=/data
+Environment=NOTIFICATION_BUS_URL=http://localhost:8111
+Environment=AGENT_RUNTIME_URL=http://localhost:8100
+Environment=AUDIT_LOG_URL=http://localhost:8112
+Environment=MODEL_HUB_URL=http://localhost:8113
+Environment=PERSONA_SERVICE_URL=http://localhost:8114
+Environment=SCHEDULER_SERVICE_URL=http://localhost:8110
+Environment=MEMORY_SERVICE_URL=http://localhost:8108
+Environment=SECURITY_POLICY_URL=http://localhost:8117
+
+# Systemd hardening
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+PrivateDevices=true
+RestrictSUIDSGID=true
+LockPersonality=true
+MemoryDenyWriteExecute=true
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+ReadWritePaths=/data
+
+[Install]
+WantedBy=multi-user.target

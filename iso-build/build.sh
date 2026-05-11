@@ -5,10 +5,10 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 CONFIG_DIR="${SCRIPT_DIR}/config"
 INCLUDES_DIR="${CONFIG_DIR}/includes.chroot"
-PROJECT_DST="${INCLUDES_DIR}/opt/prady-os"
+PROJECT_DST="${INCLUDES_DIR}/opt/kryos-os"
 THEME_SRC="${SCRIPT_DIR}/plymouth"
-THEME_DST="${INCLUDES_DIR}/usr/share/plymouth/themes/prady"
-PRADY_RELEASE_FILE="${INCLUDES_DIR}/etc/prady/os-release"
+THEME_DST="${INCLUDES_DIR}/usr/share/plymouth/themes/kryos"
+KRYOS_RELEASE_FILE="${INCLUDES_DIR}/etc/kryos/os-release"
 CONFIG_ONLY=0
 
 if [[ "${1:-}" == "--config-only" ]]; then
@@ -22,12 +22,12 @@ fi
 
 mkdir -p "${PROJECT_DST}"
 mkdir -p "${THEME_DST}"
-mkdir -p "$(dirname "${PRADY_RELEASE_FILE}")"
+mkdir -p "$(dirname "${KRYOS_RELEASE_FILE}")"
 
 chmod +x "${CONFIG_DIR}"/hooks/live/*.hook.chroot
 chmod +x "${INCLUDES_DIR}/etc/xdm/Xsession"
 
-echo "[1/5] Syncing repository into live image payload at /opt/prady-os ..."
+echo "[1/5] Syncing repository into live image payload at /opt/kryos-os ..."
 rsync -a --delete \
   --exclude '.git' \
   --exclude '.venv' \
@@ -40,10 +40,10 @@ rsync -a --delete \
 echo "[2/5] Installing Plymouth theme payload ..."
 rsync -a --delete "${THEME_SRC}/" "${THEME_DST}/"
 
-echo "[3/5] Writing Prady build metadata ..."
-cat > "${PRADY_RELEASE_FILE}" <<EOF
-PRADY_VERSION=0.1.0
-PRADY_CODENAME=caveman
+echo "[3/5] Writing Kryos build metadata ..."
+cat > "${KRYOS_RELEASE_FILE}" <<EOF
+KRYOS_VERSION=0.1.0
+KRYOS_CODENAME=caveman
 BUILD_DATE=$(date -u +%Y-%m-%dT%H:%M:%SZ)
 EOF
 
@@ -85,5 +85,5 @@ if [[ -z "${ISO_FILE}" ]]; then
   exit 1
 fi
 
-cp -f "${ISO_FILE}" "prady-os.iso"
-echo "ISO build complete: ${SCRIPT_DIR}/prady-os.iso"
+cp -f "${ISO_FILE}" "kryos-os.iso"
+echo "ISO build complete: ${SCRIPT_DIR}/kryos-os.iso"

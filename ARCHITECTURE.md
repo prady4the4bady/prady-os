@@ -37,7 +37,7 @@ Prady OS v2 is a **multi-agent automation system** that translates high-level go
 | **model-gateway** | 11430 | Python | LLM routing, model selection, API gateway |
 | **workflow-engine** | 11431 | Python | Task orchestration, approval workflow |
 | **screen-agent** | 11433 | Python | Desktop automation, screenshot, vision |
-| **lumyn** | 11436 | Python | Primary conversational agent, session management |
+| **lumyn-agent** | 11436 | Python | Primary conversational agent, session management |
 | **playwright-runner** | 11432 (host bridge) | Node.js | Browser automation, web task execution |
 
 ---
@@ -206,7 +206,7 @@ XDG_RUNTIME_DIR=... # XDG runtime (for X11 socket)
 
 ---
 
-### 5. Lumyn (Conversational Layer)
+### 5. Lumyn Agent (Conversational Layer)
 
 **Responsibility:** Primary user-facing agent; session management; learned strategies.
 
@@ -294,7 +294,7 @@ POST   /browser/evaluate          → { script }
 ```
 User Goal (e.g., "Find and summarize today's climate news")
     ↓
-Lumyn (chat endpoint)
+Lumyn Agent (chat endpoint)
     ↓ Calls /v1/chat/completions on model-gateway
     ↓
 Model Gateway (selects best LLM)
@@ -369,7 +369,7 @@ Example:
 4. screen-agent       (depends: model-gateway, X11/Wayland)
    ↓ Health: GET /healthz
    
-5. lumyn       (depends: model-gateway, workflow-engine, screen-agent)
+5. lumyn-agent       (depends: model-gateway, workflow-engine, screen-agent)
    ↓ Health: GET /healthz
    
 6. playwright-runner  (optional, depends: host network bridge)
@@ -403,9 +403,9 @@ curl http://workflow-engine:8000/healthz
 curl http://screen-agent:8000/healthz
 ```
 
-**Lumyn Health:**
+**Lumyn Agent Health:**
 ```bash
-curl http://lumyn:8000/healthz
+curl http://lumyn-agent:8000/healthz
 ```
 
 ---
@@ -471,7 +471,7 @@ docker-compose restart model-gateway workflow-engine
 
 ### Scenario 4: Screen Agent / DISPLAY Unavailable
 
-**Symptom:** lumyn logs "Screen agent unhealthy"
+**Symptom:** lumyn-agent logs "Screen agent unhealthy"
 
 **Behavior:**
 - Desktop automation tasks fail
@@ -526,7 +526,7 @@ export PLAYWRIGHT_RUNNER_URL=http://disabled:11432
                     └──────────────┬──────────────┘
                                    │
                     ┌──────────────▼──────────────┐
-                    │   Lumyn              │ ← ReAct loop validates
+                    │   Lumyn Agent              │ ← ReAct loop validates
                     │  (prompt injection checks)  │
                     └──────────────┬──────────────┘
                                    │
@@ -588,7 +588,7 @@ make test-e2e      # Run E2E tests
 curl http://localhost:11430/healthz  # model-gateway
 curl http://localhost:11431/healthz  # workflow-engine
 curl http://localhost:11433/healthz  # screen-agent
-curl http://localhost:11436/healthz  # lumyn
+curl http://localhost:11436/healthz  # lumyn-agent
 ```
 
 ### Docker Compose (Production-like)
@@ -597,7 +597,7 @@ curl http://localhost:11436/healthz  # lumyn
 - Optional `docker-compose.dev.yml` overrides (debug logging, volume mounts)
 - Health checks on all services
 - Automatic restart on failure (`unless-stopped`)
-- Shared network `prady-net`
+- Shared network `kryos-net`
 
 **Startup:**
 ```bash
@@ -690,7 +690,7 @@ Services emit events to Redis; other services subscribe.
 
 1. Check redis memory: `redis-cli INFO memory`
 2. Check model-gateway routing: `GATEWAY_ROUTING_MODE=local-first` or `cloud-only`?
-3. Check network: `docker network inspect prady-net`
+3. Check network: `docker network inspect kryos-net`
 4. Monitor logs: `make logs | grep -i error`
 
 ### API Errors (500, 503)
@@ -711,7 +711,7 @@ Services emit events to Redis; other services subscribe.
 
 1. **Kubernetes Migration:** Replace docker-compose with Helm charts
 2. **Observability:** Add Prometheus metrics, Jaeger tracing, ELK logging
-3. **Scale:** Horizontal scaling for model-gateway, lumyn
+3. **Scale:** Horizontal scaling for model-gateway, lumyn-agent
 4. **Persistence:** PostgreSQL backend for session and approval state
 5. **Analytics:** Learnings database; model performance tracking
 

@@ -1,0 +1,18 @@
+version: 1
+name: input-controller-policy
+terms:
+  - include: input-controller-policy
+filesystem:
+  deny_read:
+    - /etc/passwd
+    - /etc/shadow
+    - /root/.ssh/
+    - /home/
+display:
+  allow:
+    - X11
+    - Wayland
+rate_limit:
+  actions_per_minute: 100
+notes:
+  - Input controller: deny sensitive file reads, allow display server access, rate-limit actions.

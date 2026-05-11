@@ -1,6 +1,6 @@
 agents: [lumyn-primary, lumyn-secondary]
 inference_backend: vyrex
-vyrex_sandbox: prady-main
+vyrex_sandbox: kryos-main
 screen_control: ydotool
 model_default: nvidia/nemotron-3-super-120b-a12b
 model_local_fallback: mistral-7b-instruct

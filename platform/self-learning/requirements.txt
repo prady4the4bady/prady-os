@@ -1,0 +1,9 @@
+fastapi
+uvicorn[standard]
+httpx
+aiosqlite
+psutil
+numpy
+sentence-transformers
+pytest
+pytest-asyncio

@@ -6,7 +6,7 @@ interface Props {
   onDismiss: (id: string) => void;
 }
 
-export default function NotificationToast({ notif, onDismiss }: Props) {
+export default function NotificationToast({ notif, onDismiss }: Readonly<Props>) {
   const [exiting, setExiting] = useState(false);
 
   // Auto-dismiss after duration_ms
@@ -28,7 +28,6 @@ export default function NotificationToast({ notif, onDismiss }: Props) {
     <div
       role="alert"
       className={`notif-toast glass${exiting ? " notif-toast--exiting" : ""}`}
-      onClick={handleDismiss}
     >
       <div className="notif-toast__header">
         <span className="notif-toast__title">

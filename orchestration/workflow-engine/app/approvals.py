@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import asyncio
 from datetime import datetime, timezone
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 from app.schemas import ApprovalDecision, ApprovalRecord, ApprovalRequest
 
@@ -20,6 +20,7 @@ class ApprovalStore:
         self._events: Dict[str, asyncio.Event] = {}
 
     async def request(self, req: ApprovalRequest) -> ApprovalRecord:
+        await asyncio.sleep(0)
         record = ApprovalRecord(
             approval_id=req.approval_id,
             task_id=req.task_id,
@@ -36,6 +37,7 @@ class ApprovalStore:
 
     async def submit(self, decision: ApprovalDecision) -> Optional[ApprovalRecord]:
         """Apply an approval or rejection decision. Returns None if not found."""
+        await asyncio.sleep(0)
         record = self._store.get(decision.approval_id)
         if not record:
             return None
@@ -52,15 +54,22 @@ class ApprovalStore:
         return record
 
     async def wait_for_decision(
-        self, approval_id: str, timeout: float = 300.0
+        self,
+        approval_id: str,
+        wait_seconds: float = 300.0,
+        **kwargs: Any,
     ) -> Optional[ApprovalRecord]:
         """Block until the approval is decided or *timeout* seconds elapse."""
+        if "timeout" in kwargs:
+            wait_seconds = float(kwargs["timeout"])
+
         event = self._events.get(approval_id)
         if not event:
             return self._store.get(approval_id)
         try:
-            await asyncio.wait_for(event.wait(), timeout=timeout)
-        except asyncio.TimeoutError:
+            async with asyncio.timeout(wait_seconds):
+                await event.wait()
+        except TimeoutError:
             pass
         return self._store.get(approval_id)
 

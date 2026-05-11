@@ -1,4 +1,4 @@
-# Lumyn (Phase 5)
+# Lumyn Agent (Phase 5)
 
 Primary conversational AI service for PradyOS.
 

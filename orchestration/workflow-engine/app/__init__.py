@@ -1,1 +1,1 @@
-"""Prady Orchestration Engine — multi-agent workflow orchestration layer."""
+"""Kryos Orchestration Engine — multi-agent workflow orchestration layer."""

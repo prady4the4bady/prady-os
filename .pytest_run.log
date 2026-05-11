@@ -1,0 +1,44 @@
+........................................................................ [ 10%]
+...................................s....s............................... [ 20%]
+........................................................................ [ 30%]
+........................................................................ [ 40%]
+........................................................................ [ 50%]
+........................................................................ [ 60%]
+........................................................................ [ 70%]
+........................................................................ [ 81%]
+........................................................................ [ 91%]
+..............................................................           [100%]
+============================== warnings summary ===============================
+..\..\..\..\miniforge3\Lib\site-packages\pydantic\_internal\_fields.py:160
+..\..\..\..\miniforge3\Lib\site-packages\pydantic\_internal\_fields.py:160
+..\..\..\..\miniforge3\Lib\site-packages\pydantic\_internal\_fields.py:160
+platform/agent-runtime/tests/test_agent_manager.py::TestAgentAPI::test_health_endpoint
+  C:\Users\prady\miniforge3\Lib\site-packages\pydantic\_internal\_fields.py:160: UserWarning: Field "model_id" has conflict with protected namespace "model_".
+  
+  You may be able to resolve this warning by setting `model_config['protected_namespaces'] = ()`.
+    warnings.warn(
+
+..\..\..\..\miniforge3\Lib\site-packages\keras\src\export\tf2onnx_lib.py:8
+  C:\Users\prady\miniforge3\Lib\site-packages\keras\src\export\tf2onnx_lib.py:8: FutureWarning: In the future `np.object` will be defined as the corresponding NumPy scalar.
+    if not hasattr(np, "object"):
+
+..\..\..\..\miniforge3\Lib\site-packages\pydantic\_internal\_fields.py:160
+  C:\Users\prady\miniforge3\Lib\site-packages\pydantic\_internal\_fields.py:160: UserWarning: Field "model_size" has conflict with protected namespace "model_".
+  
+  You may be able to resolve this warning by setting `model_config['protected_namespaces'] = ()`.
+    warnings.warn(
+
+platform/self-learning/tests/test_self_learning_service.py::test_health
+  C:\Users\prady\miniforge3\Lib\site-packages\pydantic\_internal\_fields.py:160: UserWarning: Field "model_used" has conflict with protected namespace "model_".
+  
+  You may be able to resolve this warning by setting `model_config['protected_namespaces'] = ()`.
+    warnings.warn(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+708 passed, 2 skipped, 7 warnings in 130.85s (0:02:10)
+Task was destroyed but it is pending!
+task: <Task pending name='Task-1153' coro=<_run_pull_job() running at C:\Users\prady\Desktop\Claude\OS\prady-os-v2\platform\model-hub\model_hub_service.py:440>>
+Exception ignored in: <coroutine object _run_pull_job at 0x000001B9B5B32C00>
+Traceback (most recent call last):
+  File "C:\Users\prady\Desktop\Claude\OS\prady-os-v2\platform\model-hub\model_hub_service.py", line 485, in _run_pull_job
+TypeError: 'NoneType' object does not support the asynchronous context manager protocol

@@ -24,7 +24,7 @@ export type DockAppId =
   | "terminal"
   | "files"
   | "browser"
-  | "prady_tasks"
+  | "kryos_tasks"
   | "settings";
 
 export interface DockAppConfig {

@@ -1,0 +1,12 @@
+[Unit]
+Description=PradyOS Screen Automation Service
+After=graphical.target vyrex-gateway.service
+
+[Service]
+ExecStart=uvicorn automation_service:app --host 0.0.0.0 --port 8101
+WorkingDirectory=/opt/prady/platform/automation
+Restart=on-failure
+Environment=DISPLAY=:0
+
+[Install]
+WantedBy=graphical.target

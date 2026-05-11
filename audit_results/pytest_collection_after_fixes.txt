@@ -1,0 +1,413 @@
+platform/agent-runtime/tests/test_agent_manager.py::TestModelRegistry::test_register_stores_entry
+platform/agent-runtime/tests/test_agent_manager.py::TestModelRegistry::test_get_returns_entry
+platform/agent-runtime/tests/test_agent_manager.py::TestModelRegistry::test_get_missing_returns_none
+platform/agent-runtime/tests/test_agent_manager.py::TestModelRegistry::test_list_available_empty
+platform/agent-runtime/tests/test_agent_manager.py::TestModelRegistry::test_list_available_returns_all
+platform/agent-runtime/tests/test_agent_manager.py::TestModelRegistry::test_ensure_local_uses_local_file
+platform/agent-runtime/tests/test_agent_manager.py::TestModelRegistry::test_ensure_local_raises_for_unknown
+platform/agent-runtime/tests/test_agent_manager.py::TestModelRegistry::test_ensure_local_already_ready
+platform/agent-runtime/tests/test_agent_manager.py::TestModelRegistry::test_ensure_local_downloads_hf
+platform/agent-runtime/tests/test_agent_manager.py::TestAgentManager::test_spawn_creates_handle
+platform/agent-runtime/tests/test_agent_manager.py::TestAgentManager::test_spawn_assigns_unique_ids
+platform/agent-runtime/tests/test_agent_manager.py::TestAgentManager::test_list_agents_returns_spawned
+platform/agent-runtime/tests/test_agent_manager.py::TestAgentManager::test_kill_stops_agent
+platform/agent-runtime/tests/test_agent_manager.py::TestAgentManager::test_kill_unknown_raises
+platform/agent-runtime/tests/test_agent_manager.py::TestAgentManager::test_kill_already_dead_is_idempotent
+platform/agent-runtime/tests/test_agent_manager.py::TestAgentManager::test_spawn_records_model_and_policy
+platform/agent-runtime/tests/test_agent_manager.py::TestAgentManager::test_spawn_sets_started_at
+platform/agent-runtime/tests/test_agent_manager.py::TestPolicyLoading::test_missing_policy_returns_defaults
+platform/agent-runtime/tests/test_agent_manager.py::TestPolicyLoading::test_policy_file_parses
+platform/agent-runtime/tests/test_agent_manager.py::TestAgentAPI::test_health_endpoint
+platform/agent-runtime/tests/test_agent_manager.py::TestAgentAPI::test_list_agents_empty
+platform/agent-runtime/tests/test_agent_manager.py::TestAgentAPI::test_spawn_and_list
+platform/agent-runtime/tests/test_agent_manager.py::TestAgentAPI::test_kill_agent
+platform/agent-runtime/tests/test_agent_manager.py::TestAgentAPI::test_kill_unknown_returns_404
+platform/agent-runtime/tests/test_agent_manager.py::TestAgentAPI::test_prompt_unknown_agent_returns_404
+platform/agent-runtime/tests/test_agent_manager.py::TestAgentAPI::test_prompt_streams_sse
+platform/agentnet/tests/test_identity.py::test_generate_identity_creates_keys
+platform/agentnet/tests/test_identity.py::test_generate_identity_idempotent
+platform/agentnet/tests/test_identity.py::test_generate_identity_priv_key_permissions
+platform/agentnet/tests/test_identity.py::test_sign_and_verify
+platform/agentnet/tests/test_identity.py::test_verify_fails_with_wrong_payload
+platform/agentnet/tests/test_identity.py::test_verify_fails_with_wrong_key
+platform/agentnet/tests/test_identity.py::test_get_all_public_keys
+platform/agentnet/tests/test_message_bus.py::test_create_message_fields
+platform/agentnet/tests/test_message_bus.py::test_receive_message_valid
+platform/agentnet/tests/test_message_bus.py::test_receive_message_no_pub_key_passes
+platform/agentnet/tests/test_message_bus.py::test_receive_message_tampered_payload
+platform/agentnet/tests/test_message_bus.py::test_create_message_appends_log
+platform/audit-log/tests/test_audit_log_service.py::test_health
+platform/audit-log/tests/test_audit_log_service.py::test_list_runs_empty
+platform/audit-log/tests/test_audit_log_service.py::test_list_runs_with_data
+platform/audit-log/tests/test_audit_log_service.py::test_list_runs_filter_by_status
+platform/audit-log/tests/test_audit_log_service.py::test_list_runs_filter_by_agent_id
+platform/audit-log/tests/test_audit_log_service.py::test_list_runs_pagination
+platform/audit-log/tests/test_audit_log_service.py::test_list_runs_date_range
+platform/audit-log/tests/test_audit_log_service.py::test_get_run
+platform/audit-log/tests/test_audit_log_service.py::test_get_run_not_found
+platform/audit-log/tests/test_audit_log_service.py::test_stats_empty
+platform/audit-log/tests/test_audit_log_service.py::test_stats_with_data
+platform/audit-log/tests/test_audit_log_service.py::test_replay_run
+platform/audit-log/tests/test_audit_log_service.py::test_replay_run_not_found
+platform/audit-log/tests/test_audit_log_service.py::test_sse_event_to_record_task_complete
+platform/audit-log/tests/test_audit_log_service.py::test_sse_event_to_record_job_failed
+platform/auth-service/tests/test_auth_service.py::test_login_valid_pam_creds
+platform/auth-service/tests/test_auth_service.py::test_login_wrong_password
+platform/auth-service/tests/test_auth_service.py::test_refresh_valid_token
+platform/auth-service/tests/test_auth_service.py::test_refresh_revoked_token
+platform/auth-service/tests/test_auth_service.py::test_get_users_without_admin_forbidden
+platform/auth-service/tests/test_auth_service.py::test_patch_user_role_as_admin
+platform/auth-service/tests/test_auth_service.py::test_get_auth_me_with_valid_token
+platform/auth-service/tests/test_auth_service.py::test_logout_revokes_refresh_token
+platform/auth-service/tests/test_auth_service.py::test_health_ok
+platform/auth-service/tests/test_auth_service.py::test_verify_returns_identity
+platform/auth-service/tests/test_auth_service.py::test_patch_preferences_self
+platform/auth-service/tests/test_auth_service.py::test_refresh_rotation_revokes_old_token
+platform/auth-service/tests/test_jwt_utils.py::test_sign_verify_round_trip
+platform/auth-service/tests/test_jwt_utils.py::test_expired_token_raises_401
+platform/auth-service/tests/test_jwt_utils.py::test_wrong_key_raises_401
+platform/auth-service/tests/test_jwt_utils.py::test_tampered_payload_raises_401
+platform/auth-service/tests/test_jwt_utils.py::test_refresh_not_usable_as_access
+platform/auth-service/tests/test_jwt_utils.py::test_generate_keypair_creates_files
+platform/auth-service/tests/test_jwt_utils.py::test_verify_without_expected_type_succeeds
+platform/auth-service/tests/test_jwt_utils.py::test_iat_and_exp_present
+platform/auth-service/tests/test_pam_bridge.py::test_valid_creds_returns_true
+platform/auth-service/tests/test_pam_bridge.py::test_invalid_creds_returns_false
+platform/auth-service/tests/test_pam_bridge.py::test_pam_unavailable_raises_service_unavailable
+platform/auth-service/tests/test_pam_bridge.py::test_async_wrapper_uses_run_in_executor
+platform/auth-service/tests/test_rbac.py::test_admin_has_all_permissions
+platform/auth-service/tests/test_rbac.py::test_operator_has_model_activation
+platform/auth-service/tests/test_rbac.py::test_guest_no_package_install
+platform/auth-service/tests/test_rbac.py::test_require_permission_raises_403_for_insufficient_role
+platform/auth-service/tests/test_rbac.py::test_require_permission_passes_for_correct_role
+platform/auth-service/tests/test_rbac.py::test_missing_token_raises_401
+platform/auth-service/tests/test_rbac.py::test_expired_token_semantics_401
+platform/auth-service/tests/test_rbac.py::test_unknown_role_denied
+platform/automation/tests/test_automation_service.py::test_screenshot_endpoint_windows
+platform/automation/tests/test_automation_service.py::test_mouse_endpoints_windows
+platform/automation/tests/test_automation_service.py::test_keyboard_endpoints_windows
+platform/automation/tests/test_automation_service.py::test_screen_info_and_stats
+platform/automation/tests/test_automation_service.py::test_rate_limiting
+platform/automation/tests/test_automation_service.py::test_policy_enforcement_blocked_app
+platform/automation/tests/test_automation_service.py::test_linux_screenshot_uses_scrot
+platform/automation/tests/test_automation_service.py::test_linux_mouse_move_uses_xdotool_fallback
+platform/automation/tests/test_automation_service.py::test_vision_verify_ollama_available
+platform/automation/tests/test_automation_service.py::test_vision_verify_ollama_unavailable
+platform/automation/tests/test_automation_service.py::test_route_input_wayland_available
+platform/automation/tests/test_automation_service.py::test_route_input_x11_fallback
+platform/computer-use/tests/test_computer_use.py::test_screenshot_full
+platform/computer-use/tests/test_computer_use.py::test_screenshot_region
+platform/computer-use/tests/test_computer_use.py::test_mouse_move
+platform/computer-use/tests/test_computer_use.py::test_mouse_click
+platform/computer-use/tests/test_computer_use.py::test_keyboard_type
+platform/computer-use/tests/test_computer_use.py::test_keyboard_hotkey
+platform/computer-use/tests/test_computer_use.py::test_ocr_region
+platform/computer-use/tests/test_computer_use.py::test_element_find
+platform/computer-use/tests/test_computer_use.py::test_macro_record_stop_replay
+platform/computer-use/tests/test_computer_use.py::test_health
+platform/computer-use/tests/test_computer_use.py::test_safe_mode_flash
+platform/computer-use/tests/test_computer_use.py::test_task_executor_single_step
+platform/ebpf-hardening/tests/test_ebpf_loader.py::TestHealthEndpoint::test_health_check
+platform/ebpf-hardening/tests/test_ebpf_loader.py::TestProgramManagement::test_load_program
+platform/ebpf-hardening/tests/test_ebpf_loader.py::TestProgramManagement::test_load_program_already_loaded
+platform/ebpf-hardening/tests/test_ebpf_loader.py::TestProgramManagement::test_unload_program
+platform/ebpf-hardening/tests/test_ebpf_loader.py::TestProgramManagement::test_unload_nonexistent_program
+platform/ebpf-hardening/tests/test_ebpf_loader.py::TestProgramStats::test_get_program_stats
+platform/ebpf-hardening/tests/test_ebpf_loader.py::TestProgramStats::test_get_nonexistent_program_stats
+platform/ebpf-hardening/tests/test_ebpf_loader.py::TestListPrograms::test_list_empty
+platform/ebpf-hardening/tests/test_ebpf_loader.py::TestListPrograms::test_list_multiple
+platform/ebpf-hardening/tests/test_ebpf_loader.py::TestSandboxing::test_sandbox_agent
+platform/ebpf-hardening/tests/test_ebpf_loader.py::TestSandboxing::test_sandbox_computer_use
+platform/ebpf-hardening/tests/test_ebpf_loader.py::TestSandboxing::test_sandbox_agent_invalid_pid
+platform/ebpf-hardening/tests/test_ebpf_loader.py::TestSandboxing::test_detach_agent
+platform/ebpf-hardening/tests/test_ebpf_loader.py::TestAuditDenials::test_get_empty_denials
+platform/ebpf-hardening/tests/test_ebpf_loader.py::TestAuditDenials::test_get_denials_with_pagination
+platform/lumyn-bridge/tests/test_lumyn_bridge.py::test_task_dispatch_default_model
+platform/lumyn-bridge/tests/test_lumyn_bridge.py::test_task_dispatch_custom_model
+platform/lumyn-bridge/tests/test_lumyn_bridge.py::test_model_pull_huggingface
+platform/lumyn-bridge/tests/test_lumyn_bridge.py::test_model_pull_github
+platform/lumyn-bridge/tests/test_lumyn_bridge.py::test_policy_block
+platform/lumyn-bridge/tests/test_lumyn_bridge.py::test_model_list
+platform/lumyn-bridge/tests/test_lumyn_bridge.py::test_model_delete
+platform/lumyn-bridge/tests/test_lumyn_bridge.py::test_skill_list
+platform/input-controller/tests/test_input_controller.py::test_move_mouse_logs_action
+platform/input-controller/tests/test_input_controller.py::test_type_text_logs_action
+platform/input-controller/tests/test_input_controller.py::test_hotkey_executes
+platform/input-controller/tests/test_input_controller.py::test_screenshot_returns_bytes_on_mss_failure
+platform/input-controller/tests/test_input_controller.py::test_make_minimal_png
+platform/input-controller/tests/test_input_controller.py::test_click_logs_audit
+platform/loop-runner/tests/test_loop_runner.py::test_health
+platform/loop-runner/tests/test_loop_runner.py::test_status_initial
+platform/loop-runner/tests/test_loop_runner.py::test_pause
+platform/loop-runner/tests/test_loop_runner.py::test_resume
+platform/loop-runner/tests/test_loop_runner.py::test_pause_then_status
+platform/memory-service/tests/test_memory_service.py::test_health
+platform/memory-service/tests/test_memory_service.py::test_create_memory
+platform/memory-service/tests/test_memory_service.py::test_create_memory_missing_type_422
+platform/memory-service/tests/test_memory_service.py::test_search_memory_fts
+platform/memory-service/tests/test_memory_service.py::test_search_memory_with_type_filter
+platform/memory-service/tests/test_memory_service.py::test_get_memory_by_id
+platform/memory-service/tests/test_memory_service.py::test_patch_memory
+platform/memory-service/tests/test_memory_service.py::test_delete_memory
+platform/memory-service/tests/test_memory_service.py::test_ingest_task_auto_memory
+platform/memory-service/tests/test_memory_service.py::test_session_start_and_end
+platform/memory-service/tests/test_memory_service.py::test_session_list
+platform/memory-service/tests/test_memory_service.py::test_context_build
+platform/memory-service/tests/test_memory_service.py::test_memories_by_persona_endpoint
+platform/memory-service/tests/test_memory_service.py::test_memories_topics_endpoint
+platform/model-hub/tests/test_model_hub.py::test_health_initial
+platform/model-hub/tests/test_model_hub.py::test_pull_queued
+platform/model-hub/tests/test_model_hub.py::test_pull_invalid_source_422
+platform/model-hub/tests/test_model_hub.py::test_pull_progress_sse_streams_and_finishes
+platform/model-hub/tests/test_model_hub.py::test_pull_progress_missing_job_404
+platform/model-hub/tests/test_model_hub.py::test_list_models_after_pull_has_metadata
+platform/model-hub/tests/test_model_hub.py::test_activate_model_calls_vyrex
+platform/model-hub/tests/test_model_hub.py::test_activate_model_404
+platform/model-hub/tests/test_model_hub.py::test_delete_model_removes_row_and_files
+platform/model-hub/tests/test_model_hub.py::test_delete_model_404
+platform/model-hub/tests/test_model_hub.py::test_benchmark_updates_metrics
+platform/model-hub/tests/test_model_hub.py::test_benchmark_404
+platform/model-hub/tests/test_model_hub.py::test_legacy_alias_models_list
+platform/model-hub/tests/test_model_hub.py::test_legacy_alias_set_default_and_config
+platform/model-manager/tests/test_download.py::test_resolve_hf_and_download_sha
+platform/model-manager/tests/test_download.py::test_resolve_github
+platform/model-manager/tests/test_manager_rollback.py::test_rollback_on_warmup_failure
+platform/model-manager/tests/test_registry.py::test_registry_add_and_remove
+platform/model-manager/tests/test_registry.py::test_set_default_writes_routing_policy
+platform/vyrex-proxy/tests/test_vyrex_proxy.py::test_generate_success
+platform/vyrex-proxy/tests/test_vyrex_proxy.py::test_generate_token_budget_exceeded
+platform/vyrex-proxy/tests/test_vyrex_proxy.py::test_generate_blocked_model
+platform/vyrex-proxy/tests/test_vyrex_proxy.py::test_chat_success
+platform/vyrex-proxy/tests/test_vyrex_proxy.py::test_models_list
+platform/vyrex-proxy/tests/test_vyrex_proxy.py::test_model_pull
+platform/vyrex-proxy/tests/test_vyrex_proxy.py::test_metrics_empty
+platform/vyrex-proxy/tests/test_vyrex_proxy.py::test_metrics_populated_after_generate
+platform/vyrex-proxy/tests/test_vyrex_proxy.py::test_metrics_summary
+platform/vyrex-proxy/tests/test_vyrex_proxy.py::test_health_ollama_reachable
+platform/vyrex-proxy/tests/test_vyrex_proxy.py::test_health_ollama_unreachable
+platform/vyrex-proxy/tests/test_vyrex_proxy.py::test_rate_limit_exceeded
+platform/vyrex-proxy/tests/test_vyrex_proxy.py::test_active_model_hot_swap_endpoints
+platform/vyrex-proxy/tests/test_vyrex_proxy.py::test_generate_uses_hot_swapped_model_when_request_model_missing
+platform/notification-bus/tests/test_notification_service.py::test_health
+platform/notification-bus/tests/test_notification_service.py::test_publish_notification
+platform/notification-bus/tests/test_notification_service.py::test_list_notifications
+platform/notification-bus/tests/test_notification_service.py::test_list_unread_only
+platform/notification-bus/tests/test_notification_service.py::test_get_notification
+platform/notification-bus/tests/test_notification_service.py::test_get_notification_not_found
+platform/notification-bus/tests/test_notification_service.py::test_mark_read
+platform/notification-bus/tests/test_notification_service.py::test_mark_read_not_found
+platform/notification-bus/tests/test_notification_service.py::test_read_all
+platform/notification-bus/tests/test_notification_service.py::test_delete_notification
+platform/notification-bus/tests/test_notification_service.py::test_delete_notification_not_found
+platform/notification-bus/tests/test_notification_service.py::test_pagination
+platform/notification-bus/tests/test_notification_service.py::test_pagination_offset
+platform/notification-bus/tests/test_notification_service.py::test_sse_stream_receives_event
+platform/oobe/tests/test_oobe_service.py::test_status_returns_false_before_complete
+platform/oobe/tests/test_oobe_service.py::test_oobe_complete_writes_file
+platform/oobe/tests/test_oobe_service.py::test_status_returns_true_after_complete
+platform/oobe/tests/test_oobe_service.py::test_payload_validation_username
+platform/oobe/tests/test_oobe_service.py::test_422_on_bad_data
+platform/oobe/tests/test_oobe_service.py::test_oobe_route_serves_index
+platform/package-manager/tests/test_package_manager_service.py::test_health
+platform/package-manager/tests/test_package_manager_service.py::test_list_packages_returns_catalog
+platform/package-manager/tests/test_package_manager_service.py::test_list_packages_filter_type
+platform/package-manager/tests/test_package_manager_service.py::test_list_packages_filter_status
+platform/package-manager/tests/test_package_manager_service.py::test_list_packages_search
+platform/package-manager/tests/test_package_manager_service.py::test_list_packages_invalid_type
+platform/package-manager/tests/test_package_manager_service.py::test_get_package
+platform/package-manager/tests/test_package_manager_service.py::test_get_package_not_found
+platform/package-manager/tests/test_package_manager_service.py::test_install_package
+platform/package-manager/tests/test_package_manager_service.py::test_install_package_not_found
+platform/package-manager/tests/test_package_manager_service.py::test_install_package_already_installed
+platform/package-manager/tests/test_package_manager_service.py::test_install_package_dependency_conflict
+platform/package-manager/tests/test_package_manager_service.py::test_install_package_with_dep_resolved
+platform/package-manager/tests/test_package_manager_service.py::test_update_package
+platform/package-manager/tests/test_package_manager_service.py::test_update_package_not_installed
+platform/package-manager/tests/test_package_manager_service.py::test_enable_package
+platform/package-manager/tests/test_package_manager_service.py::test_enable_package_already_enabled
+platform/package-manager/tests/test_package_manager_service.py::test_enable_package_service_action_fails
+platform/package-manager/tests/test_package_manager_service.py::test_disable_package
+platform/package-manager/tests/test_package_manager_service.py::test_disable_package_not_installed
+platform/package-manager/tests/test_package_manager_service.py::test_remove_package
+platform/package-manager/tests/test_package_manager_service.py::test_remove_package_not_installed
+platform/package-manager/tests/test_package_manager_service.py::test_check_package_no_healthcheck
+platform/package-manager/tests/test_package_manager_service.py::test_check_package_not_installed
+platform/package-manager/tests/test_package_manager_service.py::test_operations_log
+platform/package-manager/tests/test_package_manager_service.py::test_operations_filter_by_package
+platform/package-manager/tests/test_package_manager_service.py::test_operations_stats
+platform/package-manager/tests/test_package_manager_service.py::test_catalog_endpoint
+platform/package-manager/tests/test_package_manager_service.py::test_execute_service_action_not_in_allowlist
+platform/package-manager/tests/test_package_manager_service.py::test_execute_service_action_invalid_action
+platform/package-manager/tests/test_package_manager_service.py::test_execute_service_action_simulated_success
+platform/persona-service/tests/test_persona_service.py::test_health
+platform/persona-service/tests/test_persona_service.py::test_create_persona_plural_endpoint
+platform/persona-service/tests/test_persona_service.py::test_create_duplicate_name_conflict
+platform/persona-service/tests/test_persona_service.py::test_list_personas
+platform/persona-service/tests/test_persona_service.py::test_get_persona_by_id
+platform/persona-service/tests/test_persona_service.py::test_patch_persona_fields
+platform/persona-service/tests/test_persona_service.py::test_patch_persona_without_fields_400
+platform/persona-service/tests/test_persona_service.py::test_clone_persona
+platform/persona-service/tests/test_persona_service.py::test_activate_persona_ok_when_hot_swap_unavailable
+platform/persona-service/tests/test_persona_service.py::test_activate_missing_persona_404
+platform/persona-service/tests/test_persona_service.py::test_archive_persona_hides_from_list
+platform/persona-service/tests/test_persona_service.py::test_memory_summary_success
+platform/persona-service/tests/test_persona_service.py::test_memory_summary_downstream_error
+platform/persona-service/tests/test_persona_service.py::test_compress_memory_accepts_request
+platform/persona-service/tests/test_persona_service.py::test_compress_memory_updates_summary
+platform/persona-service/tests/test_persona_service.py::test_legacy_endpoints_mapping
+platform/security-policy/tests/test_security_policy_service.py::test_health
+platform/security-policy/tests/test_security_policy_service.py::test_grant_sensitive_permission
+platform/security-policy/tests/test_security_policy_service.py::test_grant_baseline_permission
+platform/security-policy/tests/test_security_policy_service.py::test_grant_unknown_permission_rejected
+platform/security-policy/tests/test_security_policy_service.py::test_grant_upsert
+platform/security-policy/tests/test_security_policy_service.py::test_check_allowed_after_grant
+platform/security-policy/tests/test_security_policy_service.py::test_check_denied_no_grant
+platform/security-policy/tests/test_security_policy_service.py::test_check_baseline_safe_always_allowed
+platform/security-policy/tests/test_security_policy_service.py::test_check_denied_expired_grant
+platform/security-policy/tests/test_security_policy_service.py::test_revoke_existing_grant
+platform/security-policy/tests/test_security_policy_service.py::test_revoke_nonexistent_grant_returns_404
+platform/security-policy/tests/test_security_policy_service.py::test_audit_entries_recorded
+platform/security-policy/tests/test_security_policy_service.py::test_audit_stats
+platform/security-policy/tests/test_security_policy_service.py::test_list_policies
+platform/security-policy/tests/test_security_policy_service.py::test_get_subject_policies
+platform/security-policy/tests/test_security_policy_service.py::test_sensitive_deny_by_default[network]
+platform/security-policy/tests/test_security_policy_service.py::test_sensitive_deny_by_default[filesystem-write]
+platform/security-policy/tests/test_security_policy_service.py::test_sensitive_deny_by_default[filesystem-read-sensitive]
+platform/security-policy/tests/test_security_policy_service.py::test_sensitive_deny_by_default[model-activation]
+platform/security-policy/tests/test_security_policy_service.py::test_sensitive_deny_by_default[persona-activation]
+platform/security-policy/tests/test_security_policy_service.py::test_sensitive_deny_by_default[service-restart]
+platform/security-policy/tests/test_security_policy_service.py::test_sensitive_deny_by_default[package-install]
+platform/security-policy/tests/test_security_policy_service.py::test_sensitive_deny_by_default[package-remove]
+platform/security-policy/tests/test_security_policy_service.py::test_sensitive_deny_by_default[computer-control]
+platform/security-policy/tests/test_security_policy_service.py::test_sensitive_deny_by_default[shell-exec]
+platform/security-policy/tests/test_security_policy_service.py::test_sensitive_deny_by_default[clipboard]
+platform/security-policy/tests/test_security_policy_service.py::test_sensitive_deny_by_default[task-replay]
+platform/soul/tests/test_soul_manager.py::test_load_returns_default_when_missing
+platform/soul/tests/test_soul_manager.py::test_load_parsed_returns_dict
+platform/soul/tests/test_soul_manager.py::test_update_modifies_field
+platform/soul/tests/test_soul_manager.py::test_update_creates_file
+platform/soul/tests/test_soul_manager.py::test_append_memory
+platform/soul/tests/test_soul_manager.py::test_memory_pruned_to_20
+platform/soul/tests/test_soul_manager.py::test_load_parses_existing_soul
+platform/soul/tests/test_soul_manager.py::test_update_preserves_unknown_fields
+platform/soul/tests/test_soul_router.py::test_get_soul_default
+platform/soul/tests/test_soul_router.py::test_put_soul_update
+platform/soul/tests/test_soul_router.py::test_put_soul_partial_update
+platform/soul/tests/test_soul_router.py::test_post_memory
+platform/soul/tests/test_soul_router.py::test_get_soul_after_memory
+platform/swarm-coordinator/tests/test_swarm_coordinator.py::test_task_create_and_decompose
+platform/swarm-coordinator/tests/test_swarm_coordinator.py::test_task_status_tree
+platform/swarm-coordinator/tests/test_swarm_coordinator.py::test_task_list_pagination
+platform/swarm-coordinator/tests/test_swarm_coordinator.py::test_task_cancel
+platform/swarm-coordinator/tests/test_swarm_coordinator.py::test_agent_list
+platform/swarm-coordinator/tests/test_swarm_coordinator.py::test_graph_output_structure
+platform/swarm-coordinator/tests/test_swarm_coordinator.py::test_policy_block_max_agents
+platform/task-scheduler/tests/test_scheduler_service.py::test_health
+platform/task-scheduler/tests/test_scheduler_service.py::test_create_job_cron
+platform/task-scheduler/tests/test_scheduler_service.py::test_create_job_interval
+platform/task-scheduler/tests/test_scheduler_service.py::test_create_job_both_schedule_422
+platform/task-scheduler/tests/test_scheduler_service.py::test_create_job_neither_schedule_422
+platform/task-scheduler/tests/test_scheduler_service.py::test_get_job_by_id
+platform/task-scheduler/tests/test_scheduler_service.py::test_get_job_not_found
+platform/task-scheduler/tests/test_scheduler_service.py::test_list_jobs
+platform/task-scheduler/tests/test_scheduler_service.py::test_list_jobs_pagination
+platform/task-scheduler/tests/test_scheduler_service.py::test_patch_job
+platform/task-scheduler/tests/test_scheduler_service.py::test_patch_job_no_fields_400
+platform/task-scheduler/tests/test_scheduler_service.py::test_delete_job
+platform/task-scheduler/tests/test_scheduler_service.py::test_delete_job_not_found
+platform/task-scheduler/tests/test_scheduler_service.py::test_run_now
+platform/task-scheduler/tests/test_scheduler_service.py::test_run_now_not_found
+platform/task-scheduler/tests/test_scheduler_service.py::test_get_runs_empty
+platform/task-scheduler/tests/test_scheduler_service.py::test_create_duplicate_name_409
+platform/watchdog/tests/test_watchdog.py::test_health
+platform/watchdog/tests/test_watchdog.py::test_status_returns_all_services
+platform/watchdog/tests/test_watchdog.py::test_restart_unknown_service
+platform/watchdog/tests/test_watchdog.py::test_restart_known_service_success
+platform/watchdog/tests/test_watchdog.py::test_restart_known_service_failure
+platform/watchdog/tests/test_watchdog.py::test_check_service_healthy
+platform/watchdog/tests/test_watchdog.py::test_check_service_unhealthy
+platform/watchdog/tests/test_watchdog_service.py::test_health
+platform/watchdog/tests/test_watchdog_service.py::test_list_services_returns_all_monitored
+platform/watchdog/tests/test_watchdog_service.py::test_get_unknown_service_returns_404
+platform/watchdog/tests/test_watchdog_service.py::test_force_check_unknown_service_returns_404
+platform/watchdog/tests/test_watchdog_service.py::test_healthy_after_successful_check
+platform/watchdog/tests/test_watchdog_service.py::test_single_failure_keeps_healthy
+platform/watchdog/tests/test_watchdog_service.py::test_two_failures_trigger_degraded
+platform/watchdog/tests/test_watchdog_service.py::test_four_failures_trigger_down
+platform/watchdog/tests/test_watchdog_service.py::test_recovery_resets_failures_and_status
+platform/watchdog/tests/test_watchdog_service.py::test_high_latency_triggers_degraded
+platform/watchdog/tests/test_watchdog_service.py::test_incident_created_on_degraded
+platform/watchdog/tests/test_watchdog_service.py::test_incident_created_on_down
+platform/watchdog/tests/test_watchdog_service.py::test_incident_resolved_on_recovery
+platform/watchdog/tests/test_watchdog_service.py::test_incidents_stats_counts
+platform/watchdog/tests/test_watchdog_service.py::test_incidents_filter_by_service
+platform/watchdog/tests/test_watchdog_service.py::test_scan_all_services
+platform/watchdog/tests/test_watchdog_service.py::test_restart_unknown_service_returns_404
+platform/watchdog/tests/test_watchdog_service.py::test_restart_systemctl_not_available
+platform/watchdog/tests/test_watchdog_service.py::test_restart_systemctl_success
+platform/watchdog/tests/test_watchdog_service.py::test_restart_systemctl_failure
+platform/wayland-mcp/tests/test_wayland_mcp.py::test_move_wayland
+platform/wayland-mcp/tests/test_wayland_mcp.py::test_move_x11_fallback
+platform/wayland-mcp/tests/test_wayland_mcp.py::test_click_wayland
+platform/wayland-mcp/tests/test_wayland_mcp.py::test_type_wayland
+platform/wayland-mcp/tests/test_wayland_mcp.py::test_screenshot_grim
+platform/wayland-mcp/tests/test_wayland_mcp.py::test_screenshot_scrot_fallback
+platform/wayland-mcp/tests/test_wayland_mcp.py::test_window_list_sway
+platform/wayland-mcp/tests/test_wayland_mcp.py::test_window_list_wmctrl_fallback
+platform/wayland-mcp/tests/test_wayland_mcp.py::test_focus_window
+platform/wayland-mcp/tests/test_wayland_mcp.py::test_session_type_detection
+platform/wayland-mcp/tests/test_wayland_mcp.py::test_policy_block
+platform/wayland-mcp/tests/test_wayland_mcp.py::test_rate_limit_exceeded
+
+=================================== ERRORS ====================================
+________ ERROR collecting platform/bot-bridge/tests/test_bot_bridge.py ________
+ImportError while importing test module 'C:\Users\prady\Desktop\Claude\OS\prady-os\platform\bot-bridge\tests\test_bot_bridge.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+platform\bot-bridge\tests\test_bot_bridge.py:17: in <module>
+    from main import app
+E   ModuleNotFoundError: No module named 'main'
+________________ ERROR collecting platform/memory-store/tests _________________
+.venv\Lib\site-packages\pluggy\_manager.py:146: in register
+    raise ValueError(
+E   ValueError: Plugin already registered under a different name: C:\Users\prady\Desktop\Claude\OS\prady-os\platform\memory-store\tests\conftest.py=<module 'tests.conftest' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\platform\\input-controller\\tests\\conftest.py'>
+E   {'1909323232320': <_pytest.config.PytestPluginManager object at 0x000001BC8C887440>, 'pytestconfig': <_pytest.config.Config object at 0x000001BC8C51E0F0>, 'mark': <module '_pytest.mark' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\mark\\__init__.py'>, 'main': <module '_pytest.main' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\main.py'>, 'runner': <module '_pytest.runner' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\runner.py'>, 'fixtures': <module '_pytest.fixtures' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\fixtures.py'>, 'helpconfig': <module '_pytest.helpconfig' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\helpconfig.py'>, 'python': <module '_pytest.python' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\python.py'>, 'terminal': <module '_pytest.terminal' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\terminal.py'>, 'debugging': <module '_pytest.debugging' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\debugging.py'>, 'unittest': <module '_pytest.unittest' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\unittest.py'>, 'capture': <module '_pytest.capture' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\capture.py'>, 'skipping': <module '_pytest.skipping' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\skipping.py'>, 'legacypath': <module '_pytest.legacypath' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\legacypath.py'>, 'tmpdir': <module '_pytest.tmpdir' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\tmpdir.py'>, 'monkeypatch': <module '_pytest.monkeypatch' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\monkeypatch.py'>, 'recwarn': <module '_pytest.recwarn' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\recwarn.py'>, 'pastebin': <module '_pytest.pastebin' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\pastebin.py'>, 'assertion': <module '_pytest.assertion' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\assertion\\__init__.py'>, 'junitxml': <module '_pytest.junitxml' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\junitxml.py'>, 'doctest': <module '_pytest.doctest' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\doctest.py'>, 'cacheprovider': <module '_pytest.cacheprovider' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\cacheprovider.py'>, 'freeze_support': <module '_pytest.freeze_support' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\freeze_support.py'>, 'setuponly': <module '_pytest.setuponly' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\setuponly.py'>, 'setupplan': <module '_pytest.setupplan' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\setupplan.py'>, 'stepwise': <module '_pytest.stepwise' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\stepwise.py'>, 'warnings': <module '_pytest.warnings' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\warnings.py'>, 'logging': <module '_pytest.logging' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\logging.py'>, 'reports': <module '_pytest.reports' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\reports.py'>, 'python_path': <module '_pytest.python_path' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\python_path.py'>, 'unraisableexception': <module '_pytest.unraisableexception' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\unraisableexception.py'>, 'threadexception': <module '_pytest.threadexception' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\threadexception.py'>, 'faulthandler': <module '_pytest.faulthandler' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\faulthandler.py'>, 'anyio': <module 'anyio.pytest_plugin' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\anyio\\pytest_plugin.py'>, 'asyncio': <module 'pytest_asyncio.plugin' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\pytest_asyncio\\plugin.py'>, 'respx': <module 'respx.plugin' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\respx\\plugin.py'>, 'capturemanager': <CaptureManager _method='fd' _global_capturing=<MultiCapture out=<FDCapture 1 oldfd=5 _state='suspended' tmpfile=<_io.TextIOWrapper name='<tempfile._TemporaryFileWrapper object at 0x000001BC8EACC260>' mode='r+' encoding='utf-8'>> err=<FDCapture 2 oldfd=7 _state='suspended' tmpfile=<_io.TextIOWrapper name='<tempfile._TemporaryFileWrapper object at 0x000001BC8EACE090>' mode='r+' encoding='utf-8'>> in_=<FDCapture 0 oldfd=3 _state='started' tmpfile=<_io.TextIOWrapper name='nul' mode='r' encoding='utf-8'>> _state='suspended' _in_suspended=False> _capture_fixture=None>, 'session': <Session  exitstatus=<ExitCode.OK: 0> testsfailed=1 testscollected=0>, 'lfplugin': <_pytest.cacheprovider.LFPlugin object at 0x000001BC8CC20D70>, 'nfplugin': <_pytest.cacheprovider.NFPlugin object at 0x000001BC8CC20650>, 'legacypath-tmpdir': <class '_pytest.legacypath.LegacyTmpdirPlugin'>, 'terminalreporter': <_pytest.terminal.TerminalReporter object at 0x000001BC8EAE51F0>, 'logging-plugin': <_pytest.logging.LoggingPlugin object at 0x000001BC8EAE5EE0>, 'funcmanage': <_pytest.fixtures.FixtureManager object at 0x000001BC8E76EDB0>, 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\platform\\agentnet\\tests\\conftest.py': <module 'platform.agentnet.tests.conftest' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\platform\\agentnet\\tests\\conftest.py'>, 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\platform\\auth-service\\tests\\conftest.py': <module 'platform.auth-service.tests.conftest' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\platform\\auth-service\\tests\\conftest.py'>, 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\platform\\input-controller\\tests\\conftest.py': <module 'tests.conftest' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\platform\\input-controller\\tests\\conftest.py'>}
+_____ ERROR collecting platform/model-manager/tests/test_platform_api.py ______
+ImportError while importing test module 'C:\Users\prady\Desktop\Claude\OS\prady-os\platform\model-manager\tests\test_platform_api.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+platform\model-manager\tests\test_platform_api.py:8: in <module>
+    from prady_models.db import ModelRecord, SessionLocal, init_db
+platform\model-manager\prady_models\db.py:7: in <module>
+    from sqlalchemy import DateTime, Float, String, Text, create_engine
+E   ModuleNotFoundError: No module named 'sqlalchemy'
+_________________ ERROR collecting platform/ota-service/tests _________________
+.venv\Lib\site-packages\pluggy\_manager.py:146: in register
+    raise ValueError(
+E   ValueError: Plugin already registered under a different name: C:\Users\prady\Desktop\Claude\OS\prady-os\platform\ota-service\tests\conftest.py=<module 'tests.conftest' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\platform\\input-controller\\tests\\conftest.py'>
+E   {'1909323232320': <_pytest.config.PytestPluginManager object at 0x000001BC8C887440>, 'pytestconfig': <_pytest.config.Config object at 0x000001BC8C51E0F0>, 'mark': <module '_pytest.mark' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\mark\\__init__.py'>, 'main': <module '_pytest.main' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\main.py'>, 'runner': <module '_pytest.runner' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\runner.py'>, 'fixtures': <module '_pytest.fixtures' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\fixtures.py'>, 'helpconfig': <module '_pytest.helpconfig' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\helpconfig.py'>, 'python': <module '_pytest.python' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\python.py'>, 'terminal': <module '_pytest.terminal' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\terminal.py'>, 'debugging': <module '_pytest.debugging' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\debugging.py'>, 'unittest': <module '_pytest.unittest' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\unittest.py'>, 'capture': <module '_pytest.capture' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\capture.py'>, 'skipping': <module '_pytest.skipping' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\skipping.py'>, 'legacypath': <module '_pytest.legacypath' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\legacypath.py'>, 'tmpdir': <module '_pytest.tmpdir' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\tmpdir.py'>, 'monkeypatch': <module '_pytest.monkeypatch' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\monkeypatch.py'>, 'recwarn': <module '_pytest.recwarn' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\recwarn.py'>, 'pastebin': <module '_pytest.pastebin' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\pastebin.py'>, 'assertion': <module '_pytest.assertion' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\assertion\\__init__.py'>, 'junitxml': <module '_pytest.junitxml' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\junitxml.py'>, 'doctest': <module '_pytest.doctest' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\doctest.py'>, 'cacheprovider': <module '_pytest.cacheprovider' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\cacheprovider.py'>, 'freeze_support': <module '_pytest.freeze_support' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\freeze_support.py'>, 'setuponly': <module '_pytest.setuponly' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\setuponly.py'>, 'setupplan': <module '_pytest.setupplan' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\setupplan.py'>, 'stepwise': <module '_pytest.stepwise' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\stepwise.py'>, 'warnings': <module '_pytest.warnings' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\warnings.py'>, 'logging': <module '_pytest.logging' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\logging.py'>, 'reports': <module '_pytest.reports' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\reports.py'>, 'python_path': <module '_pytest.python_path' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\python_path.py'>, 'unraisableexception': <module '_pytest.unraisableexception' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\unraisableexception.py'>, 'threadexception': <module '_pytest.threadexception' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\threadexception.py'>, 'faulthandler': <module '_pytest.faulthandler' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\faulthandler.py'>, 'anyio': <module 'anyio.pytest_plugin' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\anyio\\pytest_plugin.py'>, 'asyncio': <module 'pytest_asyncio.plugin' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\pytest_asyncio\\plugin.py'>, 'respx': <module 'respx.plugin' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\respx\\plugin.py'>, 'capturemanager': <CaptureManager _method='fd' _global_capturing=<MultiCapture out=<FDCapture 1 oldfd=5 _state='suspended' tmpfile=<_io.TextIOWrapper name='<tempfile._TemporaryFileWrapper object at 0x000001BC8EACC260>' mode='r+' encoding='utf-8'>> err=<FDCapture 2 oldfd=7 _state='suspended' tmpfile=<_io.TextIOWrapper name='<tempfile._TemporaryFileWrapper object at 0x000001BC8EACE090>' mode='r+' encoding='utf-8'>> in_=<FDCapture 0 oldfd=3 _state='started' tmpfile=<_io.TextIOWrapper name='nul' mode='r' encoding='utf-8'>> _state='suspended' _in_suspended=False> _capture_fixture=None>, 'session': <Session  exitstatus=<ExitCode.OK: 0> testsfailed=3 testscollected=0>, 'lfplugin': <_pytest.cacheprovider.LFPlugin object at 0x000001BC8CC20D70>, 'nfplugin': <_pytest.cacheprovider.NFPlugin object at 0x000001BC8CC20650>, 'legacypath-tmpdir': <class '_pytest.legacypath.LegacyTmpdirPlugin'>, 'terminalreporter': <_pytest.terminal.TerminalReporter object at 0x000001BC8EAE51F0>, 'logging-plugin': <_pytest.logging.LoggingPlugin object at 0x000001BC8EAE5EE0>, 'funcmanage': <_pytest.fixtures.FixtureManager object at 0x000001BC8E76EDB0>, 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\platform\\agentnet\\tests\\conftest.py': <module 'platform.agentnet.tests.conftest' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\platform\\agentnet\\tests\\conftest.py'>, 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\platform\\auth-service\\tests\\conftest.py': <module 'platform.auth-service.tests.conftest' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\platform\\auth-service\\tests\\conftest.py'>, 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\platform\\input-controller\\tests\\conftest.py': <module 'tests.conftest' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\platform\\input-controller\\tests\\conftest.py'>, 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\platform\\model-manager\\tests\\conftest.py': <module 'platform.model-manager.tests.conftest' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\platform\\model-manager\\tests\\conftest.py'>, 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\platform\\oobe\\tests\\conftest.py': <module 'platform.oobe.tests.conftest' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\platform\\oobe\\tests\\conftest.py'>}
+_______________ ERROR collecting platform/process-manager/tests _______________
+.venv\Lib\site-packages\pluggy\_manager.py:146: in register
+    raise ValueError(
+E   ValueError: Plugin already registered under a different name: C:\Users\prady\Desktop\Claude\OS\prady-os\platform\process-manager\tests\conftest.py=<module 'tests.conftest' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\platform\\input-controller\\tests\\conftest.py'>
+E   {'1909323232320': <_pytest.config.PytestPluginManager object at 0x000001BC8C887440>, 'pytestconfig': <_pytest.config.Config object at 0x000001BC8C51E0F0>, 'mark': <module '_pytest.mark' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\mark\\__init__.py'>, 'main': <module '_pytest.main' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\main.py'>, 'runner': <module '_pytest.runner' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\runner.py'>, 'fixtures': <module '_pytest.fixtures' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\fixtures.py'>, 'helpconfig': <module '_pytest.helpconfig' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\helpconfig.py'>, 'python': <module '_pytest.python' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\python.py'>, 'terminal': <module '_pytest.terminal' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\terminal.py'>, 'debugging': <module '_pytest.debugging' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\debugging.py'>, 'unittest': <module '_pytest.unittest' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\unittest.py'>, 'capture': <module '_pytest.capture' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\capture.py'>, 'skipping': <module '_pytest.skipping' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\skipping.py'>, 'legacypath': <module '_pytest.legacypath' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\legacypath.py'>, 'tmpdir': <module '_pytest.tmpdir' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\tmpdir.py'>, 'monkeypatch': <module '_pytest.monkeypatch' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\monkeypatch.py'>, 'recwarn': <module '_pytest.recwarn' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\recwarn.py'>, 'pastebin': <module '_pytest.pastebin' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\pastebin.py'>, 'assertion': <module '_pytest.assertion' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\assertion\\__init__.py'>, 'junitxml': <module '_pytest.junitxml' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\junitxml.py'>, 'doctest': <module '_pytest.doctest' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\doctest.py'>, 'cacheprovider': <module '_pytest.cacheprovider' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\cacheprovider.py'>, 'freeze_support': <module '_pytest.freeze_support' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\freeze_support.py'>, 'setuponly': <module '_pytest.setuponly' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\setuponly.py'>, 'setupplan': <module '_pytest.setupplan' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\setupplan.py'>, 'stepwise': <module '_pytest.stepwise' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\stepwise.py'>, 'warnings': <module '_pytest.warnings' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\warnings.py'>, 'logging': <module '_pytest.logging' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\logging.py'>, 'reports': <module '_pytest.reports' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\reports.py'>, 'python_path': <module '_pytest.python_path' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\python_path.py'>, 'unraisableexception': <module '_pytest.unraisableexception' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\unraisableexception.py'>, 'threadexception': <module '_pytest.threadexception' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\threadexception.py'>, 'faulthandler': <module '_pytest.faulthandler' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\faulthandler.py'>, 'anyio': <module 'anyio.pytest_plugin' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\anyio\\pytest_plugin.py'>, 'asyncio': <module 'pytest_asyncio.plugin' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\pytest_asyncio\\plugin.py'>, 'respx': <module 'respx.plugin' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\respx\\plugin.py'>, 'capturemanager': <CaptureManager _method='fd' _global_capturing=<MultiCapture out=<FDCapture 1 oldfd=5 _state='suspended' tmpfile=<_io.TextIOWrapper name='<tempfile._TemporaryFileWrapper object at 0x000001BC8EACC260>' mode='r+' encoding='utf-8'>> err=<FDCapture 2 oldfd=7 _state='suspended' tmpfile=<_io.TextIOWrapper name='<tempfile._TemporaryFileWrapper object at 0x000001BC8EACE090>' mode='r+' encoding='utf-8'>> in_=<FDCapture 0 oldfd=3 _state='started' tmpfile=<_io.TextIOWrapper name='nul' mode='r' encoding='utf-8'>> _state='suspended' _in_suspended=False> _capture_fixture=None>, 'session': <Session  exitstatus=<ExitCode.OK: 0> testsfailed=4 testscollected=0>, 'lfplugin': <_pytest.cacheprovider.LFPlugin object at 0x000001BC8CC20D70>, 'nfplugin': <_pytest.cacheprovider.NFPlugin object at 0x000001BC8CC20650>, 'legacypath-tmpdir': <class '_pytest.legacypath.LegacyTmpdirPlugin'>, 'terminalreporter': <_pytest.terminal.TerminalReporter object at 0x000001BC8EAE51F0>, 'logging-plugin': <_pytest.logging.LoggingPlugin object at 0x000001BC8EAE5EE0>, 'funcmanage': <_pytest.fixtures.FixtureManager object at 0x000001BC8E76EDB0>, 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\platform\\agentnet\\tests\\conftest.py': <module 'platform.agentnet.tests.conftest' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\platform\\agentnet\\tests\\conftest.py'>, 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\platform\\auth-service\\tests\\conftest.py': <module 'platform.auth-service.tests.conftest' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\platform\\auth-service\\tests\\conftest.py'>, 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\platform\\input-controller\\tests\\conftest.py': <module 'tests.conftest' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\platform\\input-controller\\tests\\conftest.py'>, 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\platform\\model-manager\\tests\\conftest.py': <module 'platform.model-manager.tests.conftest' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\platform\\model-manager\\tests\\conftest.py'>, 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\platform\\oobe\\tests\\conftest.py': <module 'platform.oobe.tests.conftest' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\platform\\oobe\\tests\\conftest.py'>}
+________________ ERROR collecting platform/vision-agent/tests _________________
+.venv\Lib\site-packages\pluggy\_manager.py:146: in register
+    raise ValueError(
+E   ValueError: Plugin already registered under a different name: C:\Users\prady\Desktop\Claude\OS\prady-os\platform\vision-agent\tests\conftest.py=<module 'tests.conftest' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\platform\\input-controller\\tests\\conftest.py'>
+E   {'1909323232320': <_pytest.config.PytestPluginManager object at 0x000001BC8C887440>, 'pytestconfig': <_pytest.config.Config object at 0x000001BC8C51E0F0>, 'mark': <module '_pytest.mark' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\mark\\__init__.py'>, 'main': <module '_pytest.main' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\main.py'>, 'runner': <module '_pytest.runner' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\runner.py'>, 'fixtures': <module '_pytest.fixtures' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\fixtures.py'>, 'helpconfig': <module '_pytest.helpconfig' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\helpconfig.py'>, 'python': <module '_pytest.python' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\python.py'>, 'terminal': <module '_pytest.terminal' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\terminal.py'>, 'debugging': <module '_pytest.debugging' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\debugging.py'>, 'unittest': <module '_pytest.unittest' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\unittest.py'>, 'capture': <module '_pytest.capture' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\capture.py'>, 'skipping': <module '_pytest.skipping' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\skipping.py'>, 'legacypath': <module '_pytest.legacypath' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\legacypath.py'>, 'tmpdir': <module '_pytest.tmpdir' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\tmpdir.py'>, 'monkeypatch': <module '_pytest.monkeypatch' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\monkeypatch.py'>, 'recwarn': <module '_pytest.recwarn' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\recwarn.py'>, 'pastebin': <module '_pytest.pastebin' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\pastebin.py'>, 'assertion': <module '_pytest.assertion' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\assertion\\__init__.py'>, 'junitxml': <module '_pytest.junitxml' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\junitxml.py'>, 'doctest': <module '_pytest.doctest' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\doctest.py'>, 'cacheprovider': <module '_pytest.cacheprovider' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\cacheprovider.py'>, 'freeze_support': <module '_pytest.freeze_support' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\freeze_support.py'>, 'setuponly': <module '_pytest.setuponly' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\setuponly.py'>, 'setupplan': <module '_pytest.setupplan' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\setupplan.py'>, 'stepwise': <module '_pytest.stepwise' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\stepwise.py'>, 'warnings': <module '_pytest.warnings' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\warnings.py'>, 'logging': <module '_pytest.logging' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\logging.py'>, 'reports': <module '_pytest.reports' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\reports.py'>, 'python_path': <module '_pytest.python_path' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\python_path.py'>, 'unraisableexception': <module '_pytest.unraisableexception' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\unraisableexception.py'>, 'threadexception': <module '_pytest.threadexception' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\threadexception.py'>, 'faulthandler': <module '_pytest.faulthandler' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\faulthandler.py'>, 'anyio': <module 'anyio.pytest_plugin' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\anyio\\pytest_plugin.py'>, 'asyncio': <module 'pytest_asyncio.plugin' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\pytest_asyncio\\plugin.py'>, 'respx': <module 'respx.plugin' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\respx\\plugin.py'>, 'capturemanager': <CaptureManager _method='fd' _global_capturing=<MultiCapture out=<FDCapture 1 oldfd=5 _state='suspended' tmpfile=<_io.TextIOWrapper name='<tempfile._TemporaryFileWrapper object at 0x000001BC8EACC260>' mode='r+' encoding='utf-8'>> err=<FDCapture 2 oldfd=7 _state='suspended' tmpfile=<_io.TextIOWrapper name='<tempfile._TemporaryFileWrapper object at 0x000001BC8EACE090>' mode='r+' encoding='utf-8'>> in_=<FDCapture 0 oldfd=3 _state='started' tmpfile=<_io.TextIOWrapper name='nul' mode='r' encoding='utf-8'>> _state='suspended' _in_suspended=False> _capture_fixture=None>, 'session': <Session  exitstatus=<ExitCode.OK: 0> testsfailed=5 testscollected=0>, 'lfplugin': <_pytest.cacheprovider.LFPlugin object at 0x000001BC8CC20D70>, 'nfplugin': <_pytest.cacheprovider.NFPlugin object at 0x000001BC8CC20650>, 'legacypath-tmpdir': <class '_pytest.legacypath.LegacyTmpdirPlugin'>, 'terminalreporter': <_pytest.terminal.TerminalReporter object at 0x000001BC8EAE51F0>, 'logging-plugin': <_pytest.logging.LoggingPlugin object at 0x000001BC8EAE5EE0>, 'funcmanage': <_pytest.fixtures.FixtureManager object at 0x000001BC8E76EDB0>, 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\platform\\agentnet\\tests\\conftest.py': <module 'platform.agentnet.tests.conftest' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\platform\\agentnet\\tests\\conftest.py'>, 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\platform\\auth-service\\tests\\conftest.py': <module 'platform.auth-service.tests.conftest' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\platform\\auth-service\\tests\\conftest.py'>, 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\platform\\input-controller\\tests\\conftest.py': <module 'tests.conftest' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\platform\\input-controller\\tests\\conftest.py'>, 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\platform\\model-manager\\tests\\conftest.py': <module 'platform.model-manager.tests.conftest' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\platform\\model-manager\\tests\\conftest.py'>, 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\platform\\oobe\\tests\\conftest.py': <module 'platform.oobe.tests.conftest' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\platform\\oobe\\tests\\conftest.py'>, 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\platform\\soul\\tests\\conftest.py': <module 'platform.soul.tests.conftest' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\platform\\soul\\tests\\conftest.py'>}
+________________ ERROR collecting platform/voice-service/tests ________________
+.venv\Lib\site-packages\pluggy\_manager.py:146: in register
+    raise ValueError(
+E   ValueError: Plugin already registered under a different name: C:\Users\prady\Desktop\Claude\OS\prady-os\platform\voice-service\tests\conftest.py=<module 'tests.conftest' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\platform\\input-controller\\tests\\conftest.py'>
+E   {'1909323232320': <_pytest.config.PytestPluginManager object at 0x000001BC8C887440>, 'pytestconfig': <_pytest.config.Config object at 0x000001BC8C51E0F0>, 'mark': <module '_pytest.mark' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\mark\\__init__.py'>, 'main': <module '_pytest.main' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\main.py'>, 'runner': <module '_pytest.runner' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\runner.py'>, 'fixtures': <module '_pytest.fixtures' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\fixtures.py'>, 'helpconfig': <module '_pytest.helpconfig' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\helpconfig.py'>, 'python': <module '_pytest.python' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\python.py'>, 'terminal': <module '_pytest.terminal' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\terminal.py'>, 'debugging': <module '_pytest.debugging' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\debugging.py'>, 'unittest': <module '_pytest.unittest' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\unittest.py'>, 'capture': <module '_pytest.capture' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\capture.py'>, 'skipping': <module '_pytest.skipping' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\skipping.py'>, 'legacypath': <module '_pytest.legacypath' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\legacypath.py'>, 'tmpdir': <module '_pytest.tmpdir' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\tmpdir.py'>, 'monkeypatch': <module '_pytest.monkeypatch' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\monkeypatch.py'>, 'recwarn': <module '_pytest.recwarn' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\recwarn.py'>, 'pastebin': <module '_pytest.pastebin' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\pastebin.py'>, 'assertion': <module '_pytest.assertion' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\assertion\\__init__.py'>, 'junitxml': <module '_pytest.junitxml' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\junitxml.py'>, 'doctest': <module '_pytest.doctest' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\doctest.py'>, 'cacheprovider': <module '_pytest.cacheprovider' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\cacheprovider.py'>, 'freeze_support': <module '_pytest.freeze_support' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\freeze_support.py'>, 'setuponly': <module '_pytest.setuponly' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\setuponly.py'>, 'setupplan': <module '_pytest.setupplan' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\setupplan.py'>, 'stepwise': <module '_pytest.stepwise' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\stepwise.py'>, 'warnings': <module '_pytest.warnings' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\warnings.py'>, 'logging': <module '_pytest.logging' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\logging.py'>, 'reports': <module '_pytest.reports' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\reports.py'>, 'python_path': <module '_pytest.python_path' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\python_path.py'>, 'unraisableexception': <module '_pytest.unraisableexception' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\unraisableexception.py'>, 'threadexception': <module '_pytest.threadexception' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\threadexception.py'>, 'faulthandler': <module '_pytest.faulthandler' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\_pytest\\faulthandler.py'>, 'anyio': <module 'anyio.pytest_plugin' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\anyio\\pytest_plugin.py'>, 'asyncio': <module 'pytest_asyncio.plugin' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\pytest_asyncio\\plugin.py'>, 'respx': <module 'respx.plugin' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\.venv\\Lib\\site-packages\\respx\\plugin.py'>, 'capturemanager': <CaptureManager _method='fd' _global_capturing=<MultiCapture out=<FDCapture 1 oldfd=5 _state='suspended' tmpfile=<_io.TextIOWrapper name='<tempfile._TemporaryFileWrapper object at 0x000001BC8EACC260>' mode='r+' encoding='utf-8'>> err=<FDCapture 2 oldfd=7 _state='suspended' tmpfile=<_io.TextIOWrapper name='<tempfile._TemporaryFileWrapper object at 0x000001BC8EACE090>' mode='r+' encoding='utf-8'>> in_=<FDCapture 0 oldfd=3 _state='started' tmpfile=<_io.TextIOWrapper name='nul' mode='r' encoding='utf-8'>> _state='suspended' _in_suspended=False> _capture_fixture=None>, 'session': <Session  exitstatus=<ExitCode.OK: 0> testsfailed=6 testscollected=0>, 'lfplugin': <_pytest.cacheprovider.LFPlugin object at 0x000001BC8CC20D70>, 'nfplugin': <_pytest.cacheprovider.NFPlugin object at 0x000001BC8CC20650>, 'legacypath-tmpdir': <class '_pytest.legacypath.LegacyTmpdirPlugin'>, 'terminalreporter': <_pytest.terminal.TerminalReporter object at 0x000001BC8EAE51F0>, 'logging-plugin': <_pytest.logging.LoggingPlugin object at 0x000001BC8EAE5EE0>, 'funcmanage': <_pytest.fixtures.FixtureManager object at 0x000001BC8E76EDB0>, 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\platform\\agentnet\\tests\\conftest.py': <module 'platform.agentnet.tests.conftest' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\platform\\agentnet\\tests\\conftest.py'>, 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\platform\\auth-service\\tests\\conftest.py': <module 'platform.auth-service.tests.conftest' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\platform\\auth-service\\tests\\conftest.py'>, 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\platform\\input-controller\\tests\\conftest.py': <module 'tests.conftest' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\platform\\input-controller\\tests\\conftest.py'>, 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\platform\\model-manager\\tests\\conftest.py': <module 'platform.model-manager.tests.conftest' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\platform\\model-manager\\tests\\conftest.py'>, 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\platform\\oobe\\tests\\conftest.py': <module 'platform.oobe.tests.conftest' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\platform\\oobe\\tests\\conftest.py'>, 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\platform\\soul\\tests\\conftest.py': <module 'platform.soul.tests.conftest' from 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\platform\\soul\\tests\\conftest.py'>}
+=========================== short test summary info ===========================
+ERROR platform/bot-bridge/tests/test_bot_bridge.py
+ERROR platform/memory-store/tests - ValueError: Plugin already registered und...
+ERROR platform/model-manager/tests/test_platform_api.py
+ERROR platform/ota-service/tests - ValueError: Plugin already registered unde...
+ERROR platform/process-manager/tests - ValueError: Plugin already registered ...
+ERROR platform/vision-agent/tests - ValueError: Plugin already registered und...
+ERROR platform/voice-service/tests - ValueError: Plugin already registered un...
+!!!!!!!!!!!!!!!!!!! Interrupted: 7 errors during collection !!!!!!!!!!!!!!!!!!!
+360 tests collected, 7 errors in 1.70s

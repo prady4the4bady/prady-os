@@ -6,7 +6,7 @@ export class Planner {
 
   async createPlan(goal: string, context?: string): Promise<TaskPlan> {
     const prompt = `
-You are Prady, an autonomous computer agent. Given a user goal, create a step-by-step plan.
+You are Kryos, an autonomous computer agent. Given a user goal, create a step-by-step plan.
 Goal: ${goal}
 Context: ${context || 'None'}
 Available tools: screen_capture, mouse_click, keyboard_type, execute_shell, browse_web

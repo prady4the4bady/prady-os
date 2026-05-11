@@ -1,0 +1,16 @@
+[Unit]
+Description=Prady Vyrex Inference Proxy
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/prady/platform/vyrex-proxy
+ExecStart=/usr/local/bin/uvicorn vyrex_proxy:app --host 0.0.0.0 --port 8105
+Restart=on-failure
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+Environment=PYTHONUNBUFFERED=1
+
+[Install]
+WantedBy=multi-user.target

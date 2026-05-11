@@ -1,0 +1,27 @@
+[Unit]
+Description=Prady Security Policy Service
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/prady-os/platform/security-policy
+Environment=DATA_DIR=/data
+Environment=PORT=8117
+ExecStart=/usr/bin/python3 -m uvicorn security_policy_service:app --host 127.0.0.1 --port 8117
+Restart=on-failure
+RestartSec=5
+
+# Systemd hardening
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+PrivateDevices=true
+RestrictSUIDSGID=true
+LockPersonality=true
+MemoryDenyWriteExecute=true
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+ReadWritePaths=/data
+
+[Install]
+WantedBy=multi-user.target

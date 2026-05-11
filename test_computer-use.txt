@@ -1,0 +1,66 @@
+...........F                                                             [100%]
+================================== FAILURES ===================================
+_______________________ test_task_executor_single_step ________________________
+
+tmp_path = WindowsPath('C:/Users/prady/AppData/Local/Temp/pytest-of-prady/pytest-174/test_task_executor_single_step0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x0000018CC14E3B90>
+
+    @pytest.mark.asyncio
+    async def test_task_executor_single_step(tmp_path, monkeypatch):
+        db_path = tmp_path / "task_journal.db"
+    
+        class FakeResponse:
+            def __init__(self, payload):
+                self._payload = payload
+    
+            def raise_for_status(self):
+                return None
+    
+            def json(self):
+                return self._payload
+    
+        class FakeClient:
+            def __init__(self, *args, **kwargs):
+                self.calls = 0
+    
+            async def __aenter__(self):
+                return self
+    
+            async def __aexit__(self, *args):
+                return False
+    
+            async def get(self, url):
+                if url.endswith("/screenshot"):
+                    return FakeResponse({"image_b64": "abc123"})
+                return FakeResponse({"status": "ok"})
+    
+            async def post(self, url, json=None, timeout=None):
+                if url.endswith("/v1/chat/completions"):
+                    return FakeResponse({
+                        "choices": [
+                            {"message": {"content": '{"action": "done", "params": {}, "reasoning": "complete"}'}}
+                        ]
+                    })
+                return FakeResponse({"ok": True})
+    
+        import task_loop as tl
+    
+        monkeypatch.setattr(tl.httpx, "AsyncClient", FakeClient)
+    
+        executor = TaskExecutor(
+            proxy_url="http://vyrex-proxy:8105",
+            computer_url="http://computer-use:8106",
+            db_path=db_path,
+        )
+        result = await executor.run_task("open settings", max_steps=3)
+    
+>       assert result.status == "done"
+E       AssertionError: assert 'failed' == 'done'
+E         
+E         - done
+E         + failed
+
+platform\computer-use\tests\test_computer_use.py:262: AssertionError
+=========================== short test summary info ===========================
+FAILED platform/computer-use/tests/test_computer_use.py::test_task_executor_single_step
+1 failed, 11 passed in 0.76s

@@ -7,7 +7,7 @@ curl -s --unix-socket /run/vyrex/api.sock \
   http://localhost/v1/models | jq .
 
 echo "=== Testing Prax Agent ==="
-node /opt/prady/agent/dist/index.js "take a screenshot and tell me what you see"
+node /opt/kryos/agent/dist/index.js "take a screenshot and tell me what you see"
 
 echo "=== Testing Input Control ==="
 ydotool mousemove -x 500 -y 500

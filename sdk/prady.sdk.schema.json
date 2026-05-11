@@ -1,0 +1,92 @@
+{
+  "$schema": "https://kryos.dev/sdk/v1/schema.json",
+  "$id": "https://kryos.dev/sdk/v1/schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "name",
+    "display_name",
+    "version",
+    "description",
+    "author",
+    "license",
+    "entry_point",
+    "icon",
+    "permissions",
+    "capabilities",
+    "sandbox",
+    "ui",
+    "min_kryos_version"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "const": "https://kryos.dev/sdk/v1/schema.json"
+    },
+    "name": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]*[a-z0-9]$"
+    },
+    "display_name": { "type": "string", "minLength": 1 },
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "description": { "type": "string", "minLength": 1 },
+    "author": { "type": "string", "minLength": 1 },
+    "license": { "type": "string", "minLength": 1 },
+    "entry_point": { "type": "string", "minLength": 1 },
+    "icon": { "type": "string", "minLength": 1 },
+    "permissions": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "model-inference",
+          "file-system:read",
+          "file-system:write",
+          "computer-use",
+          "notifications",
+          "audio-input",
+          "audio-output",
+          "network",
+          "task-schedule"
+        ]
+      },
+      "uniqueItems": true
+    },
+    "capabilities": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z]+:[a-z]+(-[a-z]+)*$"
+      }
+    },
+    "sandbox": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["memory_mb", "cpu_shares", "network_isolated", "read_only_root"],
+      "properties": {
+        "memory_mb": { "type": "integer", "minimum": 64, "maximum": 2048 },
+        "cpu_shares": { "type": "integer", "minimum": 64, "maximum": 1024 },
+        "network_isolated": { "type": "boolean" },
+        "read_only_root": { "type": "boolean", "const": true }
+      }
+    },
+    "ui": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type"],
+      "properties": {
+        "type": { "type": "string", "enum": ["window", "widget", "background"] },
+        "width": { "type": "integer", "minimum": 1, "default": 800 },
+        "height": { "type": "integer", "minimum": 1, "default": 600 },
+        "resizable": { "type": "boolean", "default": true }
+      }
+    },
+    "min_kryos_version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    }
+  }
+}

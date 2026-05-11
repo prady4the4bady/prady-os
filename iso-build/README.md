@@ -7,12 +7,12 @@ This directory builds a bootable Prady OS ISO using Debian Live Build (`lb confi
 - Debian Bookworm amd64 live system with systemd init
 - Base desktop stack: Xorg + XDM + Openbox
 - Docker + Docker Compose plugin
-- Live image payload copied to `/opt/prady-os`
-- Prady startup units for:
+- Live image payload copied to `/opt/kryos-os`
+- Kryos startup units for:
   - model-gateway
   - workflow-engine
   - screen-agent
-  - lumyn
+  - lumyn-agent
   - aqua-shell
 - Custom Plymouth theme (`Prady OS` text on dark background)
 
@@ -28,15 +28,15 @@ sudo apt-get install -y live-build debootstrap rsync xorriso grub-pc-bin grub-ef
 ## Build command (from Debian host)
 
 ```bash
-cd /path/to/prady-os-v2/iso-build && make build
+cd /path/to/prady-os/iso-build && make build
 ```
 
 The resulting ISO is written to:
 
-- `iso-build/prady-os.iso`
+- `iso-build/kryos-os.iso`
 
 ## Notes
 
-- The chroot setup hook creates user `prady` with password `prady`.
+- The chroot setup hook creates user `kryos` with password `kryos`.
 - Rust is installed in chroot via `rustup`.
 - If compose services differ from the unit names, update the corresponding unit `ExecStart` commands under `config/includes.chroot/etc/systemd/system/`.

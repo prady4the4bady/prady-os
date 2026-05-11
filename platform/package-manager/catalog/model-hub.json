@@ -1,0 +1,1 @@
+{"package_id": "model-hub", "name": "Model Hub", "version": "1.0.0", "type": "panel", "description": "Download, activate, benchmark, and manage local LLM models.", "entrypoint": "http://localhost:8113", "service_name": "model-hub", "dependencies": [], "permissions": ["models:read", "models:write"], "healthcheck_path": "/health", "source": "kryos-core"}

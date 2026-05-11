@@ -1,15 +1,20 @@
 """Config loader: reads routing-policy.yaml and model-registry.yaml.
 
 Environment variables (all optional):
-  GATEWAY_CONFIG_DIR  - absolute path to config directory
-                        (defaults to <repo-root>/config relative to this file)
-  OLLAMA_BASE_URL     - override the Ollama base URL
+  GATEWAY_CONFIG_DIR   - absolute path to config directory
+                         (defaults to <repo-root>/config relative to this file)
+  OLLAMA_BASE_URL      - override the Ollama base URL
   GATEWAY_ROUTING_MODE - override routing mode at runtime
+  VYREX_ENABLED     - enable Vyrex middleware (default: false)
+  VYREX_ENDPOINT    - NemoShell endpoint URL (default: http://localhost:8000)
+  HUGGINGFACE_TOKEN    - token for private/model-gated HF pulls
+  MODEL_STORAGE_DIR    - local path for pulled models (default: /opt/kryos/models)
 """
 
 from __future__ import annotations
 
 import os
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, List, Optional
 
@@ -63,6 +68,23 @@ class ProviderConfig:
 # ---------------------------------------------------------------------------
 
 
+def _parse_bool(value: str, default: bool = False) -> bool:
+    lowered = value.strip().lower()
+    if lowered in {"1", "true", "yes", "on"}:
+        return True
+    if lowered in {"0", "false", "no", "off"}:
+        return False
+    return default
+
+
+@dataclass
+class VyrexSettings:
+    enabled: bool
+    endpoint: str
+    huggingface_token: Optional[str]
+    model_storage_dir: Path
+
+
 class RoutingPolicyConfig:
     """Parsed representation of routing-policy.yaml."""
 
@@ -114,6 +136,15 @@ def load_model_registry_data(force_reload: bool = False) -> dict:
     if _registry_data is None or force_reload:
         _registry_data = _load_yaml("model-registry.yaml")
     return _registry_data
+
+
+def load_vyrex_settings() -> VyrexSettings:
+    return VyrexSettings(
+        enabled=_parse_bool(os.getenv("VYREX_ENABLED", "false"), False),
+        endpoint=os.getenv("VYREX_ENDPOINT", "http://localhost:8000").rstrip("/"),
+        huggingface_token=os.getenv("HUGGINGFACE_TOKEN") or None,
+        model_storage_dir=Path(os.getenv("MODEL_STORAGE_DIR", "/opt/kryos/models")),
+    )
 
 
 def reset_config_cache() -> None:

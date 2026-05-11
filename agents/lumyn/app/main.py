@@ -35,10 +35,10 @@ def _workspace_root(base_dir: Path) -> Path:
 
 def _build_system_context(learnings: list[str]) -> str:
     if not learnings:
-        return "You are Lumyn, the primary Prady assistant."
+        return "You are Lumyn, the primary Kryos assistant."
     bullets = "\n".join(f"- {s}" for s in learnings)
     return (
-        "You are Lumyn, the primary Prady assistant. Apply these learned strategies:\n"
+        "You are Lumyn, the primary Kryos assistant. Apply these learned strategies:\n"
         f"{bullets}"
     )
 
@@ -110,7 +110,7 @@ def _register_routes(
         payload = {
             "goal": req.goal,
             "priority": "normal",
-            "metadata": {"source": "lumyn", "auto_approve": req.auto_approve},
+            "metadata": {"source": "lumyn-agent", "auto_approve": req.auto_approve},
         }
         async with httpx.AsyncClient(timeout=30.0) as client:
             resp = await client.post(f"{cfg.workflow_engine_url.rstrip('/')}/tasks", json=payload)
@@ -176,7 +176,7 @@ def create_app(*, start_scheduler: bool = True) -> FastAPI:
         await gateway.close()
 
     app = FastAPI(
-        title="Lumyn",
+        title="Lumyn Agent",
         version="0.1.0",
         description="Primary conversational agent with ReAct loop, memory, and self-improvement.",
         lifespan=lifespan,

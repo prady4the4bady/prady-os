@@ -1,0 +1,10 @@
+fastapi
+uvicorn[standard]
+httpx
+aiosqlite
+psutil
+py-dmidecode
+distro
+PyYAML
+pytest
+pytest-asyncio

@@ -16,8 +16,8 @@ export function registerVoiceTools(registry: ToolRegistry) {
     execute: async (args: any) => {
       try {
         // Try piper first
-        execSync(`echo "${args.text}" | piper --model en_US-lessac-high --output_file /tmp/prady-speech.wav`);
-        execSync(`paplay /tmp/prady-speech.wav || aplay /tmp/prady-speech.wav`);
+        execSync(`echo "${args.text}" | piper --model en_US-lessac-high --output_file /tmp/kryos-speech.wav`);
+        execSync(`paplay /tmp/kryos-speech.wav || aplay /tmp/kryos-speech.wav`);
       } catch (e) {
         try {
           // Fallback to espeak
@@ -41,7 +41,7 @@ export function registerVoiceTools(registry: ToolRegistry) {
     },
     execute: async (args: any) => {
       const timeout = args.timeout || 5;
-      const path = `/tmp/prady-listen.wav`;
+      const path = `/tmp/kryos-listen.wav`;
       try {
         execSync(`arecord -d ${timeout} -f S16_LE -c1 -r 16000 ${path}`);
         const result = execSync(`whisper -m /var/vyrex/models/whisper-base.bin -f ${path}`).toString();

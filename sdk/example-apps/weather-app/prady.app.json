@@ -1,0 +1,25 @@
+{
+  "name": "weather-app",
+  "display_name": "Weather App",
+  "version": "1.0.0",
+  "description": "Gets weather data for any location",
+  "author": "Kryos SDK Example",
+  "license": "MIT",
+  "entry_point": "main.py",
+  "icon": "icon.png",
+  "permissions": ["network", "notifications"],
+  "capabilities": ["get:weather", "get:forecast"],
+  "sandbox": {
+    "memory_mb": 256,
+    "cpu_shares": 128,
+    "network_isolated": false,
+    "read_only_root": true
+  },
+  "ui": {
+    "type": "widget",
+    "width": 400,
+    "height": 300,
+    "resizable": false
+  },
+  "min_kryos_version": "1.0.0"
+}

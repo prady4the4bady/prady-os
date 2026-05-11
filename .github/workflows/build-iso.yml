@@ -1,20 +1,105 @@
-name: Build PradyOS ISO
+# Phase 33: Production ISO Build — Buildroot-based CI
+name: Build Prady OS ISO
 
 on:
+  push:
+    branches: [main]
   workflow_dispatch:
 
 jobs:
   build-iso:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v5
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
 
-      - name: Install live-build
+      - name: Install buildroot dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y live-build debootstrap rsync xorriso grub-pc-bin grub-efi-amd64-bin isolinux syslinux-common syslinux-utils
+          sudo apt-get install -y \
+            build-essential libncurses-dev bison flex libssl-dev libelf-dev \
+            wget rsync bc cpio unzip python3 python3-pip
 
+      - name: Install GRUB tools
+        run: |
+          sudo apt-get install -y \
+            grub-pc-bin grub-efi-amd64-bin xorriso squashfs-tools mtools
+
+      - name: Install Python test dependencies
+        run: pip3 install pytest pyyaml
+
+      - name: Install Pillow for background generation
+        run: pip3 install Pillow
+
+      - name: Run Phase 33 tests (fast, no ISO build)
+        run: python -m pytest build/iso/tests/ -W error::DeprecationWarning -q
+
+      - name: Validate production compose
+        run: docker compose -f build/iso/docker-compose.prod.yml config --quiet
+
+      - name: Build ISO
+        run: SIGN_ISO=1 make -C build/iso iso-fast
+
+      - name: Upload ISO artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: prady-os-iso
+          path: |
+            output/prady-os.iso
+            output/prady-os.sha256
+            output/release-checksums.txt
+            output/prady-os.iso.sig
+          retention-days: 7
+
+      - name: Post SHA256 summary
+        run: |
+          if [ -f output/prady-os.iso ]; then
+            SHA256=$(sha256sum output/prady-os.iso | awk '{print $1}')
+            echo "## Prady OS ISO Build" >> $GITHUB_STEP_SUMMARY
+            echo "| Field | Value |" >> $GITHUB_STEP_SUMMARY
+            echo "|-------|-------|" >> $GITHUB_STEP_SUMMARY
+            echo "| SHA256 | \`${SHA256}\` |" >> $GITHUB_STEP_SUMMARY
+            echo "| ISO | prady-os.iso |" >> $GITHUB_STEP_SUMMARY
+            echo "| Phase | 38/38 |" >> $GITHUB_STEP_SUMMARY
+            if [ -f output/prady-os.iso.sig ]; then
+              echo "| Signature | prady-os.iso.sig |" >> $GITHUB_STEP_SUMMARY
+            fi
+          else
+            echo "ISO not found (build may have been skipped)"
+          fi
+
+  publish-release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: build-iso
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download ISO artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: prady-os-iso
+          path: output
+
+      - name: Publish GitHub release assets
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            output/prady-os.iso
+            output/prady-os.sha256
+            output/release-checksums.txt
+            output/prady-os.iso.sig
+
+  # Future phases that extend this workflow will add jobs below
+  # Phase 38: Sign ISO (sbsign + GPG)
+
+  # DEAD CODE BELOW — live-build approach replaced by Buildroot in Phase 33
+  # Preserved for reference only; this job is never triggered.
+  _legacy-live-build-ref:
+    if: false
+    runs-on: ubuntu-latest
+    steps:
       - name: Shim isohybrid (not needed for CI artifact)
         run: |
           # live-build calls isohybrid after genisoimage to create a hybrid-boot ISO.

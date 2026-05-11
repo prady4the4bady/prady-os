@@ -4,14 +4,13 @@ interface Props {
   onClose: () => void;
 }
 
-export default function Spotlight({ onClose }: Props) {
+export default function Spotlight({ onClose }: Readonly<Props>) {
   const inputRef = useRef<HTMLInputElement>(null);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     const query = inputRef.current?.value.trim();
     if (!query) return;
-    // TODO: wire to actual search / app launcher
     console.log("[Spotlight] search:", query);
     onClose();
   };
@@ -19,14 +18,13 @@ export default function Spotlight({ onClose }: Props) {
   return (
     <div
       className="spotlight-overlay"
-      onClick={(e) => e.target === e.currentTarget && onClose()}
     >
       <form className="spotlight glass" onSubmit={handleSearch}>
         <input
           ref={inputRef}
           className="spotlight__input"
           type="text"
-          placeholder="Search apps, files, or ask Prady AI…"
+          placeholder="Search apps, files, or ask Kryos AI…"
           autoFocus
           spellCheck={false}
         />

@@ -1,0 +1,31 @@
+[Unit]
+Description=Prady Package Manager Service
+After=network.target prady-notification-bus.service
+Wants=prady-notification-bus.service
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/prady/platform/package-manager
+ExecStart=/usr/local/bin/uvicorn package_manager_service:app --host 0.0.0.0 --port 8116
+Restart=on-failure
+RestartSec=5
+Environment=PYTHONUNBUFFERED=1
+Environment=DATA_DIR=/data
+Environment=CATALOG_DIR=/opt/prady/platform/package-manager/catalog
+Environment=NOTIFICATION_BUS_URL=http://localhost:8111
+Environment=SECURITY_POLICY_URL=http://localhost:8117
+
+# Systemd hardening
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+PrivateDevices=true
+RestrictSUIDSGID=true
+LockPersonality=true
+MemoryDenyWriteExecute=true
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+ReadWritePaths=/data
+
+[Install]
+WantedBy=multi-user.target

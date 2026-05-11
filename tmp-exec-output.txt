@@ -1,0 +1,42 @@
+C:\Users\prady\Desktop\Claude\OS\prady-os\.venv\Lib\site-packages\pytest_asyncio\plugin.py:208: PytestDeprecationWarning: The configuration option "asyncio_default_fixture_loop_scope" is unset.
+The event loop scope for asynchronous fixtures will default to the fixture caching scope. Future versions of pytest-asyncio will default the loop scope for asynchronous fixtures to function scope. Set the default fixture loop scope explicitly in order to avoid unexpected behavior in the future. Valid fixture loop scopes are: "function", "class", "module", "package", "session"
+
+  warnings.warn(PytestDeprecationWarning(_DEFAULT_FIXTURE_LOOP_SCOPE_UNSET))
+
+=================================== ERRORS ====================================
+_________ ERROR collecting platform/model-hub/tests/test_model_hub.py _________
+ImportError while importing test module 'C:\Users\prady\Desktop\Claude\OS\prady-os\platform\model-hub\tests\test_model_hub.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+..\..\..\..\AppData\Local\Programs\Python\Python312\Lib\importlib\__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+platform\model-hub\tests\test_model_hub.py:17: in <module>
+    import model_hub_service as mh
+platform\model-hub\model_hub_service.py:12: in <module>
+    import aiofiles
+E   ModuleNotFoundError: No module named 'aiofiles'
+============================== warnings summary ===============================
+platform\lumyn-bridge\lumyn_bridge.py:205
+  C:\Users\prady\Desktop\Claude\OS\prady-os\platform\lumyn-bridge\lumyn_bridge.py:205: DeprecationWarning: 
+          on_event is deprecated, use lifespan event handlers instead.
+  
+          Read more about it in the
+          [FastAPI docs for Lifespan Events](https://fastapi.tiangolo.com/advanced/events/).
+          
+    @app.on_event("startup")
+
+.venv\Lib\site-packages\fastapi\applications.py:4495
+  C:\Users\prady\Desktop\Claude\OS\prady-os\.venv\Lib\site-packages\fastapi\applications.py:4495: DeprecationWarning: 
+          on_event is deprecated, use lifespan event handlers instead.
+  
+          Read more about it in the
+          [FastAPI docs for Lifespan Events](https://fastapi.tiangolo.com/advanced/events/).
+          
+    return self.router.on_event(event_type)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+ERROR platform/model-hub/tests/test_model_hub.py
+!!!!!!!!!!!!!!!!!!! Interrupted: 1 error during collection !!!!!!!!!!!!!!!!!!!!
+2 warnings, 1 error in 1.04s
+time="2026-05-08T10:41:14+05:30" level=warning msg="C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os\\docker-compose.dev.yml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"

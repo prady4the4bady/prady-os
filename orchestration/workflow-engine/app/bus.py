@@ -1,6 +1,7 @@
 """Redis Streams message bus for inter-agent communication."""
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
 from typing import Any, Dict, List, Optional, Tuple
@@ -9,9 +10,10 @@ import redis.asyncio as aioredis
 
 logger = logging.getLogger(__name__)
 
-STREAM_PREFIX = "prady:stream:"
+STREAM_PREFIX = "kryos:stream:"
 CONDUCTOR_RESULTS_STREAM = f"{STREAM_PREFIX}conductor:results"
 TASKS_INBOX_STREAM = f"{STREAM_PREFIX}tasks:inbox"
+_CONNECT_FIRST_MESSAGE = "Call connect() first"
 
 
 def agent_stream(agent_type: str) -> str:
@@ -50,6 +52,7 @@ class MessageBus:
 
     async def connect(self) -> None:
         self._client = aioredis.from_url(self._redis_url, decode_responses=True)
+        await asyncio.sleep(0)
         logger.info("MessageBus connected to %s", self._redis_url)
 
     async def disconnect(self) -> None:
@@ -59,7 +62,7 @@ class MessageBus:
 
     async def publish(self, stream: str, message: Dict[str, Any]) -> str:
         """Append a message to *stream*. Returns the Redis message ID."""
-        assert self._client, "Call connect() first"
+        assert self._client, _CONNECT_FIRST_MESSAGE
         msg_id = await self._client.xadd(stream, _encode(message))
         logger.debug("Published %s → %s", msg_id, stream)
         return msg_id
@@ -73,7 +76,7 @@ class MessageBus:
         block_ms: Optional[int] = None,
     ) -> List[Tuple[str, Dict[str, Any]]]:
         """Read undelivered messages from a consumer group (XREADGROUP)."""
-        assert self._client, "Call connect() first"
+        assert self._client, _CONNECT_FIRST_MESSAGE
         try:
             await self._client.xgroup_create(
                 stream, consumer_group, id="0", mkstream=True
@@ -99,7 +102,7 @@ class MessageBus:
 
     async def ack(self, stream: str, consumer_group: str, msg_id: str) -> None:
         """Acknowledge a processed message (XACK)."""
-        assert self._client, "Call connect() first"
+        assert self._client, _CONNECT_FIRST_MESSAGE
         await self._client.xack(stream, consumer_group, msg_id)
 
     async def ping(self) -> bool:

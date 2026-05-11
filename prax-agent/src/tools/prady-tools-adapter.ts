@@ -1,10 +1,10 @@
 import { ToolRegistry } from './registry.js';
 
 /**
- * Adapter to wrap our local Phase 2 tools into the format expected by the upstream Prady architecture.
- * Upstream prady expects: { name, description, schema, run: async (args) => string }
+ * Adapter to wrap our local Phase 2 tools into the format expected by the upstream Kryos architecture.
+ * Upstream kryos expects: { name, description, schema, run: async (args) => string }
  */
-export function wrapToolsForPradyUpstream(registry: ToolRegistry): any[] {
+export function wrapToolsForKryosUpstream(registry: ToolRegistry): any[] {
   return registry.list().map(tool => {
     return {
       name: tool.name,

@@ -1,5 +1,5 @@
 {
-  "name": "prady-shell",
+  "name": "kryos-shell",
   "version": "1.0.0",
   "main": "app.ts",
   "dependencies": {

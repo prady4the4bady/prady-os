@@ -1,0 +1,8 @@
+[Defines]
+  DEC_SPECIFICATION              = 0x0001001A
+  PACKAGE_NAME                   = PradyBiosAIPackage
+  PACKAGE_GUID                   = 6f25b0e7-f4be-4216-8ee4-f1274c5f5569
+  PACKAGE_VERSION                = 1.0.0
+
+[Guids]
+  gPradyBootDecisionGuid = { 0x12345678, 0x1234, 0x1234, {0x12,0x34,0x12,0x34,0x56,0x78,0x9a,0xbc} }

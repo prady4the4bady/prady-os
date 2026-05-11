@@ -16,7 +16,7 @@ export function buildTaskGoal(raw: string): string {
 
 // ── Component ────────────────────────────────────────────────────────────────
 
-export default function CommandBar({ onClose }: Props) {
+export default function CommandBar({ onClose }: Readonly<Props>) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [status, setStatus] = useState<Status>("idle");
   const [message, setMessage] = useState("");
@@ -27,7 +27,7 @@ export default function CommandBar({ onClose }: Props) {
     if (!goal) return;
 
     setStatus("submitting");
-    setMessage("Sending to Prady AI…");
+    setMessage("Sending to Kryos AI…");
 
     try {
       const taskId = await invoke<string>("submit_task_cmd", { goal });

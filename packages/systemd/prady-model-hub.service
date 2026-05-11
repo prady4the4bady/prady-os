@@ -1,0 +1,21 @@
+[Unit]
+Description=Prady Model Hub Service
+After=network.target prady-notification-bus.service prady-vyrex-proxy.service
+Requires=prady-notification-bus.service prady-vyrex-proxy.service
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/prady/platform/model-hub
+ExecStart=/usr/local/bin/uvicorn model_hub_service:app --host 0.0.0.0 --port 8113
+Restart=on-failure
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+Environment=PYTHONUNBUFFERED=1
+Environment=DATA_DIR=/var/lib/prady/model-hub
+Environment=MODELS_DIR=/var/lib/prady/model-hub/models
+Environment=NOTIFICATION_BUS_URL=http://127.0.0.1:8111
+Environment=VYREX_URL=http://127.0.0.1:8105
+
+[Install]
+WantedBy=multi-user.target

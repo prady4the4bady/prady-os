@@ -8,8 +8,8 @@
 
 ## Quick Build
 ```bash
-git clone https://github.com/pradyun/prady-os
-cd prady-os
+git clone https://github.com/pradyun/kryos-os
+cd kryos-os
 chmod +x scripts/build-iso.sh
 ./scripts/build-iso.sh
 ```
@@ -17,7 +17,7 @@ chmod +x scripts/build-iso.sh
 ## Test in QEMU (no real hardware needed)
 ```bash
 qemu-system-x86_64 -m 4G -enable-kvm \
-  -cdrom dist/prady-os-1.0.iso \
+  -cdrom dist/kryos-os-1.0.iso \
   -vga virtio -display gtk
 ```
 

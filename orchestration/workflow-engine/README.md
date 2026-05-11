@@ -1,6 +1,6 @@
-# Prady Orchestration Engine
+# Kryos Orchestration Engine
 
-Phase 2 of the Prady AI stack. Receives high-level goals, decomposes them into a DAG of sub-tasks via the Phase 1 model-gateway, dispatches sub-tasks to typed agents, enforces approval policies, and writes a structured activity log.
+Phase 2 of the Kryos AI stack. Receives high-level goals, decomposes them into a DAG of sub-tasks via the Phase 1 model-gateway, dispatches sub-tasks to typed agents, enforces approval policies, and writes a structured activity log.
 
 ---
 
@@ -19,7 +19,7 @@ Phase 2 of the Prady AI stack. Receives high-level goals, decomposes them into a
          ▼                 ▼                     ▼
    BrowserAgent       ShellAgent    FileAgent / ResearchAgent
          │                 │
-         └────────────────▶│◀────── Redis Streams (prady:stream:agent:*)
+         └────────────────▶│◀────── Redis Streams (kryos:stream:agent:*)
                            │
                     activity.jsonl
 ```

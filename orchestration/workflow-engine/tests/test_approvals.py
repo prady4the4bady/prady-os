@@ -14,14 +14,14 @@ pytestmark = pytest.mark.anyio
 
 
 def _req(**kwargs) -> ApprovalRequest:
-    defaults = dict(
-        task_id=str(uuid.uuid4()),
-        subtask_id=str(uuid.uuid4()),
-        agent_type="shell",
-        action="run",
-        params={"command": "ls"},
-        reason="policy requires approval",
-    )
+    defaults = {
+        "task_id": str(uuid.uuid4()),
+        "subtask_id": str(uuid.uuid4()),
+        "agent_type": "shell",
+        "action": "run",
+        "params": {"command": "ls"},
+        "reason": "policy requires approval",
+    }
     defaults.update(kwargs)
     return ApprovalRequest(**defaults)
 
@@ -42,7 +42,8 @@ async def test_approve_resolves_wait(approvals: ApprovalStore):
         await asyncio.sleep(0.05)
         await approvals.submit(ApprovalDecision(approval_id=req.approval_id, approved=True))
 
-    asyncio.create_task(approve_soon())
+    approval_task = asyncio.create_task(approve_soon())
+    _ = approval_task
     record = await approvals.wait_for_decision(req.approval_id, timeout=2.0)
     assert record.status == "approved"
 
@@ -57,7 +58,8 @@ async def test_reject_resolves_wait(approvals: ApprovalStore):
             ApprovalDecision(approval_id=req.approval_id, approved=False, reviewer_note="no")
         )
 
-    asyncio.create_task(reject_soon())
+    rejection_task = asyncio.create_task(reject_soon())
+    _ = rejection_task
     record = await approvals.wait_for_decision(req.approval_id, timeout=2.0)
     assert record.status == "rejected"
     assert record.reviewer_note == "no"

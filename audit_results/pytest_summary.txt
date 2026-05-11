@@ -1,0 +1,18 @@
+
+=========================== short test summary info ===========================
+ERROR platform/auth-service/tests/test_auth_service.py
+ERROR platform/auth-service/tests/test_jwt_utils.py
+ERROR platform/bot-bridge/tests/test_bot_bridge.py
+ERROR platform/computer-use/tests/test_computer_use.py
+ERROR platform/ebpf-hardening/tests/test_ebpf_loader.py
+ERROR platform/memory-store/tests - ValueError: Plugin already registered und...
+ERROR platform/model-manager/tests/test_download.py
+ERROR platform/model-manager/tests/test_manager_rollback.py
+ERROR platform/model-manager/tests/test_platform_api.py
+ERROR platform/model-manager/tests/test_registry.py
+ERROR platform/ota-service/tests - ValueError: Plugin already registered unde...
+ERROR platform/process-manager/tests - ValueError: Plugin already registered ...
+ERROR platform/vision-agent/tests - ValueError: Plugin already registered und...
+ERROR platform/voice-service/tests - ValueError: Plugin already registered un...
+!!!!!!!!!!!!!!!!!! Interrupted: 14 errors during collection !!!!!!!!!!!!!!!!!!!
+14 errors in 1.25s

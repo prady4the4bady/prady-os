@@ -1,5 +1,5 @@
 {
-  "name": "@prady/agent",
+  "name": "@kryos/agent",
   "version": "0.1.0",
   "description": "Autonomous ReAct Agent Orchestration for PradyOS",
   "type": "module",

@@ -50,7 +50,7 @@ class Subtask(BaseModel):
 
     subtask_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     parent_task_id: str
-    agent_type: Literal["browser", "shell", "file", "research"]
+    agent_type: Literal["screen", "browser", "shell", "file", "research"]
     action: str
     params: Dict[str, Any] = Field(default_factory=dict)
     depends_on: List[str] = Field(default_factory=list)  # subtask_ids

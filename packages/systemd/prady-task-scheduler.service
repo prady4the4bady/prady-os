@@ -1,0 +1,16 @@
+[Unit]
+Description=Prady Task Scheduler Service
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/prady/platform/task-scheduler
+ExecStart=/usr/local/bin/uvicorn scheduler_service:app --host 0.0.0.0 --port 8110
+Restart=on-failure
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+Environment=PYTHONUNBUFFERED=1
+
+[Install]
+WantedBy=multi-user.target

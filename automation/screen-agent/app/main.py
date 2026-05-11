@@ -37,33 +37,33 @@ from .schemas import (
 from .vision import describe_screen
 
 
+async def _gate(action_name: str) -> None:
+    """Run policy check; convert PolicyDeniedError to HTTP 403."""
+    try:
+        await check_policy(action_name)
+    except PolicyDeniedError as exc:
+        raise HTTPException(status_code=403, detail=str(exc)) from exc
+
+
+def _run_action(fn, *args, **kwargs) -> None:
+    """Call action function and normalize subprocess/runtime failures."""
+    try:
+        fn(*args, **kwargs)
+    except subprocess.CalledProcessError as exc:
+        raise HTTPException(
+            status_code=500,
+            detail=f"xdotool error: {exc.stderr.strip() or exc}",
+        ) from exc
+    except RuntimeError as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
 def create_app() -> FastAPI:
     app = FastAPI(
         title="screen-agent",
         version="0.1.0",
         description="Screen automation service: mouse, keyboard, screenshot, and vision.",
     )
-
-    # ── Helpers ──────────────────────────────────────────────────────────────
-
-    async def _gate(action_name: str) -> None:
-        """Run policy check; convert PolicyDeniedError → 403."""
-        try:
-            await check_policy(action_name)
-        except PolicyDeniedError as exc:
-            raise HTTPException(status_code=403, detail=str(exc)) from exc
-
-    def _run_action(fn, *args, **kwargs) -> None:
-        """Call *fn* and translate subprocess/OS errors → 500."""
-        try:
-            fn(*args, **kwargs)
-        except subprocess.CalledProcessError as exc:
-            raise HTTPException(
-                status_code=500,
-                detail=f"xdotool error: {exc.stderr.strip() or exc}",
-            ) from exc
-        except RuntimeError as exc:
-            raise HTTPException(status_code=500, detail=str(exc)) from exc
 
     # ── Mouse move ───────────────────────────────────────────────────────────
 
@@ -112,7 +112,7 @@ def create_app() -> FastAPI:
             raise HTTPException(status_code=500, detail=str(exc)) from exc
         return ActionResponse(
             success=True,
-            message=f"Screenshot saved",
+            message="Screenshot saved",
             path=str(path),
         )
 

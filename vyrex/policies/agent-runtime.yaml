@@ -1,0 +1,91 @@
+name: agent-runtime
+terms:
+  - include: agent-runtime-policy
+version: "1.0"
+description: "Vyrex sandbox policy for the Prax Agent Runtime service"
+
+rules:
+  # Allow reading model files from the shared model cache
+  - id: agent-runtime.fs.read.models
+    effect: allow
+    subjects: ["agent-runtime"]
+    actions: ["fs:read"]
+    resources:
+      - "/root/.kryos/models/*"
+      - "/home/*/.kryos/models/*"
+
+  # Allow writing new model downloads to the cache
+  - id: agent-runtime.fs.write.models
+    effect: allow
+    subjects: ["agent-runtime"]
+    actions: ["fs:write", "fs:create"]
+    resources:
+      - "/root/.kryos/models/*"
+      - "/home/*/.kryos/models/*"
+
+  # Allow reading Prady OS configuration
+  - id: agent-runtime.fs.read.config
+    effect: allow
+    subjects: ["agent-runtime"]
+    actions: ["fs:read"]
+    resources:
+      - "/opt/kryos-os/config/*"
+      - "/etc/kryos/*"
+
+  # Allow HTTP traffic to HuggingFace for model pulls
+  - id: agent-runtime.net.huggingface
+    effect: allow
+    subjects: ["agent-runtime"]
+    actions: ["http:get", "https:get"]
+    resources:
+      - "https://huggingface.co/*"
+      - "https://cdn-lfs.huggingface.co/*"
+      - "https://cdn-lfs-us-1.huggingface.co/*"
+
+  # Allow HTTP traffic to GitHub for model/config downloads
+  - id: agent-runtime.net.github
+    effect: allow
+    subjects: ["agent-runtime"]
+    actions: ["http:get", "https:get"]
+    resources:
+      - "https://github.com/*"
+      - "https://raw.githubusercontent.com/*"
+      - "https://objects.githubusercontent.com/*"
+
+  # Allow communication with the internal Vyrex model gateway
+  - id: agent-runtime.net.gateway
+    effect: allow
+    subjects: ["agent-runtime"]
+    actions: ["http:*"]
+    resources:
+      - "http://vyrex:8000/*"
+      - "http://model-gateway:8000/*"
+      - "http://localhost:8000/*"
+
+  # Allow communication with the Kryos Swarm service
+  - id: agent-runtime.net.swarm
+    effect: allow
+    subjects: ["agent-runtime"]
+    actions: ["http:*"]
+    resources:
+      - "http://kryos-swarm:*/*"
+
+  # Deny all other outbound network traffic
+  - id: agent-runtime.net.deny-other
+    effect: deny
+    subjects: ["agent-runtime"]
+    actions: ["http:*", "tcp:*", "udp:*"]
+    resources: ["*"]
+
+egress:
+  allow_domains:
+    - huggingface.co
+    - cdn-lfs.huggingface.co
+    - cdn-lfs-us-1.huggingface.co
+    - github.com
+    - raw.githubusercontent.com
+    - objects.githubusercontent.com
+
+limits:
+  max_inference_tokens: 8192
+  inference_quota_per_minute: 60

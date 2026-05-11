@@ -12,7 +12,7 @@ export function registerScreenTools(registry: ToolRegistry) {
     parameters: { type: 'object', properties: {} },
     execute: async () => {
       const ts = Date.now();
-      const path = `/tmp/prady-screen-${ts}.png`;
+      const path = `/tmp/kryos-screen-${ts}.png`;
       const isWayland = process.env.WAYLAND_DISPLAY !== undefined;
 
       try {

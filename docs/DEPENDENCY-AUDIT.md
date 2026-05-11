@@ -70,7 +70,7 @@
 
 ---
 
-#### 4. Lumyn
+#### 4. Lumyn Agent
 **File:** `agents/lumyn/requirements.txt`
 
 | Package | Version | Type | Status |

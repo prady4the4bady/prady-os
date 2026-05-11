@@ -6,8 +6,8 @@ import * as path from 'path';
 export class SessionMemory {
   private db: Database.Database;
 
-  constructor(dbPath: string = '/var/prady/memory.db') {
-    // If not running as root or in /var/prady, fallback to a local mock DB for testing
+  constructor(dbPath: string = '/var/kryos/memory.db') {
+    // If not running as root or in /var/kryos, fallback to a local mock DB for testing
     let finalPath = dbPath;
     try {
       fs.mkdirSync(path.dirname(dbPath), { recursive: true });

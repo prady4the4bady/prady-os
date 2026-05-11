@@ -1,0 +1,17 @@
+
+=================================== ERRORS ====================================
+_________________ ERROR collecting tests/test_platform_api.py _________________
+ImportError while importing test module 'C:\Users\prady\Desktop\Claude\OS\prady-os\platform\model-manager\tests\test_platform_api.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+..\..\..\..\AppData\Local\Programs\Python\Python312\Lib\importlib\__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+platform\model-manager\tests\test_platform_api.py:8: in <module>
+    from prady_models.db import ModelRecord, SessionLocal, init_db
+platform\model-manager\prady_models\db.py:7: in <module>
+    from sqlalchemy import DateTime, Float, String, Text, create_engine
+E   ModuleNotFoundError: No module named 'sqlalchemy'
+=========================== short test summary info ===========================
+ERROR platform\model-manager\tests\test_platform_api.py
+!!!!!!!!!!!!!!!!!!! Interrupted: 1 error during collection !!!!!!!!!!!!!!!!!!!!
+1 error in 1.50s

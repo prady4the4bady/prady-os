@@ -188,7 +188,7 @@ make test-e2e ENDPOINT=http://localhost:18000
 # 2. model-gateway (depends: redis)
 # 3. workflow-engine (depends: redis, model-gateway)
 # 4. screen-agent (depends: model-gateway)
-# 5. lumyn (depends: all above)
+# 5. lumyn-agent (depends: all above)
 
 # Health check after each service
 docker-compose restart redis && sleep 15
@@ -299,7 +299,7 @@ Rollback safeguards:
 ## Improvements
 
 - [#126] Performance: Improved model-gateway latency by 20%
-- [#127] UI: Better error messages in lumyn
+- [#127] UI: Better error messages in lumyn-agent
 - [#128] Docs: Updated ARCHITECTURE.md
 
 ## Known Issues
@@ -328,9 +328,9 @@ make test-e2e  # Verify
 
 ## Support
 
-- **Documentation:** https://github.com/prady/prady-os-v2/blob/main/ARCHITECTURE.md
-- **Issues:** https://github.com/prady/prady-os-v2/issues
-- **Security:** security@prady.dev
+- **Documentation:** https://github.com/kryos/prady-os/blob/main/ARCHITECTURE.md
+- **Issues:** https://github.com/kryos/prady-os/issues
+- **Security:** security@kryos.dev
 ```
 
 ### Release Notes Checklist

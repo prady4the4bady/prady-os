@@ -2,7 +2,7 @@ import { VyrexClient } from '../vyrex-client.js';
 import { DetailedPlan } from './structured-plan.js';
 import { Tool } from '../types.js';
 
-export class Lumyn {
+export class LumynAgent {
   constructor(private vyrex: VyrexClient) {}
 
   async reason(problem: string, context: string): Promise<{ thinking: string, answer: string, confidence: number }> {

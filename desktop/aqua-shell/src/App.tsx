@@ -20,7 +20,7 @@ export default function App() {
     { key: " ", modifiers: ["meta"], handler: () => setSpotlightOpen((v) => !v) },
     // Ctrl+Space fallback (Linux without Super)
     { key: " ", modifiers: ["ctrl"], handler: () => setSpotlightOpen((v) => !v) },
-    // Ctrl+R → Prady Command Bar
+    // Ctrl+R → Kryos Command Bar
     { key: "r", modifiers: ["ctrl"], handler: () => setCommandBarOpen((v) => !v) },
     // Escape closes everything
     {

@@ -69,15 +69,14 @@ class DAG:
             node = self._nodes.get(nid)
             if node:
                 for dep in node.depends_on:
-                    if dep not in visited:
-                        if dfs(dep):
-                            return True
-                    elif dep in rec_stack:
+                    if dep in rec_stack:
+                        return True
+                    if dep not in visited and dfs(dep):
                         return True
             rec_stack.discard(nid)
             return False
 
-        return any(nid not in visited and dfs(nid) for nid in list(self._nodes))
+        return any(nid not in visited and dfs(nid) for nid in self._nodes)
 
     def node_count(self) -> int:
         return len(self._nodes)

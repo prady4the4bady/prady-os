@@ -1,5 +1,5 @@
 {
-  "name": "prady-firstboot-wizard",
+  "name": "kryos-firstboot-wizard",
   "version": "1.0.0",
   "description": "First boot setup wizard for PradyOS",
   "main": "server.js",

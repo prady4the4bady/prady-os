@@ -1,0 +1,24 @@
+version: 1
+name: vision-agent-sandbox-policy
+terms:
+  - include: vision-agent-sandbox-policy
+egress:
+  allow_domains:
+    - api.openai.com
+    - huggingface.co
+    - localhost
+filesystem:
+  deny_write_outside:
+    - /tmp/vision-sandbox/
+  allow_read:
+    - /opt/kryos-os/screenshots/
+network:
+  default: deny
+  allow_domains:
+    - api.openai.com
+    - huggingface.co
+  allow_localhost:
+    - 11434
+    - 8000
+notes:
+  - Vision agent policy. Ollama on localhost:11434 and model-gateway on localhost:8000 allowed.

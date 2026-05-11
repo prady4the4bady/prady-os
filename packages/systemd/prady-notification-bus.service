@@ -1,0 +1,15 @@
+[Unit]
+Description=Prady Notification Bus Service
+After=network.target
+
+[Service]
+Type=simple
+User=prady
+WorkingDirectory=/opt/prady/platform/notification-bus
+ExecStart=/opt/prady/.venv/bin/uvicorn notification_service:app --host 0.0.0.0 --port 8111
+Restart=on-failure
+RestartSec=5
+Environment=DATA_DIR=/var/lib/prady/notification-bus
+
+[Install]
+WantedBy=multi-user.target

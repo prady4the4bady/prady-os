@@ -1,0 +1,19 @@
+version: 1
+name: bot-bridge-egress-policy
+terms:
+  - include: bot-bridge-egress
+
+egress:
+  allow_domains:
+    - api.telegram.org
+    - discord.com
+
+network:
+  default: deny
+  allow_domains:
+    - api.telegram.org
+    - discord.com
+
+notes:
+  - Allows bot-bridge service to reach Telegram Bot API and Discord REST API.
+  - All other outbound traffic is denied.

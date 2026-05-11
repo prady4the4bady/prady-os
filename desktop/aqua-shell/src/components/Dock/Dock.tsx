@@ -7,7 +7,7 @@ export const DOCK_APPS: DockAppConfig[] = [
   { id: "terminal",    label: "Terminal",    icon: "🖥️" },
   { id: "files",       label: "Files",       icon: "📁" },
   { id: "browser",     label: "Browser",     icon: "🌐" },
-  { id: "prady_tasks", label: "Prady Tasks", icon: "🤖" },
+  { id: "kryos_tasks", label: "Kryos Tasks", icon: "🤖" },
   { id: "settings",    label: "Settings",    icon: "⚙️" },
 ];
 

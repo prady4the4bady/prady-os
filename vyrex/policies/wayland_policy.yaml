@@ -1,0 +1,15 @@
+terms:
+  - include: wayland-policy
+max_actions_per_minute: 60
+allowed_actions:
+  - move
+  - click
+  - type
+  - screenshot
+  - windows
+  - focus
+blocked_window_classes:
+  - "gnome-keyring*"
+  - "keepassxc*"
+require_focus_before_type: false
+allow_screenshot: true

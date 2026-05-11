@@ -1,0 +1,232 @@
+........................................................................ [ 10%]
+...................................s....s............................... [ 20%]
+...F..F................................................................. [ 30%]
+........................................................................ [ 40%]
+........................................................................ [ 50%]
+........................................................................ [ 60%]
+........................................................................ [ 70%]
+........................................................................ [ 81%]
+........................................................................ [ 91%]
+.FFFFFFFF........................................FFFFFFFF.....           [100%]
+================================== FAILURES ===================================
+______________________ TestSandboxing.test_sandbox_agent ______________________
+platform\ebpf-hardening\tests\test_ebpf_loader.py:184: in test_sandbox_agent
+    assert res.status_code == 200
+E   assert 500 == 200
+E    +  where 500 = <Response [500 Internal Server Error]>.status_code
+------------------------------ Captured log call ------------------------------
+ERROR    ebpf_loader:ebpf_loader.py:236 Failed to load program prax_agent_seccomp: Source not found: C:\Users\prady\Desktop\Claude\OS\prady-os-v2\platform\ebpf-hardening\programs\prax_agent_seccomp.bpf.c
+______________________ TestSandboxing.test_detach_agent _______________________
+platform\ebpf-hardening\tests\test_ebpf_loader.py:238: in test_detach_agent
+    assert res1.status_code == 200
+E   assert 500 == 200
+E    +  where 500 = <Response [500 Internal Server Error]>.status_code
+------------------------------ Captured log call ------------------------------
+ERROR    ebpf_loader:ebpf_loader.py:236 Failed to load program prax_agent_seccomp: Source not found: C:\Users\prady\Desktop\Claude\OS\prady-os-v2\platform\ebpf-hardening\programs\prax_agent_seccomp.bpf.c
+_____________________ TestDefconfig.test_defconfig_exists _____________________
+build\iso\tests\test_build_config.py:54: in test_defconfig_exists
+    assert DEFCONFIG.exists(), f"Missing: {DEFCONFIG}"
+E   AssertionError: Missing: C:\Users\prady\Desktop\Claude\OS\prady-os-v2\build\iso\buildroot-config\kryos_defconfig
+E   assert False
+E    +  where False = exists()
+E    +    where exists = WindowsPath('C:/Users/prady/Desktop/Claude/OS/prady-os-v2/build/iso/buildroot-config/kryos_defconfig').exists
+_______________________ TestDefconfig.test_x86_64_arch ________________________
+build\iso\tests\test_build_config.py:57: in test_x86_64_arch
+    assert "BR2_x86_64=y" in _read(DEFCONFIG)
+build\iso\tests\test_build_config.py:38: in _read
+    return path.read_text(encoding="utf-8")
+..\..\..\..\miniforge3\Lib\pathlib.py:1027: in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+..\..\..\..\miniforge3\Lib\pathlib.py:1013: in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os-v2\\build\\iso\\buildroot-config\\kryos_defconfig'
+____________________ TestDefconfig.test_custom_git_kernel _____________________
+build\iso\tests\test_build_config.py:60: in test_custom_git_kernel
+    content = _read(DEFCONFIG)
+build\iso\tests\test_build_config.py:38: in _read
+    return path.read_text(encoding="utf-8")
+..\..\..\..\miniforge3\Lib\pathlib.py:1027: in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+..\..\..\..\miniforge3\Lib\pathlib.py:1013: in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os-v2\\build\\iso\\buildroot-config\\kryos_defconfig'
+___________________ TestDefconfig.test_kernel_repo_is_fork ____________________
+build\iso\tests\test_build_config.py:64: in test_kernel_repo_is_fork
+    content = _read(DEFCONFIG)
+build\iso\tests\test_build_config.py:38: in _read
+    return path.read_text(encoding="utf-8")
+..\..\..\..\miniforge3\Lib\pathlib.py:1027: in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+..\..\..\..\miniforge3\Lib\pathlib.py:1013: in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os-v2\\build\\iso\\buildroot-config\\kryos_defconfig'
+_______________________ TestDefconfig.test_systemd_init _______________________
+build\iso\tests\test_build_config.py:70: in test_systemd_init
+    assert "BR2_SYSTEM_INIT_SYSTEMD=y" in _read(DEFCONFIG)
+build\iso\tests\test_build_config.py:38: in _read
+    return path.read_text(encoding="utf-8")
+..\..\..\..\miniforge3\Lib\pathlib.py:1027: in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+..\..\..\..\miniforge3\Lib\pathlib.py:1013: in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os-v2\\build\\iso\\buildroot-config\\kryos_defconfig'
+________________ TestDefconfig.test_required_packages_present _________________
+build\iso\tests\test_build_config.py:73: in test_required_packages_present
+    content = _read(DEFCONFIG)
+build\iso\tests\test_build_config.py:38: in _read
+    return path.read_text(encoding="utf-8")
+..\..\..\..\miniforge3\Lib\pathlib.py:1027: in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+..\..\..\..\miniforge3\Lib\pathlib.py:1013: in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os-v2\\build\\iso\\buildroot-config\\kryos_defconfig'
+_____________________ TestDefconfig.test_grub2_bootloader _____________________
+build\iso\tests\test_build_config.py:93: in test_grub2_bootloader
+    content = _read(DEFCONFIG)
+build\iso\tests\test_build_config.py:38: in _read
+    return path.read_text(encoding="utf-8")
+..\..\..\..\miniforge3\Lib\pathlib.py:1027: in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+..\..\..\..\miniforge3\Lib\pathlib.py:1013: in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os-v2\\build\\iso\\buildroot-config\\kryos_defconfig'
+___________________ TestDefconfig.test_squashfs_filesystem ____________________
+build\iso\tests\test_build_config.py:97: in test_squashfs_filesystem
+    assert "BR2_TARGET_ROOTFS_SQUASHFS=y" in _read(DEFCONFIG)
+build\iso\tests\test_build_config.py:38: in _read
+    return path.read_text(encoding="utf-8")
+..\..\..\..\miniforge3\Lib\pathlib.py:1027: in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+..\..\..\..\miniforge3\Lib\pathlib.py:1013: in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os-v2\\build\\iso\\buildroot-config\\kryos_defconfig'
+_____________________ TestInitScript.test_s99kryos_exists _____________________
+build\iso\tests\test_build_config.py:332: in test_s99kryos_exists
+    assert S99KRYOS.exists(), f"Missing: {S99KRYOS}"
+E   AssertionError: Missing: C:\Users\prady\Desktop\Claude\OS\prady-os-v2\build\iso\buildroot-config\overlay\etc\init.d\S99kryos
+E   assert False
+E    +  where False = exists()
+E    +    where exists = WindowsPath('C:/Users/prady/Desktop/Claude/OS/prady-os-v2/build/iso/buildroot-config/overlay/etc/init.d/S99kryos').exists
+_______________ TestInitScript.test_s99kryos_has_docker_compose _______________
+build\iso\tests\test_build_config.py:335: in test_s99kryos_has_docker_compose
+    content = _read(S99KRYOS)
+build\iso\tests\test_build_config.py:38: in _read
+    return path.read_text(encoding="utf-8")
+..\..\..\..\miniforge3\Lib\pathlib.py:1027: in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+..\..\..\..\miniforge3\Lib\pathlib.py:1013: in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os-v2\\build\\iso\\buildroot-config\\overlay\\etc\\init.d\\S99kryos'
+_____________ TestInitScript.test_s99kryos_has_compose_file_path ______________
+build\iso\tests\test_build_config.py:341: in test_s99kryos_has_compose_file_path
+    content = _read(S99KRYOS)
+build\iso\tests\test_build_config.py:38: in _read
+    return path.read_text(encoding="utf-8")
+..\..\..\..\miniforge3\Lib\pathlib.py:1027: in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+..\..\..\..\miniforge3\Lib\pathlib.py:1013: in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os-v2\\build\\iso\\buildroot-config\\overlay\\etc\\init.d\\S99kryos'
+_______________ TestInitScript.test_s99kryos_launches_chromium ________________
+build\iso\tests\test_build_config.py:347: in test_s99kryos_launches_chromium
+    content = _read(S99KRYOS).lower()
+build\iso\tests\test_build_config.py:38: in _read
+    return path.read_text(encoding="utf-8")
+..\..\..\..\miniforge3\Lib\pathlib.py:1027: in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+..\..\..\..\miniforge3\Lib\pathlib.py:1013: in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os-v2\\build\\iso\\buildroot-config\\overlay\\etc\\init.d\\S99kryos'
+____________ TestInitScript.test_s99kryos_waits_for_docker_daemon _____________
+build\iso\tests\test_build_config.py:351: in test_s99kryos_waits_for_docker_daemon
+    content = _read(S99KRYOS).lower()
+build\iso\tests\test_build_config.py:38: in _read
+    return path.read_text(encoding="utf-8")
+..\..\..\..\miniforge3\Lib\pathlib.py:1027: in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+..\..\..\..\miniforge3\Lib\pathlib.py:1013: in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os-v2\\build\\iso\\buildroot-config\\overlay\\etc\\init.d\\S99kryos'
+__________________ TestInitScript.test_s99kryos_sets_display __________________
+build\iso\tests\test_build_config.py:358: in test_s99kryos_sets_display
+    content = _read(S99KRYOS)
+build\iso\tests\test_build_config.py:38: in _read
+    return path.read_text(encoding="utf-8")
+..\..\..\..\miniforge3\Lib\pathlib.py:1027: in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+..\..\..\..\miniforge3\Lib\pathlib.py:1013: in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os-v2\\build\\iso\\buildroot-config\\overlay\\etc\\init.d\\S99kryos'
+__________________ TestInitScript.test_s99kryos_has_shebang ___________________
+build\iso\tests\test_build_config.py:362: in test_s99kryos_has_shebang
+    content = _read(S99KRYOS)
+build\iso\tests\test_build_config.py:38: in _read
+    return path.read_text(encoding="utf-8")
+..\..\..\..\miniforge3\Lib\pathlib.py:1027: in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+..\..\..\..\miniforge3\Lib\pathlib.py:1013: in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os-v2\\build\\iso\\buildroot-config\\overlay\\etc\\init.d\\S99kryos'
+______________ TestInitScript.test_s99kryos_has_start_stop_cases ______________
+build\iso\tests\test_build_config.py:366: in test_s99kryos_has_start_stop_cases
+    content = _read(S99KRYOS)
+build\iso\tests\test_build_config.py:38: in _read
+    return path.read_text(encoding="utf-8")
+..\..\..\..\miniforge3\Lib\pathlib.py:1027: in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+..\..\..\..\miniforge3\Lib\pathlib.py:1013: in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\prady\\Desktop\\Claude\\OS\\prady-os-v2\\build\\iso\\buildroot-config\\overlay\\etc\\init.d\\S99kryos'
+============================== warnings summary ===============================
+..\..\..\..\miniforge3\Lib\site-packages\pydantic\_internal\_fields.py:160
+..\..\..\..\miniforge3\Lib\site-packages\pydantic\_internal\_fields.py:160
+..\..\..\..\miniforge3\Lib\site-packages\pydantic\_internal\_fields.py:160
+platform/agent-runtime/tests/test_agent_manager.py::TestAgentAPI::test_health_endpoint
+  C:\Users\prady\miniforge3\Lib\site-packages\pydantic\_internal\_fields.py:160: UserWarning: Field "model_id" has conflict with protected namespace "model_".
+  
+  You may be able to resolve this warning by setting `model_config['protected_namespaces'] = ()`.
+    warnings.warn(
+
+..\..\..\..\miniforge3\Lib\site-packages\keras\src\export\tf2onnx_lib.py:8
+  C:\Users\prady\miniforge3\Lib\site-packages\keras\src\export\tf2onnx_lib.py:8: FutureWarning: In the future `np.object` will be defined as the corresponding NumPy scalar.
+    if not hasattr(np, "object"):
+
+..\..\..\..\miniforge3\Lib\site-packages\pydantic\_internal\_fields.py:160
+  C:\Users\prady\miniforge3\Lib\site-packages\pydantic\_internal\_fields.py:160: UserWarning: Field "model_size" has conflict with protected namespace "model_".
+  
+  You may be able to resolve this warning by setting `model_config['protected_namespaces'] = ()`.
+    warnings.warn(
+
+platform/self-learning/tests/test_self_learning_service.py::test_health
+  C:\Users\prady\miniforge3\Lib\site-packages\pydantic\_internal\_fields.py:160: UserWarning: Field "model_used" has conflict with protected namespace "model_".
+  
+  You may be able to resolve this warning by setting `model_config['protected_namespaces'] = ()`.
+    warnings.warn(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED platform/ebpf-hardening/tests/test_ebpf_loader.py::TestSandboxing::test_sandbox_agent
+FAILED platform/ebpf-hardening/tests/test_ebpf_loader.py::TestSandboxing::test_detach_agent
+FAILED build/iso/tests/test_build_config.py::TestDefconfig::test_defconfig_exists
+FAILED build/iso/tests/test_build_config.py::TestDefconfig::test_x86_64_arch
+FAILED build/iso/tests/test_build_config.py::TestDefconfig::test_custom_git_kernel
+FAILED build/iso/tests/test_build_config.py::TestDefconfig::test_kernel_repo_is_fork
+FAILED build/iso/tests/test_build_config.py::TestDefconfig::test_systemd_init
+FAILED build/iso/tests/test_build_config.py::TestDefconfig::test_required_packages_present
+FAILED build/iso/tests/test_build_config.py::TestDefconfig::test_grub2_bootloader
+FAILED build/iso/tests/test_build_config.py::TestDefconfig::test_squashfs_filesystem
+FAILED build/iso/tests/test_build_config.py::TestInitScript::test_s99kryos_exists
+FAILED build/iso/tests/test_build_config.py::TestInitScript::test_s99kryos_has_docker_compose
+FAILED build/iso/tests/test_build_config.py::TestInitScript::test_s99kryos_has_compose_file_path
+FAILED build/iso/tests/test_build_config.py::TestInitScript::test_s99kryos_launches_chromium
+FAILED build/iso/tests/test_build_config.py::TestInitScript::test_s99kryos_waits_for_docker_daemon
+FAILED build/iso/tests/test_build_config.py::TestInitScript::test_s99kryos_sets_display
+FAILED build/iso/tests/test_build_config.py::TestInitScript::test_s99kryos_has_shebang
+FAILED build/iso/tests/test_build_config.py::TestInitScript::test_s99kryos_has_start_stop_cases
+18 failed, 690 passed, 2 skipped, 7 warnings in 133.02s (0:02:13)
+Task was destroyed but it is pending!
+task: <Task pending name='Task-1152' coro=<_run_pull_job() running at C:\Users\prady\Desktop\Claude\OS\prady-os-v2\platform\model-hub\model_hub_service.py:440>>
+Exception ignored in: <coroutine object _run_pull_job at 0x0000018162D76E80>
+Traceback (most recent call last):
+  File "C:\Users\prady\Desktop\Claude\OS\prady-os-v2\platform\model-hub\model_hub_service.py", line 485, in _run_pull_job
+TypeError: 'NoneType' object does not support the asynchronous context manager protocol

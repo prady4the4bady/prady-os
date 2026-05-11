@@ -14,12 +14,12 @@ describe("DOCK_APPS configuration", () => {
     }
   });
 
-  it("includes Terminal, Files, Browser, Prady Tasks, and Settings", () => {
+  it("includes Terminal, Files, Browser, Kryos Tasks, and Settings", () => {
     const ids = DOCK_APPS.map((a) => a.id);
     expect(ids).toContain("terminal");
     expect(ids).toContain("files");
     expect(ids).toContain("browser");
-    expect(ids).toContain("prady_tasks");
+    expect(ids).toContain("kryos_tasks");
     expect(ids).toContain("settings");
   });
 
