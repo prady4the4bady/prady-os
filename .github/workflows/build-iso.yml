@@ -1,45 +1,110 @@
-# Phase 33: Production ISO Build — Buildroot-based CI
 name: Build Prady OS ISO
 
+# Two paths:
+# - push to main / manual dispatch: validate config + run fast ISO test suite
+#   (no Buildroot build — would take 2+ hours on every push).
+# - tag push `v*`: validate, then run the full Buildroot build and publish
+#   the ISO as a GitHub Release asset.
 on:
   push:
     branches: [main]
+    tags: ['v*']
   workflow_dispatch:
 
+permissions:
+  contents: read
+
+env:
+  PIP_DISABLE_PIP_VERSION_CHECK: "1"
+  PYTHONDONTWRITEBYTECODE: "1"
+
 jobs:
-  build-iso:
+  validate:
+    name: Validate ISO build configuration
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          submodules: false
+
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+
+      - name: Install Python test dependencies
+        run: python -m pip install --upgrade pip pytest pyyaml Pillow
+
+      - name: Run ISO build config tests
+        run: python -m pytest build/iso/tests/ -W error::DeprecationWarning -q
+
+      - name: Validate production compose
+        run: docker compose -f build/iso/docker-compose.prod.yml config --quiet
+
+      - name: Validate development compose
+        run: docker compose -f docker-compose.dev.yml config --quiet
+
+      - name: Shell script syntax check
+        run: |
+          bash -n build/iso/scripts/build_iso.sh
+          bash -n build/iso/scripts/sign_iso.sh
+          bash -n build/iso/scripts/write_usb.sh
+
+  build-iso:
+    name: Build and publish ISO
+    # Only run the heavy Buildroot build for tagged releases.
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
         with:
           submodules: recursive
 
-      - name: Install buildroot dependencies
+      - name: Install Buildroot dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y \
             build-essential libncurses-dev bison flex libssl-dev libelf-dev \
-            wget rsync bc cpio unzip python3 python3-pip
-
-      - name: Install GRUB tools
-        run: |
-          sudo apt-get install -y \
+            wget rsync bc cpio unzip python3 python3-pip \
             grub-pc-bin grub-efi-amd64-bin xorriso squashfs-tools mtools
 
-      - name: Install Python test dependencies
-        run: pip3 install pytest pyyaml
+      - name: Install Python build dependencies
+        run: python3 -m pip install --upgrade pip pytest pyyaml Pillow
 
-      - name: Install Pillow for background generation
-        run: pip3 install Pillow
-
-      - name: Run Phase 33 tests (fast, no ISO build)
-        run: python -m pytest build/iso/tests/ -W error::DeprecationWarning -q
+      - name: Pre-build sanity tests
+        run: python3 -m pytest build/iso/tests/ -W error::DeprecationWarning -q
 
       - name: Validate production compose
         run: docker compose -f build/iso/docker-compose.prod.yml config --quiet
 
       - name: Build ISO
         run: SIGN_ISO=1 make -C build/iso iso-fast
+
+      - name: Emit SHA256 summary
+        run: |
+          ISO=output/prady-os.iso
+          if [ ! -f "$ISO" ]; then
+            echo "ERROR: ISO not found at $ISO" >&2
+            ls -la output/ || true
+            exit 1
+          fi
+          SHA256=$(sha256sum "$ISO" | awk '{print $1}')
+          {
+            echo "## Prady OS ISO Build"
+            echo "| Field | Value |"
+            echo "|-------|-------|"
+            echo "| ISO   | prady-os.iso |"
+            echo "| SHA256 | \`${SHA256}\` |"
+            if [ -f output/prady-os.iso.sig ]; then
+              echo "| Signature | prady-os.iso.sig |"
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload ISO artifact
         uses: actions/upload-artifact@v4
@@ -50,26 +115,11 @@ jobs:
             output/prady-os.sha256
             output/release-checksums.txt
             output/prady-os.iso.sig
-          retention-days: 7
-
-      - name: Post SHA256 summary
-        run: |
-          if [ -f output/prady-os.iso ]; then
-            SHA256=$(sha256sum output/prady-os.iso | awk '{print $1}')
-            echo "## Prady OS ISO Build" >> $GITHUB_STEP_SUMMARY
-            echo "| Field | Value |" >> $GITHUB_STEP_SUMMARY
-            echo "|-------|-------|" >> $GITHUB_STEP_SUMMARY
-            echo "| SHA256 | \`${SHA256}\` |" >> $GITHUB_STEP_SUMMARY
-            echo "| ISO | prady-os.iso |" >> $GITHUB_STEP_SUMMARY
-            echo "| Phase | 38/38 |" >> $GITHUB_STEP_SUMMARY
-            if [ -f output/prady-os.iso.sig ]; then
-              echo "| Signature | prady-os.iso.sig |" >> $GITHUB_STEP_SUMMARY
-            fi
-          else
-            echo "ISO not found (build may have been skipped)"
-          fi
+          if-no-files-found: warn
+          retention-days: 30
 
   publish-release:
+    name: Publish GitHub Release
     if: startsWith(github.ref, 'refs/tags/v')
     needs: build-iso
     runs-on: ubuntu-latest
@@ -82,7 +132,7 @@ jobs:
           name: prady-os-iso
           path: output
 
-      - name: Publish GitHub release assets
+      - name: Publish release assets
         uses: softprops/action-gh-release@v2
         with:
           files: |
@@ -90,90 +140,5 @@ jobs:
             output/prady-os.sha256
             output/release-checksums.txt
             output/prady-os.iso.sig
-
-  # Future phases that extend this workflow will add jobs below
-  # Phase 38: Sign ISO (sbsign + GPG)
-
-  # DEAD CODE BELOW — live-build approach replaced by Buildroot in Phase 33
-  # Preserved for reference only; this job is never triggered.
-  _legacy-live-build-ref:
-    if: false
-    runs-on: ubuntu-latest
-    steps:
-      - name: Shim isohybrid (not needed for CI artifact)
-        run: |
-          # live-build calls isohybrid after genisoimage to create a hybrid-boot ISO.
-          # On Ubuntu 24.04 runners isohybrid is not available; shim it so build succeeds.
-          printf '#!/bin/sh\necho "isohybrid shim: CI only"\nexit 0\n' | sudo tee /usr/bin/isohybrid > /dev/null
-          sudo chmod +x /usr/bin/isohybrid
-
-      - name: Disable live-build syslinux stage
-        run: |
-          # Ubuntu's live-build fork invokes a syslinux stage that is brittle in CI.
-          # Force GRUB-only image generation by making syslinux helper scripts no-op.
-          mapfile -t SYSLINUX_SCRIPTS < <(find /usr -type f \( -name "lb_binary_syslinux" -o -name "binary_syslinux" \) 2>/dev/null)
-          if [ "${#SYSLINUX_SCRIPTS[@]}" -eq 0 ]; then
-            echo "ERROR: could not find live-build syslinux helper scripts"
-            exit 1
-          fi
-          for script in "${SYSLINUX_SCRIPTS[@]}"; do
-            echo "Disabling $script"
-            sudo cp "$script" "$script.bak"
-            printf '#!/bin/sh\nexit 0\n' | sudo tee "$script" >/dev/null
-            sudo chmod +x "$script"
-          done
-
-      - name: Stage syslinux assets
-        run: |
-          # The Ubuntu live-build lb_binary_syslinux script expects syslinux files at /root/isolinux/.
-          # Pre-populate that directory from the installed Ubuntu packages so the build doesn't fail.
-          sudo mkdir -p /root/isolinux
-          # Locate a real, readable isolinux.bin (prefer package file lists; fallback to filesystem search).
-          echo "Searching for isolinux.bin under /usr..."
-          ISOLINUX_BIN=""
-          for candidate in $(dpkg -L isolinux 2>/dev/null | grep -E '/isolinux\.bin$' || true); do
-            if [ -f "$candidate" ]; then
-              ISOLINUX_BIN="$candidate"
-              break
-            fi
-          done
-          if [ -z "$ISOLINUX_BIN" ]; then
-            while IFS= read -r candidate; do
-              if [ -f "$candidate" ]; then
-                ISOLINUX_BIN="$candidate"
-                break
-              fi
-            done < <(find /usr -type f -name "isolinux.bin" 2>/dev/null)
-          fi
-          echo "Found isolinux.bin at: ${ISOLINUX_BIN:-<not found>}"
-          if [ -n "$ISOLINUX_BIN" ]; then
-            sudo cp "$ISOLINUX_BIN" /root/isolinux/
-            sudo test -f /root/isolinux/isolinux.bin
-          else
-            echo "ERROR: isolinux.bin not found or not readable; cannot continue"
-            exit 1
-          fi
-          # Copy all .c32 modules (from syslinux-common → /usr/lib/syslinux/modules/bios/)
-          find /usr/lib/syslinux -type f -name "*.c32" 2>/dev/null | while read -r f; do sudo cp "$f" /root/isolinux/; done
-          echo "Staged files in /root/isolinux/:"
-          sudo find /root/isolinux -type f -printf "%f\n"
-
-      - name: Inject isolinux files into includes.binary
-        run: |
-          # Ensure genisoimage sees isolinux/boot catalog paths in the final image tree.
-          sudo mkdir -p iso-build/config/includes.binary/isolinux
-          sudo cp /root/isolinux/isolinux.bin iso-build/config/includes.binary/isolinux/
-          sudo cp /root/isolinux/vesamenu.c32 iso-build/config/includes.binary/isolinux/
-          sudo chown -R "$USER":"$USER" iso-build/config/includes.binary/isolinux
-          ls -l iso-build/config/includes.binary/isolinux
-
-      - name: Build ISO
-        working-directory: iso-build
-        run: sudo make build
-
-      - name: Upload ISO artifact
-        uses: actions/upload-artifact@v7
-        with:
-          name: prady-os-iso
-          path: iso-build/prady-os.iso
-          retention-days: 7
+          fail_on_unmatched_files: false
+          generate_release_notes: true

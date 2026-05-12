@@ -278,7 +278,7 @@ class TestBuildScript:
         assert "qemu-system-x86_64" in _read(BUILD_ISO_SH)
 
     def test_build_iso_release_name(self) -> None:
-        assert 'ISO_NAME="kryos-os.iso"' in _read(BUILD_ISO_SH)
+        assert 'ISO_NAME="prady-os.iso"' in _read(BUILD_ISO_SH)
 
 
 # ══════════════════════════════════════════════════════════════════════════════

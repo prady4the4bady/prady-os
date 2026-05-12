@@ -9,20 +9,30 @@ on:
 permissions:
   contents: read
 
+# actions/checkout@v5 runs on Node.js 24 — no deprecation warnings.
+# submodules: false prevents fetching the phantom gitlinks listed in
+# .gitmodules (compositor/ags-base, etc.) that are heavy and not needed
+# to run unit tests.
+env:
+  PIP_DISABLE_PIP_VERSION_CHECK: "1"
+  PYTHONDONTWRITEBYTECODE: "1"
+
 jobs:
   test-model-gateway:
     name: Phase 1 - model-gateway
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
+        with:
+          submodules: false
 
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.11"
-          cache: 'pip'
-          cache-dependency-path: 'ai-core/model-gateway/requirements-dev.txt'
+          cache: pip
+          cache-dependency-path: ai-core/model-gateway/requirements-dev.txt
 
       - name: Install dependencies
         working-directory: ai-core/model-gateway
@@ -33,7 +43,7 @@ jobs:
       - name: Run tests
         working-directory: ai-core/model-gateway
         env:
-          OPENAI_API_KEY: "test-key"
+          OPENAI_API_KEY: test-key
         run: pytest tests -v
 
   test-workflow-engine:
@@ -41,14 +51,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
+        with:
+          submodules: false
 
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.11"
-          cache: 'pip'
-          cache-dependency-path: 'orchestration/workflow-engine/requirements-dev.txt'
+          cache: pip
+          cache-dependency-path: orchestration/workflow-engine/requirements-dev.txt
 
       - name: Install dependencies
         working-directory: orchestration/workflow-engine
@@ -65,14 +77,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
+        with:
+          submodules: false
 
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.11"
-          cache: 'pip'
-          cache-dependency-path: 'automation/screen-agent/requirements-dev.txt'
+          cache: pip
+          cache-dependency-path: automation/screen-agent/requirements-dev.txt
 
       - name: Install dependencies
         working-directory: automation/screen-agent
@@ -89,14 +103,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
+        with:
+          submodules: false
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: "20"
-          cache: 'npm'
-          cache-dependency-path: 'desktop/aqua-shell/package-lock.json'
+          cache: npm
+          cache-dependency-path: desktop/aqua-shell/package-lock.json
 
       - name: Install dependencies
         working-directory: desktop/aqua-shell
@@ -111,14 +127,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
+        with:
+          submodules: false
 
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.11"
-          cache: 'pip'
-          cache-dependency-path: 'agents/lumyn/requirements-dev.txt'
+          cache: pip
+          cache-dependency-path: agents/lumyn/requirements-dev.txt
 
       - name: Install dependencies
         working-directory: agents/lumyn
@@ -135,43 +153,54 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
+        with:
+          submodules: false
 
       - name: Validate docker-compose.yml
-        run: docker compose config > /dev/null
+        run: docker compose config --quiet
 
       - name: Validate docker-compose.dev.yml
-        run: docker compose -f docker-compose.dev.yml config > /dev/null
+        run: docker compose -f docker-compose.dev.yml config --quiet
+
+      - name: Validate build/iso/docker-compose.prod.yml
+        run: docker compose -f build/iso/docker-compose.prod.yml config --quiet
 
   audit-python-deps:
     name: Audit Python dependencies
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
+        with:
+          submodules: false
 
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.11"
 
-      - name: Install Safety
-        run: pip install safety
+      - name: Install pip-audit
+        run: pip install --upgrade pip pip-audit
 
       - name: Audit ai-core/model-gateway
-        run: safety check --file ai-core/model-gateway/requirements.txt
+        working-directory: ai-core/model-gateway
+        run: pip-audit --requirement requirements.txt --disable-pip
         continue-on-error: true
 
       - name: Audit orchestration/workflow-engine
-        run: safety check --file orchestration/workflow-engine/requirements.txt
+        working-directory: orchestration/workflow-engine
+        run: pip-audit --requirement requirements.txt --disable-pip
         continue-on-error: true
 
       - name: Audit automation/screen-agent
-        run: safety check --file automation/screen-agent/requirements.txt
+        working-directory: automation/screen-agent
+        run: pip-audit --requirement requirements.txt --disable-pip
         continue-on-error: true
 
       - name: Audit agents/lumyn
-        run: safety check --file agents/lumyn/requirements.txt
+        working-directory: agents/lumyn
+        run: pip-audit --requirement requirements.txt --disable-pip
         continue-on-error: true
 
   audit-node-deps:
@@ -179,10 +208,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
+        with:
+          submodules: false
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: "20"
 
@@ -209,7 +240,7 @@ jobs:
       contents: read
     steps:
       - name: Dispatch build-iso workflow
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             await github.rest.actions.createWorkflowDispatch({

@@ -35,7 +35,7 @@ GRUB_THEME_DIR="${BUILD_ISO_DIR}/grub/grub-theme"
 UI_DIST="${REPO_ROOT}/ui/desktop-shell/dist"
 PROD_COMPOSE="${BUILD_ISO_DIR}/docker-compose.prod.yml"
 OUTPUT_DIR="${REPO_ROOT}/output"
-ISO_NAME="kryos-os.iso"
+ISO_NAME="prady-os.iso"
 SKIP_QEMU="${SKIP_QEMU:-0}"
 SIGN_ISO="${SIGN_ISO:-0}"
 

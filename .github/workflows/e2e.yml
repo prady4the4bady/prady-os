@@ -9,6 +9,18 @@ on:
     branches:
       - main
 
+permissions:
+  contents: read
+
+# Only the minimum orchestration slice is required to run the e2e smoke test:
+# model-gateway (11430) → workflow-engine (11431) → playwright-runner (shared by the engine).
+# Building the full 34-service stack on every push is prohibitively slow, so
+# we bring up only the services the e2e suite actually calls.
+env:
+  ESSENTIAL_SERVICES: "redis model-gateway playwright-runner workflow-engine"
+  PIP_DISABLE_PIP_VERSION_CHECK: "1"
+  PYTHONDONTWRITEBYTECODE: "1"
+
 jobs:
   e2e-hn-task:
     runs-on: ubuntu-latest
@@ -16,39 +28,53 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
+        with:
+          submodules: false
 
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.11"
+          cache: pip
+          cache-dependency-path: tests/e2e/requirements.txt
+
+      - name: Install E2E test dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r tests/e2e/requirements.txt
 
       - name: Ensure desktop directory
         run: mkdir -p "$HOME/Desktop"
 
-      - name: Start stack
-        run: make dev-up
+      - name: Start essential services
+        run: |
+          docker compose -f docker-compose.dev.yml up -d --build --wait \
+            --wait-timeout 600 \
+            $ESSENTIAL_SERVICES
 
-      - name: Wait for orchestration service
+      - name: Wait for orchestration service /healthz
         run: |
           echo "Waiting for workflow-engine to be ready..."
           for i in $(seq 1 30); do
             if curl -sf http://127.0.0.1:11431/healthz > /dev/null 2>&1; then
               echo "Orchestration service is up after ${i}x5s"
-              break
+              exit 0
             fi
             echo "  attempt $i/30 — sleeping 5s"
             sleep 5
           done
-          curl -sf http://127.0.0.1:11431/healthz || { echo "Service never became healthy"; exit 1; }
+          echo "Service never became healthy"
+          docker compose -f docker-compose.dev.yml logs workflow-engine --no-color | tail -200
+          exit 1
 
       - name: Run E2E test
-        run: make test-e2e
+        run: python -m pytest tests/e2e/test_hn_task.py -s -v
 
       - name: Dump service logs on failure
         if: failure()
-        run: docker compose -f docker-compose.dev.yml logs --no-color
+        run: docker compose -f docker-compose.dev.yml logs --no-color $ESSENTIAL_SERVICES | tail -500
 
       - name: Teardown stack
         if: always()
-        run: make dev-down
+        run: docker compose -f docker-compose.dev.yml down --remove-orphans
