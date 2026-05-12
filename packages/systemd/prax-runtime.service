@@ -1,6 +1,6 @@
 [Unit]
 Description=Prax Agent Runtime
-Documentation=https://github.com/prady-os/prady-os-v2/blob/main/docs/ARCHITECTURE.md
+Documentation=https://github.com/prady4the4bady/prady-os/blob/main/docs/ARCHITECTURE.md
 After=network-online.target vyrex-gateway.service
 Wants=network-online.target
 

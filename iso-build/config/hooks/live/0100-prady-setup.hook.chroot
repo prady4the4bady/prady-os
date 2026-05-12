@@ -11,7 +11,7 @@ echo 'prady:prady' | chpasswd
 
 mkdir -p /opt/prady-os
 if [ ! -d /opt/prady-os/.git ] && [ -z "$(ls -A /opt/prady-os 2>/dev/null || true)" ]; then
-  git clone https://github.com/prady4the4bady/prady-os-v2 /opt/prady-os || true
+  git clone https://github.com/prady4the4bady/prady-os /opt/prady-os || true
 fi
 
 if [ -d /opt/prady-os ] && command -v docker >/dev/null 2>&1; then

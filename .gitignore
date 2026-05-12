@@ -76,3 +76,12 @@ env/
 .DS_Store
 Thumbs.db
 desktop.ini
+
+# Local build/probe logs
+.*-build.log
+.gate10_*.log
+.fix_*.log
+.final_fix.log
+.automation-service-build.log
+.focused-build.log
+.voice-service-build.log

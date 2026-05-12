@@ -23,7 +23,7 @@ test:
 
 clean:
 	@echo -e "$(YELLOW)[build] Cleaning generated ISO artifacts...$(RESET)"
-	@rm -rf "$(ISO_DIR)/rootfs" "$(ISO_DIR)/iso" "$(ISO_DIR)/efiboot.img" "$(CURDIR)/prady-os-v2.iso"
+	@rm -rf "$(ISO_DIR)/rootfs" "$(ISO_DIR)/iso" "$(ISO_DIR)/efiboot.img" "$(CURDIR)/prady-os-v1.0.0.iso" "$(CURDIR)/prady-os-v2.iso"
 	@echo -e "$(GREEN)[build] Clean complete.$(RESET)"
 
 all: iso test

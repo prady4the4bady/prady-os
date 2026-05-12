@@ -1,3 +1,14 @@
+## Prady OS v1.0.0 — "Prax"
+
+> The world's first fully open-source AI-native OS.
+> Prax controls your device. You supervise.
+
+**Repository**: https://github.com/prady4the4bady/prady-os
+**License**: MIT
+**Built by**: Pradyun — Dubai, UAE — 2026
+
+---
+
 # Prady OS v1.0.0 — Privacy-First AI-Native Desktop OS
 
 **Release Date:** 2024  
@@ -71,9 +82,9 @@ sha256sum -c prady-os.sha256
 └────────────────────────────────────────────────────┘
 ```
 
-## Microservices (37 Services)
+## Microservices (34 Services)
 
-The system runs 37 microservices including:
+The system runs 34 microservices including:
 
 - **agent-runtime** — Prax Agent execution engine
 - **vyrex-proxy** — LLM routing and caching
@@ -83,7 +94,9 @@ The system runs 37 microservices including:
 - **task-scheduler** — Autonomous task coordination
 - **config-service** — System configuration management
 - **health-monitor** — Service health tracking
-- And 29 more specialized services
+- And 26 more specialized services
+
+All 34 services verified healthy via smoke test (`build/smoke_test.ps1`): **34/34 passing**.
 
 ## Quality Assurance
 
@@ -94,8 +107,8 @@ All 10 production gates verified:
 ✅ **Gate 3:** TypeScript strict mode (desktop-shell)  
 ✅ **Gate 4:** ESLint (0 warnings)  
 ✅ **Gate 5:** TypeScript SDK strict mode  
-✅ **Gate 6:** Docker Compose dev (37 services valid)  
-✅ **Gate 7:** Docker Compose prod (37 services valid)  
+✅ **Gate 6:** Docker Compose dev (34 services valid)  
+✅ **Gate 7:** Docker Compose prod (34 services valid)  
 ✅ **Gate 8:** Shell scripts (all 3 syntax-valid)  
 ✅ **Gate 9:** Naming compliance (14/14 canonical)  
 ✅ **Gate 10:** Git status (clean)  
@@ -158,7 +171,7 @@ Title: Prady OS v1.0.0 – Privacy-First AI-Native Desktop OS
 
 URL: https://github.com/prady4the4bady/prady-os/releases/tag/v1.0.0
 
-Text: Prady OS v1.0.0 is a privacy-first, AI-native desktop distribution built on Wayland+Hyprland with autonomous task execution via Prax Agent. Includes Vyrex (inference router), Lumyn (reasoning), and Kryos (orchestration). 37 microservices, all gates passing. Linux 6.x with custom eBPF modules for input handling and IPC. Download ISO from GitHub releases.
+Text: Prady OS v1.0.0 is a privacy-first, AI-native desktop distribution built on Wayland+Hyprland with autonomous task execution via Prax Agent. Includes Vyrex (inference router), Lumyn (reasoning), and Kryos (orchestration). 34 microservices, all gates passing. Linux 6.x with custom eBPF modules for input handling and IPC. Download ISO from GitHub releases.
 ```
 
 ### Community Announcements
@@ -173,7 +186,7 @@ Text: Prady OS v1.0.0 is a privacy-first, AI-native desktop distribution built o
 - Commits: 40+ major feature commits
 - Files Changed: 100+ source files
 - Tests: 101 pytest tests (100 passing)
-- Services: 37 microservices validated
+- Services: 34 microservices validated
 - Build Time: ~12 minutes (full ISO)
 - ISO Size: ~1.2 GB (compressed)
 
