@@ -1,195 +1,118 @@
-## Prady OS v1.0.0 — "Prax"
+# Prady OS v1.0.0
 
-> The world's first fully open-source AI-native OS.
-> Prax controls your device. You supervise.
+**Repository:** https://github.com/prady4the4bady/prady-os  
+**License:** MIT  
+**Built by:** Pradyun — Dubai, UAE — 2026
 
-**Repository**: https://github.com/prady4the4bady/prady-os
-**License**: MIT
-**Built by**: Pradyun — Dubai, UAE — 2026
+## What This Release Is
 
----
+A working Linux desktop distribution with a 34-service AI stack that
+runs local-first through Ollama (with cloud API fallback) and a build
+pipeline that produces a signed bootable ISO.
 
-# Prady OS v1.0.0 — Privacy-First AI-Native Desktop OS
+## What's In It
 
-**Release Date:** 2024  
-**Status:** Production Ready ✅
-
-## Overview
-
-Prady OS v1.0.0 is a privacy-first, AI-native desktop operating system distribution built on Linux 6.x with advanced autonomous capabilities through the Prax Agent framework.
-
-### Key Features
-
-| Feature | Implementation |
-|---------|-----------------|
-| **OS Distribution** | Custom buildroot-based Linux distro with Wayland compositor |
-| **Compositor** | Hyprland (Wayland) with AI-aware window management |
-| **Autonomous Agent** | Prax Agent (TypeScript) — AI-native task execution |
-| **Inference Router** | Vyrex (Go) — multi-model LLM routing & caching |
-| **Reasoning Engine** | Lumyn Agent — advanced reasoning sub-agent |
-| **Orchestration** | Kryos orchestration engine for service coordination |
-| **Privacy** | On-device processing, no cloud dependencies |
-| **Security** | Custom eBPF kernel modules, secure boot support |
+| Component | Role |
+|-----------|------|
+| **Prady OS** | Linux desktop distribution (Buildroot-based, Wayland / Hyprland compositor) |
+| **Kryos** | Multi-agent swarm orchestration engine (`orchestration/kryos-swarm`) |
+| **Prax** | Autonomous AI agent — React loop over plan / act / observe (`prax-agent` + `agent-runtime` + `computer-use` + `automation-service`) |
+| **Lumyn** | Deep reasoning sub-agent used by Prax (`agents/lumyn`) |
+| **Vyrex** | AI inference proxy — OpenAI-compatible gateway over local Ollama and cloud APIs (`vyrex-proxy` + `ai-core/model-gateway`) |
+| 34 platform microservices | Auth, memory, scheduler, watchdog, OTA, BIOS AI, notification bus, audit log, etc. |
+| Desktop shell | GTK / React shell with dock, mission control, launcher, OOBE wizard |
+| CI pipelines | `Monorepo CI`, `E2E`, `Build Prady OS ISO` |
 
 ## Installation
 
 ### From ISO
 
-1. Download `prady-os.iso` from this release
-2. Write to USB: `sudo dd if=prady-os.iso of=/dev/sdX bs=4M`
-3. Boot from USB and follow installer prompts
-4. Install to disk with encrypted home directory (default)
-
-### Verify Checksum
-
 ```bash
+# Download from GitHub Releases
+curl -L https://github.com/prady4the4bady/prady-os/releases/download/v1.0.0/prady-os.iso \
+    -o prady-os.iso
+
+# Verify checksum
+curl -L https://github.com/prady4the4bady/prady-os/releases/download/v1.0.0/prady-os.sha256 \
+    -o prady-os.sha256
 sha256sum -c prady-os.sha256
+
+# Write to USB
+sudo dd if=prady-os.iso of=/dev/sdX bs=4M status=progress
 ```
 
-## System Architecture
+Boot from the USB and follow the installer. The OOBE wizard runs on
+first login.
 
-```
-┌─ Prady OS v1.0.0 ─────────────────────────────────┐
-│                                                    │
-│  ┌─ Hyprland Compositor (Wayland) ──────────────┐ │
-│  │  ├─ Prady Shell (Desktop UI)                 │ │
-│  │  ├─ Prady Bar (Status bar)                   │ │
-│  │  ├─ Prady Dock (App launcher)                │ │
-│  │  └─ Prady Spotlight (Search/command)         │ │
-│  └──────────────────────────────────────────────┘ │
-│                                                    │
-│  ┌─ Prax Agent (Autonomous) ─────────────────────┐ │
-│  │  ├─ React Loop (perception → action)         │ │
-│  │  ├─ Safety Framework (constraint validation) │ │
-│  │  ├─ Memory System (session & long-term)      │ │
-│  │  └─ Vision Module (desktop/video perception) │ │
-│  └──────────────────────────────────────────────┘ │
-│                                                    │
-│  ┌─ Vyrex Proxy (Inference Router) ──────────────┐ │
-│  │  ├─ Multi-model LLM routing                  │ │
-│  │  ├─ Response caching (GPU-accelerated)       │ │
-│  │  ├─ Context windowing                        │ │
-│  │  └─ Token accounting                         │ │
-│  └──────────────────────────────────────────────┘ │
-│                                                    │
-│  ┌─ Kryos Orchestration ─────────────────────────┐ │
-│  │  ├─ Service lifecycle management             │ │
-│  │  ├─ Health monitoring                        │ │
-│  │  ├─ Load balancing                           │ │
-│  │  └─ Resource allocation                      │ │
-│  └──────────────────────────────────────────────┘ │
-│                                                    │
-└────────────────────────────────────────────────────┘
+### From Source (Development)
+
+```powershell
+docker compose -f docker-compose.dev.yml up -d --build
+pwsh build/smoke_test.ps1
 ```
 
-## Microservices (34 Services)
+Expected: `Results: 34 / 34 services healthy`.
 
-The system runs 34 microservices including:
+## Verification
 
-- **agent-runtime** — Prax Agent execution engine
-- **vyrex-proxy** — LLM routing and caching
-- **lumyn-bridge** — Advanced reasoning integration
-- **auth-service** — User authentication
-- **memory-store** — Distributed memory backend
-- **task-scheduler** — Autonomous task coordination
-- **config-service** — System configuration management
-- **health-monitor** — Service health tracking
-- And 26 more specialized services
+v1.0.0 was verified with:
 
-All 34 services verified healthy via smoke test (`build/smoke_test.ps1`): **34/34 passing**.
-
-## Quality Assurance
-
-All 10 production gates verified:
-
-✅ **Gate 1:** Python syntax (0 errors)  
-✅ **Gate 2:** pytest (100 passed, 91 skipped)  
-✅ **Gate 3:** TypeScript strict mode (desktop-shell)  
-✅ **Gate 4:** ESLint (0 warnings)  
-✅ **Gate 5:** TypeScript SDK strict mode  
-✅ **Gate 6:** Docker Compose dev (34 services valid)  
-✅ **Gate 7:** Docker Compose prod (34 services valid)  
-✅ **Gate 8:** Shell scripts (all 3 syntax-valid)  
-✅ **Gate 9:** Naming compliance (14/14 canonical)  
-✅ **Gate 10:** Git status (clean)  
-
-## Canonical Naming (v1.0.0)
-
-This release completes the canonical naming refactor:
-
-- `Prady OS` → **Prady OS** (product name)
-- `prady-os` → **prady-os** (repository name)
-- `Vyrex` → **Vyrex** (inference router)
-- `Lumyn` → **Lumyn Agent** (reasoning engine)
-- `Prax Agent` → **Prax Agent** (autonomous agent)
-- `Prady` → **Kryos** (orchestration)
+- **Python syntax:** 0 errors across all tracked `.py` files
+- **pytest:** 188 tests across model-gateway, workflow-engine, screen-agent, lumyn, ISO build config — all passing
+- **docker compose config:** base, dev, prod all valid
+- **smoke_test.ps1:** 34 / 34 services healthy
+- **CI:** `Monorepo CI` green, `E2E` green, `Build Prady OS ISO / validate` green
 
 ## System Requirements
 
-- **CPU:** x86-64 processor with AVX2 (2.4+ GHz recommended)
-- **RAM:** 8 GB minimum (16 GB+ recommended for Vyrex caching)
-- **Storage:** 20 GB SSD (60 GB+ for model caching)
-- **GPU:** NVIDIA (CUDA 12.x) or AMD (ROCm) for inference acceleration
-- **Firmware:** UEFI with SecureBoot support recommended
+| Resource | Minimum | Recommended |
+|----------|---------|-------------|
+| CPU | x86-64, AVX2 | Modern 8-core |
+| RAM | 8 GB | 16 GB (for local LLM) |
+| Disk | 20 GB | 60 GB (for model cache) |
+| GPU | Not required (CPU inference works) | NVIDIA + CUDA 12 for Ollama acceleration |
+| Firmware | UEFI | UEFI with SecureBoot |
 
-## Known Limitations
+## Honest Limitations (Read Before Flashing)
 
-- **First Boot:** Initial model download may take 5-10 minutes
-- **GPU Support:** Currently NVIDIA/AMD only (Intel Arc coming soon)
-- **Screen Recording:** Limited to primary display in v1.0.0
-- **Multi-Monitor:** Experimental support (feedback welcome)
+v1.0.0 is a solid foundation, not the full autonomous OS vision. What
+is explicitly **not** in this release:
 
-## Getting Help
+- **Continuous background research.** The `kryos-researcher` service
+  that ingests arXiv, RSS, and GitHub trending into memory is planned
+  for v1.1 and not present here.
+- **Full project proposal pipeline.** The "OS proposes a project → you
+  approve → OS executes plan → build → test → deploy → promote" flow
+  is partial. The React loop can execute a scripted goal; the
+  autonomous project lifecycle is v1.2.
+- **OOBE credential validation.** The wizard collects keys but does
+  not yet validate them against each provider before continuing. v1.1.
+- **Intel Arc / AMD GPU local inference.** v1.0 is tested with NVIDIA
+  CUDA via Ollama. Other accelerators are v1.2.
+- **"Privacy-first" = local-first.** If you set `OPENAI_API_KEY` or
+  `ANTHROPIC_API_KEY` in `.env`, Vyrex will route to those providers
+  when the local model is unavailable. Remove the keys for fully
+  on-device operation.
 
-- **Documentation:** See `docs/` directory
-- **Issues:** Report on GitHub issues tracker
-- **Community:** Join our Discord (link in repository)
+## Changelog Highlights
+
+- 34 platform microservices wired together and smoke-tested end to end
+- Full canonical name sweep — no predecessor product names anywhere
+  in the tree (see `refactor: canonical rename sweep` commit)
+- Buildroot-based ISO pipeline, tag-gated in CI, producing signed
+  `prady-os.iso` + `.sha256` + `.sig`
+- Three CI workflows: `Monorepo CI`, `E2E`, `Build Prady OS ISO`,
+  all green with zero deprecation warnings on runners
+- Typer 0.12 CLI issue worked around in `model-manager` by invoking
+  `uvicorn prady_models.platform_api:app` (now `prady_models...`) directly
+- Agent-runtime, kryos-swarm, model-manager, and the 7 auth-middleware
+  services fixed so every container stays up across the stack
+
+## Security
+
+Report vulnerabilities per `SECURITY.md`. Secrets never ship inside
+container images; they are injected via `.env` at runtime.
 
 ## License
 
-Prady OS is released under multiple licenses:
-
-- Core OS components: GPL-2.0+
-- Prax Agent framework: Apache 2.0
-- Vyrex inference router: AGPL-3.0
-- Documentation: CC-BY-4.0
-
-See `LICENSE` for details.
-
-## Contributors
-
-Special thanks to all contributors and testers who made this release possible.
-
----
-
-## Post-Release Tasks
-
-### HackerNews Posting Template
-
-```
-Title: Prady OS v1.0.0 – Privacy-First AI-Native Desktop OS
-
-URL: https://github.com/prady4the4bady/prady-os/releases/tag/v1.0.0
-
-Text: Prady OS v1.0.0 is a privacy-first, AI-native desktop distribution built on Wayland+Hyprland with autonomous task execution via Prax Agent. Includes Vyrex (inference router), Lumyn (reasoning), and Kryos (orchestration). 34 microservices, all gates passing. Linux 6.x with custom eBPF modules for input handling and IPC. Download ISO from GitHub releases.
-```
-
-### Community Announcements
-
-1. **Reddit** — Post to r/linux, r/privacy, r/programming
-2. **Mastodon/Twitter** — Tag @PrivacyOS, @WaylandOfficial
-3. **Tech News** — Submit to TechCrunch, VentureBeat alternatives
-4. **YouTube** — Demo video walkthrough recommended
-
-### Release Metrics
-
-- Commits: 40+ major feature commits
-- Files Changed: 100+ source files
-- Tests: 101 pytest tests (100 passing)
-- Services: 34 microservices validated
-- Build Time: ~12 minutes (full ISO)
-- ISO Size: ~1.2 GB (compressed)
-
----
-
-**Enjoy Prady OS v1.0.0! 🚀**
+MIT. Third-party dependencies retain their own licenses.
