@@ -649,7 +649,48 @@ services:
       - notification-bus
     restart: unless-stopped
 
+  inventor-engine:
+    build:
+      context: ./platform
+      dockerfile: inventor-engine/Dockerfile
+    image: prady/inventor-engine:dev
+    container_name: prady-inventor-engine
+    restart: unless-stopped
+    ports:
+      - "8022:8022"
+    environment:
+      - PORT=8022
+      - VYREX_URL=http://vyrex-proxy:8105
+      - PRAX_AGENT_URL=http://agent-runtime:8100
+      - AUDIT_LOG_URL=http://audit-log:8112
+      - NOTIFICATION_BUS_URL=http://notification-bus:8111
+      - SECURITY_POLICY_URL=http://security-policy:8117
+      - SELF_LEARNING_URL=http://self-learning:8018
+      - GITHUB_TOKEN=${GITHUB_TOKEN:-}
+      - WORKSPACE_BASE=/var/prady/projects
+      - SCAN_INTERVAL_HOURS=6
+      - MIN_PROBLEM_SCORE=0.6
+      - LOG_LEVEL=INFO
+    volumes:
+      - inventor-data:/data/inventor
+      - prax-projects:/var/prady/projects
+      - /var/run/docker.sock:/var/run/docker.sock
+    depends_on:
+      - vyrex-proxy
+      - audit-log
+      - notification-bus
+      - security-policy
+      - self-learning
+    healthcheck:
+      test: ["CMD","python","-c","import httpx,sys; r=httpx.get('http://localhost:8022/health',timeout=5); sys.exit(0 if r.json().get('status')=='ok' else 1)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+
 volumes:
+  inventor-data:
+  prax-projects:
   postgres_data:
   chromadb_data:
   memory_store_data:

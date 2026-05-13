@@ -297,6 +297,16 @@ export default function SpotlightLauncher(): JSX.Element {
         execute: () => openAndFocusWindow("software-update"),
         icon: <ArrowUpCircle size={14} color="#0A84FF" />,
       },
+      {
+        id: "app-inventor-engine",
+        group: "Applications",
+        kind: "application",
+        title: "Inventor Engine",
+        subtitle: "Prax autonomous project discovery and building",
+        searchableText: "inventor prax build project autonomous discover propose",
+        execute: () => openAndFocusWindow("inventor-engine"),
+        icon: <ArrowUpCircle size={14} color="#0A84FF" />,
+      },
     ];
   }, [openAndFocusWindow]);
 

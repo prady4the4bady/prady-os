@@ -118,6 +118,7 @@ SELF_LEARNING_URL = os.getenv("SELF_LEARNING_URL", "http://self-learning:8018")
 SDK_REGISTRY_URL = os.getenv("SDK_REGISTRY_URL", "http://sdk-registry:8020")
 SYSTEM_HEALTH_URL = os.getenv("SYSTEM_HEALTH_URL", "http://system-health:8021")
 OOBE_SERVICE_URL = os.getenv("OOBE_SERVICE_URL", "http://oobe-service:8099")
+INVENTOR_ENGINE_URL = os.getenv("INVENTOR_ENGINE_URL", "http://inventor-engine:8022")
 
 
 async def _notify_self_learning(
@@ -1256,6 +1257,66 @@ async def api_system_first_boot_complete() -> dict:
         return JSONResponse(status_code=resp.status_code, content=resp.json())
     except Exception as exc:
         raise HTTPException(status_code=502, detail=f"first-boot completion unavailable: {exc}") from exc
+
+
+# ---------------------------------------------------------------------------
+# Inventor Engine proxy routes (Phase 39)
+# ---------------------------------------------------------------------------
+
+@app.get("/api/inventor/status")
+async def inventor_status() -> Response:
+    async with httpx.AsyncClient(timeout=10.0) as c:
+        r = await c.get(f"{INVENTOR_ENGINE_URL}/inventor/status")
+    return Response(content=r.content, media_type="application/json")
+
+
+@app.post("/api/inventor/start")
+async def inventor_start() -> Response:
+    async with httpx.AsyncClient(timeout=10.0) as c:
+        r = await c.post(f"{INVENTOR_ENGINE_URL}/inventor/start")
+    return Response(content=r.content, media_type="application/json")
+
+
+@app.post("/api/inventor/stop")
+async def inventor_stop() -> Response:
+    async with httpx.AsyncClient(timeout=10.0) as c:
+        r = await c.post(f"{INVENTOR_ENGINE_URL}/inventor/stop")
+    return Response(content=r.content, media_type="application/json")
+
+
+@app.get("/api/inventor/proposals")
+async def inventor_proposals() -> Response:
+    async with httpx.AsyncClient(timeout=10.0) as c:
+        r = await c.get(f"{INVENTOR_ENGINE_URL}/inventor/proposals")
+    return Response(content=r.content, media_type="application/json")
+
+
+@app.post("/api/inventor/proposals/{proposal_id}/approve")
+async def inventor_approve(proposal_id: str) -> Response:
+    async with httpx.AsyncClient(timeout=10.0) as c:
+        r = await c.post(f"{INVENTOR_ENGINE_URL}/inventor/proposals/{proposal_id}/approve")
+    return Response(content=r.content, media_type="application/json", status_code=r.status_code)
+
+
+@app.post("/api/inventor/proposals/{proposal_id}/reject")
+async def inventor_reject(proposal_id: str) -> Response:
+    async with httpx.AsyncClient(timeout=10.0) as c:
+        r = await c.post(f"{INVENTOR_ENGINE_URL}/inventor/proposals/{proposal_id}/reject")
+    return Response(content=r.content, media_type="application/json", status_code=r.status_code)
+
+
+@app.get("/api/inventor/projects")
+async def inventor_projects() -> Response:
+    async with httpx.AsyncClient(timeout=10.0) as c:
+        r = await c.get(f"{INVENTOR_ENGINE_URL}/inventor/projects")
+    return Response(content=r.content, media_type="application/json")
+
+
+@app.get("/api/inventor/projects/{project_id}/progress")
+async def inventor_progress(project_id: str) -> Response:
+    async with httpx.AsyncClient(timeout=30.0) as c:
+        r = await c.get(f"{INVENTOR_ENGINE_URL}/inventor/projects/{project_id}/progress")
+    return Response(content=r.content, media_type="application/json", status_code=r.status_code)
 
 
 @app.get("/health")

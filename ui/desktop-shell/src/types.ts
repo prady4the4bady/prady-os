@@ -10,7 +10,8 @@ export type AppId =
   | "lumyn"
   | "desktop-agent"
   | "process-viewer"
-  | "memory-browser";
+  | "memory-browser"
+  | "inventor-engine";
 
 export interface WindowItem {
   id: string;

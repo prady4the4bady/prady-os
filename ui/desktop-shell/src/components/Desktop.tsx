@@ -34,6 +34,7 @@ const APP_META: Record<AppId, { title: string; icon: string }> = {
   "desktop-agent": { title: "Desktop Agent", icon: "🤖" },
   "process-viewer": { title: "Process Viewer", icon: "🖥" },
   "memory-browser": { title: "Memory Browser", icon: "🗄️" },
+  "inventor-engine": { title: "Inventor Engine", icon: "🧠" },
 };
 
 let zCounter = 100;

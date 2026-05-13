@@ -26,6 +26,7 @@ export const DOCK_APPS: DockItem[] = [
   { appId: "desktop-agent", label: "Desktop Agent", icon: "🤖" },
   { appId: "process-viewer", label: "Processes", icon: "🖥" },
   { appId: "memory-browser", label: "Memory", icon: "🗄️" },
+  { appId: "inventor-engine", label: "Inventor", icon: "🧠" },
 ];
 
 const PINNED_COUNT = 9;

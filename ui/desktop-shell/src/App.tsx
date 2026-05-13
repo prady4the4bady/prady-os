@@ -26,6 +26,7 @@ import Dock from "./Dock";
 import WindowOverview from "./WindowOverview";
 import { ShellWindowStateProvider, useShellWindowState } from "./ShellWindowState";
 import SoftwareUpdate from "./apps/SoftwareUpdate/SoftwareUpdate";
+import InventorDashboard from "./apps/InventorDashboard/InventorDashboard";
 import About from "./apps/About";
 import FirstBootWizard from "./components/FirstBootWizard";
 
@@ -59,6 +60,7 @@ function AppShell(): JSX.Element | null {
   const [switchingUser, setSwitchingUser] = useState(false);
   const [voiceBarOpen, setVoiceBarOpen] = useState(false);
   const [aboutOpen, setAboutOpen] = useState(false);
+  const [inventorOpen] = useState(false);
   const [oobeWizardOpen, setOobeWizardOpen] = useState(false);
   const [systemAbout, setSystemAbout] = useState<{ name: string; version: string; channel: string; build?: string }>({
     name: "Prady OS",
@@ -93,6 +95,7 @@ function AppShell(): JSX.Element | null {
     registerWindow({ id: "app-store", title: "App Store", minimizable: true });
     registerWindow({ id: "security-center", title: "Security Center", minimizable: true });
     registerWindow({ id: "software-update", title: "Software Update", minimizable: true });
+    registerWindow({ id: "inventor-engine", title: "Inventor Engine", minimizable: true });
   }, [registerWindow]);
 
   useEffect(() => {
@@ -130,6 +133,10 @@ function AppShell(): JSX.Element | null {
   useEffect(() => {
     setWindowOpen("security-center", securityCenterOpen);
   }, [securityCenterOpen, setWindowOpen]);
+
+  useEffect(() => {
+    setWindowOpen("inventor-engine", inventorOpen);
+  }, [inventorOpen, setWindowOpen]);
 
   useEffect(() => {
     const toggleVoice = (): void => setVoiceBarOpen((prev) => !prev);
@@ -402,6 +409,11 @@ function AppShell(): JSX.Element | null {
         open={getWindowOpen("software-update")}
         onOpenChange={(open) => setWindowOpen("software-update", open)}
         layerZIndex={getWindowLayer("software-update")}
+      />
+      <InventorDashboard
+        open={getWindowOpen("inventor-engine")}
+        onOpenChange={(open) => setWindowOpen("inventor-engine", open)}
+        layerZIndex={getWindowLayer("inventor-engine")}
       />
 
       <SpotlightLauncher />

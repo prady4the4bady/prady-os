@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import asyncio
 import importlib
+import sys
+from pathlib import Path
 
 import pytest
 import respx
@@ -11,6 +13,7 @@ from httpx import Response
 
 @pytest.fixture
 def gate(tmp_path, monkeypatch):
+    sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
     monkeypatch.setenv("DATA_DIR", str(tmp_path))
     import proposal_gate  # type: ignore[import-not-found]
 

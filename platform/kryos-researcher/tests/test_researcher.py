@@ -6,7 +6,6 @@ the test suite remains fully offline and deterministic.
 from __future__ import annotations
 
 import json
-from pathlib import Path
 
 import httpx
 import pytest

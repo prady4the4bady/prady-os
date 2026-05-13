@@ -2029,4 +2029,87 @@ export const handlers = [
     http.get("/api/sdk/health", () =>
       HttpResponse.json({ status: "ok", service: "sdk-registry", version: "1.0.0", installed_apps: 1, running_apps: 1 })
     ),
+
+    http.get("/api/inventor/status", () =>
+      HttpResponse.json({
+        loop_active: true,
+        current_phase: "researching",
+        active_project: null,
+        completed_projects: 3,
+        pending_proposal: null,
+        last_scan_ts: new Date().toISOString(),
+      })
+    ),
+
+    http.post("/api/inventor/start", () =>
+      HttpResponse.json({ status: "started" })
+    ),
+
+    http.post("/api/inventor/stop", () =>
+      HttpResponse.json({ status: "stopped" })
+    ),
+
+    http.get("/api/inventor/proposals", () =>
+      HttpResponse.json([
+        {
+          proposal_id: "prop-001",
+          problem_summary: "No open-source tool exists to automatically detect unused environment variables across a polyglot codebase",
+          why_it_matters: "Developer teams waste hours debugging misconfigured deployments",
+          what_to_build: "A CLI tool that scans your whole project and tells you which env vars are set but never used",
+          tools: [
+            { name: "Python", license: "PSF-2.0", purpose: "CLI and file parsing" },
+            { name: "Click", license: "BSD-3-Clause", purpose: "Command line interface" },
+            { name: "Pytest", license: "MIT", purpose: "Test suite" },
+          ],
+          time_estimate_hrs: 8,
+          deliverables: ["Working CLI tool installable via pip", "Test suite with 20+ tests passing", "README with install and usage guide"],
+          confidence_level: "high",
+          honest_caveats: ["Will not detect dynamically constructed env var names", "Language support limited to Python and JS in v1"],
+          created_ts: new Date().toISOString(),
+        },
+      ])
+    ),
+
+    http.post("/api/inventor/proposals/:id/approve", () =>
+      HttpResponse.json({ status: "building", project_id: "proj-abc123" })
+    ),
+
+    http.post("/api/inventor/proposals/:id/reject", () =>
+      HttpResponse.json({ status: "rejected" })
+    ),
+
+    http.get("/api/inventor/projects", () =>
+      HttpResponse.json([
+        {
+          project_id: "proj-abc123",
+          name: "env-var-scanner",
+          status: "delivered",
+          repo_url: "https://github.com/prady4the4bady/env-var-scanner",
+          verified: true,
+          test_pass_rate: 1.0,
+          build_started: new Date(Date.now() - 8 * 3600000).toISOString(),
+          build_completed: new Date().toISOString(),
+        },
+      ])
+    ),
+
+    http.get("/api/inventor/projects/:id/progress", () =>
+      HttpResponse.json({
+        project_id: "proj-abc123",
+        name: "env-var-scanner",
+        status: "verifying",
+        current_agent: "verifier",
+        steps_completed: [
+          "architect: system design complete",
+          "developer: implementation complete",
+          "qa: 23/23 tests passing",
+          "documenter: documentation complete",
+        ],
+        steps_remaining: ["verifier: cold-start check"],
+        latest_commit: "feat: implement multi-language support",
+        test_results: { passed: 23, failed: 0 },
+        verified: false,
+        eta_minutes: 3,
+      })
+    ),
 ];

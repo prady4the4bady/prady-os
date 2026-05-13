@@ -631,7 +631,39 @@ services:
     volumes:
       - computer-use-data:/data
 
+  inventor-engine:
+    image: prady/inventor-engine:1.0.0
+    restart: always
+    mem_limit: 2g
+    depends_on:
+      - vyrex-proxy
+      - audit-log
+      - notification-bus
+      - security-policy
+      - self-learning
+    ports:
+      - "8022:8022"
+    environment:
+      - PORT=8022
+      - VYREX_URL=http://vyrex-proxy:8105
+      - PRAX_AGENT_URL=http://agent-runtime:8100
+      - AUDIT_LOG_URL=http://audit-log:8112
+      - NOTIFICATION_BUS_URL=http://notification-bus:8111
+      - SECURITY_POLICY_URL=http://security-policy:8117
+      - SELF_LEARNING_URL=http://self-learning:8018
+      - GITHUB_TOKEN=${GITHUB_TOKEN:-}
+      - WORKSPACE_BASE=/var/prady/projects
+      - SCAN_INTERVAL_HOURS=6
+      - MIN_PROBLEM_SCORE=0.6
+      - LOG_LEVEL=INFO
+    volumes:
+      - inventor-data:/data/inventor
+      - prax-projects:/var/prady/projects
+      - /var/run/docker.sock:/var/run/docker.sock
+
 volumes:
+  inventor-data:
+  prax-projects:
   redis-data:
   postgres-data:
   model-gateway-config:
