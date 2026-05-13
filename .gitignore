@@ -102,3 +102,6 @@ watch_*.txt
 # JWT test keys
 *.pem
 tests/.tmp/
+
+# JWT secrets (generated at deploy time)
+build/iso/secrets/

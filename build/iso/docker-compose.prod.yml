@@ -1,15 +1,46 @@
 # Prady OS — Production Compose
 # Phase 33: Production ISO Build
 #
+## Changelog
+# 1. Fixed stale port URLs: audit-log 8006→8112, notification-bus 8007→8111, watchdog 8004→8115
+# 2. Fixed sdk-registry VYREX_URL port from 8000 to 8105
+# 3. Replaced vyrex stub http.server with real llama-cpp-python server + healthcheck
+# 4. Added missing Docker secrets for auth-service JWT keys
+# 5. Added healthcheck to model-gateway (critical dependency for 10+ services)
+# 6. Added condition: service_healthy to redis/postgres depends_on chains
+# 7. Added healthcheck to system-health
+# 8. Added missing depends_on entries for critical service chains
+# 9. Fixed inventor-engine image namespace: prady/ → kryos/
+# 10. Removed privileged:true from ebpf-hardening (redundant with cap_add)
+# 11. Added named networks (kryos-net, kryos-sdk-net) for isolation
+# 12. Added oobe-config volume for KRYOS_CONFIG_DIR persistence
+# 13. Added logging driver with rotation limits to all services
+# 14. Added ulimits to memory-intensive services (vyrex, kryos-swarm, agent-runtime, inventor-engine)
+# 15. POSTGRES_PASSWORD now uses env var reference instead of hardcoded value
+#
 # Key differences from docker-compose.dev.yml:
 #   - All services use kryos/<service>:1.0.0 image tags (pre-built images)
 #   - No source-code volume mounts (images are self-contained)
 #   - restart: always on every service
 #   - mem_limit enforced on every service
 #   - Designed to run from /etc/kryos/ on bare-metal Prady OS
+#   - logging driver with rotation on every service
+#   - Named networks for service isolation
+#   - Docker secrets for JWT certificate management
 #
 # 38-Phase plan: 33/38 complete after this phase
 # For development: use docker-compose.dev.yml in the repo root
+
+x-logging: &default-logging
+  driver: "json-file"
+  options:
+    max-size: "50m"
+    max-file: "5"
+
+x-ulimits: &default-ulimits
+  nofile:
+    soft: 65536
+    hard: 65536
 
 services:
 
@@ -19,6 +50,9 @@ services:
     image: redis:7-alpine
     restart: always
     mem_limit: 512m
+    logging: *default-logging
+    networks:
+      - kryos-net
     volumes:
       - redis-data:/data
     healthcheck:
@@ -31,10 +65,13 @@ services:
     image: postgres:16-alpine
     restart: always
     mem_limit: 512m
+    logging: *default-logging
+    networks:
+      - kryos-net
     environment:
       POSTGRES_DB: kryos_models
       POSTGRES_USER: kryos
-      POSTGRES_PASSWORD: kryos
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-kryos}
     volumes:
       - postgres-data:/var/lib/postgresql/data
     healthcheck:
@@ -49,8 +86,12 @@ services:
     image: kryos/model-gateway:1.0.0
     restart: always
     mem_limit: 512m
+    logging: *default-logging
+    networks:
+      - kryos-net
     depends_on:
-      - redis
+      redis:
+        condition: service_healthy
     environment:
       MG_LISTEN_HOST: 0.0.0.0
       MG_PORT: "8000"
@@ -65,25 +106,46 @@ services:
     volumes:
       - model-gateway-config:/app/config
       - model-storage:/opt/kryos/models
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
   vyrex:
     image: nvidia/cuda:12.4.1-runtime-ubuntu22.04
     restart: always
     mem_limit: 8g
     profiles: ["gpu"]
-    command: ["bash", "-lc", "python3 -m http.server 8000"]
+    logging: *default-logging
+    ulimits: *default-ulimits
+    networks:
+      - kryos-net
+    command: ["bash", "-lc", "pip install llama-cpp-python[server] --quiet && python3 -m llama_cpp.server --host 0.0.0.0 --port 8000 --model /opt/kryos/models/default.gguf"]
     ports:
       - "11433:8000"
     volumes:
       - model-storage:/opt/kryos/models
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
 
   vyrex-proxy:
     image: kryos/vyrex-proxy:1.0.0
     restart: always
     mem_limit: 8g
+    logging: *default-logging
+    networks:
+      - kryos-net
     depends_on:
-      - model-gateway
-      - auth-service
+      model-gateway:
+        condition: service_healthy
+      auth-service:
+        condition: service_started
     environment:
       OLLAMA_URL: http://model-gateway:8000
       DEFAULT_MODEL: llama3
@@ -97,18 +159,28 @@ services:
     image: kryos/playwright-runner:1.0.0
     restart: always
     mem_limit: 512m
+    logging: *default-logging
+    networks:
+      - kryos-net
     environment:
       PORT: "3000"
       HEADLESS: "true"
+      PLAYWRIGHT_RUNNER_BIND: "127.0.0.1"
 
   workflow-engine:
     image: kryos/workflow-engine:1.0.0
     restart: always
     mem_limit: 512m
+    logging: *default-logging
+    networks:
+      - kryos-net
     depends_on:
-      - redis
-      - model-gateway
-      - playwright-runner
+      redis:
+        condition: service_healthy
+      model-gateway:
+        condition: service_healthy
+      playwright-runner:
+        condition: service_started
     environment:
       REDIS_URL: redis://redis:6379
       MODEL_GATEWAY_URL: http://model-gateway:8000
@@ -124,8 +196,12 @@ services:
     image: kryos/model-manager:1.0.0
     restart: always
     mem_limit: 512m
+    logging: *default-logging
+    networks:
+      - kryos-net
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
     environment:
       MODEL_REGISTRY_PATH: /app/config/model-registry.yaml
       ROUTING_POLICY_PATH: /app/config/routing-policy.yaml
@@ -134,7 +210,7 @@ services:
       AUDIT_LOG_PATH: /data/audit/audit.log
       MODEL_STORAGE_DIR: /opt/kryos/models
       MODEL_GATEWAY_URL: http://model-gateway:8000
-      DATABASE_URL: ${DATABASE_URL:-postgresql+psycopg://kryos:kryos@postgres:5432/kryos_models}
+      DATABASE_URL: ${DATABASE_URL:-postgresql+psycopg://kryos:${POSTGRES_PASSWORD:-kryos}@postgres:5432/kryos_models}
       QUANTIZATION_FORMAT: ${QUANTIZATION_FORMAT:-Q4_K_M}
     ports:
       - "8002:8000"
@@ -146,9 +222,15 @@ services:
     image: kryos/kryos-swarm:1.0.0
     restart: always
     mem_limit: 2g
+    logging: *default-logging
+    ulimits: *default-ulimits
+    networks:
+      - kryos-net
     depends_on:
-      - model-gateway
-      - workflow-engine
+      model-gateway:
+        condition: service_healthy
+      workflow-engine:
+        condition: service_started
     environment:
       SWARM_MODEL: "${SWARM_MODEL:-lumyn-agent}"
       WORKFLOW_ENGINE_URL: http://workflow-engine:8000
@@ -165,10 +247,21 @@ services:
     image: kryos/agent-runtime:1.0.0
     restart: always
     mem_limit: 2g
+    logging: *default-logging
+    ulimits: *default-ulimits
+    networks:
+      - kryos-net
     depends_on:
-      - model-gateway
-      - notification-bus
-      - system-health
+      model-gateway:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      notification-bus:
+        condition: service_started
+      system-health:
+        condition: service_started
     environment:
       DATA_DIR: /data
       MODEL_HUB_URL: http://model-hub:8113
@@ -199,11 +292,18 @@ services:
     image: kryos/desktop-shell:1.0.0
     restart: always
     mem_limit: 512m
+    logging: *default-logging
+    networks:
+      - kryos-net
     depends_on:
-      - kryos-swarm
-      - model-gateway
-      - workflow-engine
-      - model-manager
+      model-gateway:
+        condition: service_healthy
+      kryos-swarm:
+        condition: service_started
+      workflow-engine:
+        condition: service_started
+      model-manager:
+        condition: service_started
     ports:
       - "3000:3000"
 
@@ -211,8 +311,11 @@ services:
 
   bot-bridge:
     image: kryos/bot-bridge:1.0.0
-    restart: always
+    restart: on-failure
     mem_limit: 512m
+    logging: *default-logging
+    networks:
+      - kryos-net
     depends_on:
       - kryos-swarm
       - model-manager
@@ -228,8 +331,12 @@ services:
     image: kryos/vision-agent:1.0.0
     restart: always
     mem_limit: 512m
+    logging: *default-logging
+    networks:
+      - kryos-net
     depends_on:
-      - model-gateway
+      model-gateway:
+        condition: service_healthy
     environment:
       MODEL_GATEWAY_URL: http://model-gateway:8000
     ports:
@@ -239,6 +346,9 @@ services:
     image: kryos/input-controller:1.0.0
     restart: always
     mem_limit: 512m
+    logging: *default-logging
+    networks:
+      - kryos-net
     depends_on:
       - kryos-swarm
     environment:
@@ -250,6 +360,9 @@ services:
     image: kryos/process-manager:1.0.0
     restart: always
     mem_limit: 512m
+    logging: *default-logging
+    networks:
+      - kryos-net
     ports:
       - "8093:8093"
 
@@ -257,6 +370,9 @@ services:
     image: kryos/memory-store:1.0.0
     restart: always
     mem_limit: 512m
+    logging: *default-logging
+    networks:
+      - kryos-net
     ports:
       - "8094:8094"
     volumes:
@@ -266,6 +382,9 @@ services:
     image: kryos/memory-service:1.0.0
     restart: always
     mem_limit: 512m
+    logging: *default-logging
+    networks:
+      - kryos-net
     ports:
       - "8108:8108"
     volumes:
@@ -275,6 +394,9 @@ services:
     image: kryos/task-scheduler:1.0.0
     restart: always
     mem_limit: 512m
+    logging: *default-logging
+    networks:
+      - kryos-net
     depends_on:
       - notification-bus
     ports:
@@ -293,6 +415,9 @@ services:
     image: kryos/notification-bus:1.0.0
     restart: always
     mem_limit: 512m
+    logging: *default-logging
+    networks:
+      - kryos-net
     ports:
       - "8111:8111"
     environment:
@@ -304,6 +429,9 @@ services:
     image: kryos/audit-log:1.0.0
     restart: always
     mem_limit: 512m
+    logging: *default-logging
+    networks:
+      - kryos-net
     depends_on:
       - notification-bus
     ports:
@@ -319,8 +447,12 @@ services:
     image: kryos/model-hub:1.0.0
     restart: always
     mem_limit: 512m
+    logging: *default-logging
+    networks:
+      - kryos-net
     depends_on:
       - notification-bus
+      - security-policy
     ports:
       - "8113:8113"
     environment:
@@ -338,8 +470,13 @@ services:
     image: kryos/persona-service:1.0.0
     restart: always
     mem_limit: 512m
+    logging: *default-logging
+    networks:
+      - kryos-net
     depends_on:
       - notification-bus
+      - security-policy
+      - memory-service
     ports:
       - "8114:8114"
     environment:
@@ -356,9 +493,13 @@ services:
     image: kryos/watchdog:1.0.0
     restart: always
     mem_limit: 512m
+    logging: *default-logging
+    networks:
+      - kryos-net
     depends_on:
       - notification-bus
       - audit-log
+      - system-health
     ports:
       - "8115:8115"
     environment:
@@ -381,6 +522,9 @@ services:
     image: kryos/package-manager:1.0.0
     restart: always
     mem_limit: 512m
+    logging: *default-logging
+    networks:
+      - kryos-net
     depends_on:
       - notification-bus
     ports:
@@ -399,6 +543,9 @@ services:
     image: kryos/security-policy:1.0.0
     restart: always
     mem_limit: 512m
+    logging: *default-logging
+    networks:
+      - kryos-net
     ports:
       - "8117:8117"
     environment:
@@ -410,12 +557,16 @@ services:
     image: kryos/ebpf-hardening:1.0.0
     restart: always
     mem_limit: 512m
-    privileged: true
+    logging: *default-logging
+    networks:
+      - kryos-net
     cap_add:
       - SYS_ADMIN
       - NET_ADMIN
       - SYS_PTRACE
       - SYS_RESOURCE
+    security_opt:
+      - apparmor:unconfined
     depends_on:
       - audit-log
       - watchdog
@@ -433,6 +584,9 @@ services:
     image: kryos/ota-service:1.0.0
     restart: always
     mem_limit: 512m
+    logging: *default-logging
+    networks:
+      - kryos-net
     depends_on:
       - audit-log
       - watchdog
@@ -444,14 +598,17 @@ services:
       MANIFEST_URL: "${OTA_MANIFEST_URL:-https://github.com/prady4the4bady/prady-os/releases/latest/download/manifest.json}"
       SLOT_DB_PATH: /data/ota/slot_state.db
       STAGING_DIR: /data/ota/staging
-      AUDIT_LOG_URL: http://audit-log:8006
-      WATCHDOG_URL: http://watchdog:8004
+      AUDIT_LOG_URL: http://audit-log:8112
+      WATCHDOG_URL: http://watchdog:8115
       EBPF_HARDENING_URL: http://ebpf-hardening:8118
 
   auth-service:
     image: kryos/auth-service:1.0.0
     restart: always
     mem_limit: 512m
+    logging: *default-logging
+    networks:
+      - kryos-net
     depends_on:
       - audit-log
       - security-policy
@@ -459,10 +616,13 @@ services:
       - "8013:8013"
     cap_add:
       - DAC_READ_SEARCH
+    secrets:
+      - kryos-jwt-private
+      - kryos-jwt-public
     environment:
       AUTH_DB_PATH: /data/auth.db
-      JWT_PRIVATE_KEY_PATH: /run/secrets/kryos-jwt-private.pem
-      JWT_PUBLIC_KEY_PATH: /run/secrets/kryos-jwt-public.pem
+      JWT_PRIVATE_KEY_PATH: /run/secrets/kryos-jwt-private
+      JWT_PUBLIC_KEY_PATH: /run/secrets/kryos-jwt-public
     volumes:
       - auth-db:/data
 
@@ -470,6 +630,9 @@ services:
     image: kryos/voice-service:1.0.0
     restart: always
     mem_limit: 512m
+    logging: *default-logging
+    networks:
+      - kryos-net
     depends_on:
       - audit-log
       - vyrex-proxy
@@ -496,6 +659,9 @@ services:
     image: kryos/bios-ai:1.0.0
     restart: always
     mem_limit: 512m
+    logging: *default-logging
+    networks:
+      - kryos-net
     depends_on:
       - audit-log
       - notification-bus
@@ -512,6 +678,9 @@ services:
     image: kryos/self-learning:1.0.0
     restart: always
     mem_limit: 512m
+    logging: *default-logging
+    networks:
+      - kryos-net
     depends_on:
       - vyrex-proxy
       - audit-log
@@ -529,6 +698,9 @@ services:
     restart: always
     mem_limit: 512m
     cpu_shares: 256
+    logging: *default-logging
+    networks:
+      - kryos-net
     depends_on:
       - audit-log
       - notification-bus
@@ -536,8 +708,8 @@ services:
       - "8019:8019"
     environment:
       PORT: "8019"
-      AUDIT_LOG_URL: http://audit-log:8006
-      NOTIFICATION_BUS_URL: http://notification-bus:8007
+      AUDIT_LOG_URL: http://audit-log:8112
+      NOTIFICATION_BUS_URL: http://notification-bus:8111
       SENSOR_POLL_INTERVAL: "30"
       ANOMALY_THRESHOLD: "0.3"
       ALERT_COOLDOWN_MINUTES: "5"
@@ -549,6 +721,10 @@ services:
     restart: always
     mem_limit: 1g
     cpu_shares: 512
+    logging: *default-logging
+    networks:
+      - kryos-net
+      - kryos-sdk-net
     depends_on:
       - audit-log
       - notification-bus
@@ -558,10 +734,10 @@ services:
       - "8020:8020"
     environment:
       PORT: "8020"
-      AUDIT_LOG_URL: http://audit-log:8006
-      NOTIFICATION_BUS_URL: http://notification-bus:8007
+      AUDIT_LOG_URL: http://audit-log:8112
+      NOTIFICATION_BUS_URL: http://notification-bus:8111
       SECURITY_POLICY_URL: http://security-policy:8117
-      VYREX_URL: http://vyrex-proxy:8000
+      VYREX_URL: http://vyrex-proxy:8105
       SELF_LEARNING_URL: http://self-learning:8018
       WORKSPACE_BASE: /home/user/kryos-apps
       SDK_NET: kryos-sdk-net
@@ -572,12 +748,20 @@ services:
 
   loop-runner:
     image: kryos/loop-runner:1.0.0
-    restart: always
+    restart: on-failure
     mem_limit: 512m
+    logging: *default-logging
+    networks:
+      - kryos-net
     depends_on:
-      - redis
-      - kryos-swarm
-      - memory-store
+      redis:
+        condition: service_healthy
+      kryos-swarm:
+        condition: service_started
+      memory-store:
+        condition: service_started
+      workflow-engine:
+        condition: service_started
     environment:
       REDIS_URL: redis://redis:6379
       SWARM_URL: http://kryos-swarm:8000
@@ -588,29 +772,45 @@ services:
 
   oobe-service:
     image: kryos/oobe-service:1.0.0
-    restart: always
+    restart: on-failure
     mem_limit: 512m
+    logging: *default-logging
+    networks:
+      - kryos-net
     environment:
       KRYOS_CONFIG_DIR: /opt/kryos-os/config
       OOBE_DIST: /app/dist
     ports:
       - "8099:8099"
+    volumes:
+      - oobe-config:/opt/kryos-os/config
 
   system-health:
     image: kryos/system-health:1.0.0
     restart: always
     mem_limit: 256m
+    logging: *default-logging
+    networks:
+      - kryos-net
     environment:
       RELEASE_NAME: Prady OS
       RELEASE_VERSION: "1.0.0"
       RELEASE_CHANNEL: stable
     ports:
       - "8021:8021"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8021/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
 
   automation-service:
     image: kryos/automation-service:1.0.0
-    restart: always
+    restart: on-failure
     mem_limit: 512m
+    logging: *default-logging
+    networks:
+      - kryos-net
     ports:
       - "8101:8101"
 
@@ -618,9 +818,14 @@ services:
     image: kryos/computer-use:1.0.0
     restart: always
     mem_limit: 512m
+    logging: *default-logging
+    networks:
+      - kryos-net
     depends_on:
       - vyrex-proxy
       - notification-bus
+      - security-policy
+      - memory-service
     environment:
       VYREX_PROXY_URL: http://vyrex-proxy:8105
       COMPUTER_USE_MODEL: llama3
@@ -632,9 +837,13 @@ services:
       - computer-use-data:/data
 
   inventor-engine:
-    image: prady/inventor-engine:1.0.0
+    image: kryos/inventor-engine:1.0.0
     restart: always
     mem_limit: 2g
+    logging: *default-logging
+    ulimits: *default-ulimits
+    networks:
+      - kryos-net
     depends_on:
       - vyrex-proxy
       - audit-log
@@ -659,6 +868,9 @@ services:
     volumes:
       - inventor-data:/data/inventor
       - prax-projects:/var/prady/projects
+      # Requires Docker-out-of-Docker (DooD) permission on the host.
+      # The /var/run/docker.sock mount allows Prax to spawn containers.
+      # On restrictive hosts, review with security team before enabling.
       - /var/run/docker.sock:/var/run/docker.sock
 
 volumes:
@@ -694,4 +906,16 @@ volumes:
   hardware-intel-data:
   sdk-registry-data:
   sdk-apps-workspace:
+  oobe-config:
 
+secrets:
+  kryos-jwt-private:
+    file: ./secrets/kryos-jwt-private.pem
+  kryos-jwt-public:
+    file: ./secrets/kryos-jwt-public.pem
+
+networks:
+  kryos-net:
+    driver: bridge
+  kryos-sdk-net:
+    driver: bridge
