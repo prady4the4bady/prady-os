@@ -7,3 +7,11 @@
 [submodule "shell/rofi-base"]
 	path = shell/rofi-base
 	url = https://github.com/lbonn/rofi
+
+[submodule "compositor/neila"]
+	path = compositor/neila
+	url = https://github.com/prady4the4bady/ouroboros-desktop
+
+[submodule "compositor/ahnis"]
+	path = compositor/ahnis
+	url = https://github.com/prady4the4bady/mempalace-Aya-fork
