@@ -155,7 +155,7 @@ make -C "${BUILDROOT_DIR}" \
 make -C "${BUILDROOT_DIR}" \
     O="${BUILDROOT_OUTPUT}" \
     BR2_ROOTFS_OVERLAY="${OVERLAY_DIR}" \
-    -j"$(nproc)"
+        -j1
 
 ok "Buildroot build complete"
 
