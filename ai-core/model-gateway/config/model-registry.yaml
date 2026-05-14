@@ -125,5 +125,26 @@ models:
   - id: claude-3-opus-20240229
     provider: anthropic
     capabilities: [chat, completion, vision, code]
+      latency_profile: slow
+
+  # --- Neila — Desktop Agent Runtime (ouroboros-desktop) ---
+  - id: neila-agent
+    provider: neila
+    capabilities: [chat, completion, code, function_calling]
+    privacy_level: internal
+    latency_profile: medium
+    user_pullable: false
+    endpoint: http://neila:8090
+    description: Neila desktop agent runtime, formerly ouroboros-desktop
+
+  # --- Ahnis — AI Memory Service (mempalace-Aya-fork) ---
+  - id: ahnis-memory
+    provider: ahnis
+    capabilities: [embeddings]
+    privacy_level: private
+    latency_profile: fast
+    user_pullable: false
+    endpoint: http://ahnis:8091
+    description: Ahnis AI memory service, formerly mempalace-Aya-fork
     privacy_level: cloud
     latency_profile: slow
