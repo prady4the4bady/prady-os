@@ -829,7 +829,6 @@ services:
       retries: 3
       start_period: 20s
 
-  # ── Ahnis — AI Memory Service (mempalace-Aya-fork) ──────────────────────────
   ahnis:
     build:
       context: ./ai-core/ahnis
@@ -857,7 +856,6 @@ services:
       timeout: 10s
       retries: 3
       start_period: 20s
-
 volumes:
   social-data:
   market-data:
