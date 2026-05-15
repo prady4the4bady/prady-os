@@ -343,8 +343,8 @@ jobs:
       - validate-compose
       - audit-python-deps
       - audit-node-deps
-        - test-neila
-        - test-ahnis
+      - test-neila
+      - test-ahnis
     runs-on: ubuntu-latest
     permissions:
       actions: write
