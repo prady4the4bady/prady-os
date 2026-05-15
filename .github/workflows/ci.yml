@@ -308,8 +308,7 @@ jobs:
         run: pip install --no-cache-dir -r requirements.txt
       - name: Run Neila tests
         working-directory: ai-core/neila
-        run: pytest tests/ -v --tb=short
-
+            run: python -m pytest tests/ -v --tb=short
   test-ahnis:
     name: Phase N - ahnis
     runs-on: ubuntu-latest
@@ -327,8 +326,7 @@ jobs:
         run: pip install --no-cache-dir -r requirements.txt
       - name: Run Ahnis tests
         working-directory: ai-core/ahnis
-        run: pytest tests/ -v --tb=short
-
+            run: python -m pytest tests/ -v --tb=short
   trigger-build-iso:
     name: Trigger ISO build
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
