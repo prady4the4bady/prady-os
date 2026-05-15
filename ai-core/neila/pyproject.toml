@@ -1,0 +1,106 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "NEILA"
+version = "5.8.1"
+description = "Self-creating AI agent with constitution, background consciousness, and persistent identity"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.10"
+authors = [
+    {name = "Anton Razzhigaev"},
+]
+keywords = ["ai-agent", "self-modifying", "autonomous", "llm", "openrouter"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: MacOS",
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+dependencies = [
+    "openai>=1.66.0",
+    "requests",
+    "httpx",
+    "dulwich",
+    "huggingface_hub",
+    "starlette",
+    "python-multipart",
+    "uvicorn[standard]",
+    "websockets",
+    "pytest>=7.0",
+    "claude-agent-sdk>=0.1.60",
+    "a2a-sdk[http-server]>=0.3.20,<1.0.0",
+    # Declared explicitly so ``NEILA/contracts/api_v1.py`` can rely on
+    # ``typing_extensions.NotRequired`` on Python 3.10 (``typing.NotRequired``
+    # is only available on 3.11+). In practice many transitive deps already
+    # pull it in, but the frozen contract must not depend on that.
+    "typing_extensions>=4.5.0",
+]
+
+[project.scripts]
+NEILA-web = "server:main"
+
+[project.urls]
+Homepage = "https://github.com/joi-lab/NEILA-desktop"
+Repository = "https://github.com/joi-lab/NEILA-desktop"
+Issues = "https://github.com/joi-lab/NEILA-desktop/issues"
+"Previous Version (Colab)" = "https://github.com/joi-lab/NEILA"
+
+[project.optional-dependencies]
+claude-sdk = ["claude-agent-sdk>=0.1.60"]
+a2a = ["a2a-sdk[http-server]>=0.3.20,<1.0.0"]
+browser = ["playwright", "playwright-stealth"]
+local-model = ["llama-cpp-python"]
+build = ["pyinstaller>=6.0"]
+all = ["claude-agent-sdk>=0.1.60", "a2a-sdk[http-server]>=0.3.20,<1.0.0", "playwright", "playwright-stealth", "llama-cpp-python", "huggingface_hub"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_functions = ["test_*"]
+# Default local runs exclude the `integration` marker so contributors do not
+# accidentally burn provider tokens on every `pytest`. CI Tier 2.5 opts in
+# explicitly with `pytest -m integration` (the CLI -m overrides addopts -m).
+addopts = "-q --tb=short -m 'not integration and not browser and not ui_browser and not ui_browser_docker and not portable_detail'"
+markers = [
+    "integration: requires real provider API keys (OPENROUTER_API_KEY / OPENAI_API_KEY / ANTHROPIC_API_KEY / CLOUDRU_FOUNDATION_MODELS_API_KEY); excluded from default local runs, opt in via `pytest -m integration`",
+    "browser: launches real Playwright Chromium; excluded from default local runs, opt in via `pytest -m browser`",
+    "ui_browser: launches the real NEILA web UI in host/direct mode; excluded from default local runs",
+    "ui_browser_docker: launches UI smoke checks against Docker runtime; excluded from default local runs",
+    "portable_detail: portable/build artifact detail checks; excluded from default local runs",
+]
+
+[tool.setuptools]
+py-modules = ["server"]
+
+[tool.setuptools.packages.find]
+include = ["NEILA*", "supervisor*", "web*"]
+
+[tool.setuptools.package-data]
+web = [
+    "*.html",
+    "*.js",
+    "*.css",
+    "*.png",
+    "*.jpg",
+    "modules/*.js",
+    "providers/*.svg",
+    "providers/*.png",
+    "providers/*.ico",
+]
+
+[tool.ruff]
+line-length = 120
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I"]
+ignore = ["E501"]

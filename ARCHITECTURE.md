@@ -289,7 +289,113 @@ POST   /browser/evaluate          → { script }
 
 ## Data Flow and Orchestration
 
-### High-Level Flow
+#### 7. Neila — Ouroboros Daemon (Autonomous Background Loop)
+
+**Responsibility:** Persistent background daemon that runs the Ouroboros loop below Prax. Retries failed jobs, triggers scheduled actions, generates digests, consolidates memory, and closes the Prax → Ahnis → Neila loop.
+
+**Key Capabilities:**
+- SQLite-backed retry queue with exponential backoff (survives restarts)
+- SQLite-backed scheduled actions (survive restarts)
+- Digest candidate generation every 10 cycles
+- Memory consolidation triggers via Ahnis
+- Follow-up candidate generation from Ahnis summaries and unresolved items
+- Stalled-task resurfacing (proposals pending >24h)
+- Structured audit events with event_type, source, correlation_id, status
+
+**Routes (v1.1.0):**
+```
+GET    /health                           → HealthResponse
+GET    /neila/status                     → NeilaStatusResponse
+GET    /neila/metrics                    → MetricsResponse
+POST   /neila/pause                      → { status }
+POST   /neila/resume                     → { status }
+POST   /neila/enqueue                    → EnqueueResponse
+GET    /neila/queue                      → [ QueueEntryResponse ]
+POST   /neila/schedule                   → ScheduleResponse
+GET    /neila/scheduled                  → [ ScheduledEntryResponse ]
+POST   /neila/followup                   → { followup_id }
+GET    /neila/followups                  → [ FollowupCandidateResponse ]
+POST   /neila/followups/{fid}/processed  → { status }
+GET    /neila/digests                    → [ DigestCandidateResponse ]
+```
+
+**Persistence:** SQLite at `/data/neila.db` (configurable via `NEILA_DB_PATH`). On startup, all pending retries and schedules are restored.
+
+**Environment:**
+```
+NEILA_TICK_INTERVAL=60        # seconds between cycles
+NEILA_DB_PATH=/data/neila.db  # SQLite database path
+NEILA_HTTP_TIMEOUT=10.0       # HTTP client timeout
+INVENTOR_ENGINE_URL=http://inventor-engine:8022
+AUDIT_LOG_URL=http://audit-log:8112
+NOTIFICATION_BUS_URL=http://notification-bus:8111
+AHNIS_URL=http://ahnis:8028
+```
+
+### 8. Ahnis — MemPalace-Aya (Pluggable Semantic Memory)
+
+**Responsibility:** Semantic memory and retrieval with pluggable embedding architecture. Provides write, search, summarize, consolidate, and delete operations across six categories: conversation, task, skill, project, summary, failure_lesson.
+
+**Key Capabilities:**
+- Pluggable embedding providers:
+  1. **LocalHashProvider** — deterministic hash-based (always available, 64-dim)
+  2. **SentenceTransformerProvider** — learned semantic embeddings when sentence-transformers installed
+  3. **QdrantProvider** — optional Qdrant vector storage
+- Provider selection via `AHNIS_EMBEDDING_MODE` env var (auto | local-hash | sentence-transformer | qdrant)
+- In-memory store with consolidation (trims to 1000 when >2000 per category)
+- Structured search with scoring: exact match → token overlap → fuzzy → fallback
+- Deterministic local embedding as fallback always preserved
+- Provider info, dimension, and backend capability exposed in status/metrics
+
+**Routes (v1.1.0):**
+```
+GET    /health                           → HealthResponse
+GET    /ahnis/status                     → AhnisStatusResponse
+GET    /ahnis/embeddings/provider        → EmbeddingInfo
+GET    /ahnis/metrics                    → MetricsResponse
+POST   /memory/write                     → WriteResponse
+POST   /memory/search                    → SearchResponse
+POST   /memory/summarize                 → SummarizeResponse
+POST   /memory/consolidate               → ConsolidateResponse
+DELETE /memory/{entry_id}                → DeleteResponse
+GET    /memory/skills                    → [ dict ]
+GET    /memory/projects                  → [ dict ]
+POST   /memory/summarize_legacy          → { summary, count } (backward-compat)
+POST   /memory/consolidate_legacy        → { status, entries_before/after } (backward-compat)
+```
+
+**Environment:**
+```
+AHNIS_EMBEDDING_MODE=auto          # auto | local-hash | sentence-transformer | qdrant
+AHNIS_ST_MODEL=all-MiniLM-L6-v2    # sentence-transformers model name
+QDRANT_HOST=""                     # Qdrant host (empty = disabled)
+QDRANT_PORT=6333
+AUDIT_LOG_URL=http://audit-log:8112
+```
+
+### 9. Prax → Ahnis → Neila Loop
+
+The memory loop closes the feedback cycle between task execution (Prax), memory storage (Ahnis), and background orchestration (Neila):
+
+```
+Prax executes task
+  ↓
+Prax writes episodic memory to Ahnis at task boundaries
+  ↓
+Neila reads Ahnis summaries and unresolved items every 5 cycles
+  ↓
+Neila generates follow-up candidates from Ahnis context
+  ↓
+Neila creates digest candidates from Inventor Engine every 10 cycles
+  ↓
+Neila triggers memory consolidation via Ahnis every cycle
+  ↓
+Follow-up and digest candidates available via /neila/followups, /neila/digests
+```
+
+This loop is fully local-first. No cloud APIs required.
+
+## High-Level Flow
 
 ```
 User Goal (e.g., "Find and summarize today's climate news")

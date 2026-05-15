@@ -1,4 +1,9 @@
-fastapi>=0.100.0
-uvicorn[standard]>=0.24.0
+# Prady OS Ahnis - combined production dependencies
+fastapi>=0.111.0
+uvicorn[standard]>=0.29.0
 httpx>=0.27.0
 pydantic>=2.0.0
+chromadb>=1.5.4,<2
+pyyaml>=6.0,<7
+qdrant-client>=1.9.0
+# sentence-transformers>=2.7.0  # optional - requires PyTorch (~2GB); install separately

@@ -810,23 +810,24 @@ services:
     container_name: prady-neila
     restart: unless-stopped
     ports:
-      - "8027:8027"
+      - "8090:8090"
     environment:
-      - PORT=8027
+      - NEILA_PORT=8090
       - NEILA_TICK_INTERVAL=60
-      - INVENTOR_ENGINE_URL=http://inventor-engine:8022
+      - NEILA_DB_PATH=/data/neila.db
+      - MODEL_GATEWAY_URL=http://model-gateway:8000
+      - AHNIS_URL=http://ahnis:8091
       - AUDIT_LOG_URL=http://audit-log:8112
       - NOTIFICATION_BUS_URL=http://notification-bus:8111
-      - SELF_LEARNING_URL=http://self-learning:8018
-      - AHNIS_URL=http://ahnis:8028
-      - MODEL_GATEWAY_URL=http://model-gateway:11430
       - LOG_LEVEL=INFO
+    volumes:
+      - neila-data:/data
     depends_on:
-      - inventor-engine
-      - audit-log
-      - notification-bus
+      - model-gateway
+      - ahnis
+      - redis
     healthcheck:
-      test: ["CMD","python","-c","import httpx,sys; r=httpx.get('http://localhost:8027/health',timeout=5); sys.exit(0 if r.json().get('status')=='ok' else 1)"]
+      test: ["CMD","python","-c","import httpx,sys; r=httpx.get('http://localhost:8090/health',timeout=5); sys.exit(0 if r.json().get('status')=='ok' else 1)"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -839,18 +840,24 @@ services:
     container_name: prady-ahnis
     restart: unless-stopped
     ports:
-      - "8028:8028"
+      - "8091:8091"
     environment:
-      - PORT=8028
-      - QDRANT_HOST=${QDRANT_HOST:-}
-      - QDRANT_PORT=6333
+      - AHNIS_PORT=8091
+      - AHNIS_DB_PATH=/data/ahnis.db
+      - AHNIS_EMBEDDING_MODE=${AHNIS_EMBEDDING_MODE:-auto}
+      - AHNIS_ST_MODEL=${AHNIS_ST_MODEL:-all-MiniLM-L6-v2}
+      - MODEL_GATEWAY_URL=http://model-gateway:8000
+      - NEILA_URL=http://neila:8090
+      - MEMORY_BACKEND=local
       - AUDIT_LOG_URL=http://audit-log:8112
-      - MODEL_GATEWAY_URL=http://model-gateway:11430
       - LOG_LEVEL=INFO
+    volumes:
+      - ahnis-data:/data
     depends_on:
-      - audit-log
+      - model-gateway
+      - redis
     healthcheck:
-      test: ["CMD","python","-c","import httpx,sys; r=httpx.get('http://localhost:8028/health',timeout=5); sys.exit(0 if r.json().get('status')=='ok' else 1)"]
+      test: ["CMD","python","-c","import httpx,sys; r=httpx.get('http://localhost:8091/health',timeout=5); sys.exit(0 if r.json().get('status')=='ok' else 1)"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -889,4 +896,6 @@ volumes:
   sdk-apps-workspace:
   kryos-researcher-data:
   proposal-gate-data:
+  neila-data:
+  ahnis-data:
 

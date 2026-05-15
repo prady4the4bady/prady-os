@@ -1,0 +1,1073 @@
+"""Skill execution substrate + skill-lifecycle tools (Phase 3).
+
+Exposes four tools to the agent:
+
+- ``list_skills``   — catalogue view (no filesystem side effects).
+- ``review_skill``  — run tri-model review against a single skill.
+- ``toggle_skill``  — flip the durable ``enabled.json`` bit for a skill.
+- ``skill_exec``    — execute a script from a reviewed + enabled skill.
+
+Design rules (per the Phase 3 plan):
+
+- ``skill_exec`` is a **separate substrate**, not a ``run_shell`` reuse.
+  It never spawns a user-supplied string command; callers pick a script
+  name declared by the skill manifest, and the runtime resolves that name
+  to the exact on-disk file inside the skill directory.
+- Only skills that are enabled, whose review status is ``pass``, and
+  whose review is NOT stale against the current content hash can execute.
+  ``type: extension`` skills are deferred until Phase 4.
+- The subprocess runs with ``cwd=skill_dir``, a scrubbed environment, a
+  timeout (from the manifest, hard-capped at 300s), and bounded stdout /
+  stderr so a misbehaving skill cannot flood the runtime logs.
+- The runtime allowlist is ``python``/``python3``/``bash``/``node``;
+  anything else is rejected up-front.
+- Runtime-mode gate (v5.1.2 Frame A): ``light``/``advanced``/``pro`` ALL
+  allow reviewed + enabled skills to execute. The ``runtime_mode`` axis
+  controls only repo self-modification + the ``NEILA_RUNTIME_MODE``
+  elevation ratchet — owner-approved skills already pass through their
+  own independent stack (tri-model review PASS + ``enabled.json`` toggle
+  + content-hash freshness + sandboxed subprocess + ``FORBIDDEN_SKILL_SETTINGS``
+  denylist), so a runtime_mode gate on top would only deny owner-approved
+  capabilities without adding security.
+"""
+
+from __future__ import annotations
+
+import json
+import logging
+import os
+import pathlib
+import shutil
+import subprocess
+import threading
+import time
+from typing import Any, Dict, List, Optional, Tuple
+
+from neila.config import get_skills_repo_path, load_settings
+from neila.skill_loader import (
+    SkillPayloadUnreadable,
+    VALID_REVIEW_STATUSES,
+    compute_content_hash,
+    discover_skills,
+    find_skill,
+    grant_status_for_skill,
+    save_enabled,
+    summarize_skills,
+)
+from neila.skill_review import review_skill as _review_skill_impl
+from neila.tools.registry import ToolContext, ToolEntry
+
+# Reuse the panic-integrated tracked-subprocess runner so skills spawned
+# by ``skill_exec`` participate in the same process-group tracking as
+# ``run_shell``/``claude_code_edit``. Without this, a long-running skill
+# would not be killed by ``/panic`` → Emergency Stop Invariant violation.
+from neila.tools.shell import (
+    _active_subprocesses,
+    _subprocess_lock,
+    _kill_process_group,
+)
+from subprocess import Popen
+from neila.platform_layer import merge_hidden_kwargs, subprocess_new_group_kwargs
+from neila.contracts.plugin_api import FORBIDDEN_SKILL_SETTINGS
+
+log = logging.getLogger(__name__)
+
+# ---------------------------------------------------------------------------
+# Execution policy
+# ---------------------------------------------------------------------------
+
+# Hard ceiling regardless of the skill manifest's timeout_sec. Anything
+# longer than this is bundled into a background task by the runtime loop
+# — ``skill_exec`` is for bounded, synchronous helper calls, not for
+# long-running worker tasks.
+_HARD_TIMEOUT_CEILING_SEC = 300
+_SKILL_REVIEW_TOOL_TIMEOUT_SEC = int(os.environ.get("NEILA_SKILL_REVIEW_TOOL_TIMEOUT_SEC", "1800"))
+_DEFAULT_TIMEOUT_SEC = 60
+# v5.7.0: bumped from 64KB / 32KB. Real script skills (image-gen prompt
+# trace, deep-research dump, batch summarisation) routinely produced
+# 80–200KB of stdout, which used to trip ``SKILL_EXEC_OVERFLOW`` and
+# kill the process mid-run. ``tool_capabilities.TOOL_RESULT_LIMITS``
+# pairs this with a 300_000-char per-tool cap so the wrapped JSON does
+# not get re-truncated to 15KB by the loop's default limit.
+_MAX_STDOUT_BYTES = 256 * 1024
+_MAX_STDERR_BYTES = 128 * 1024
+
+_ALLOWED_RUNTIMES = {
+    # Cross-platform compatibility: ``python3`` is the canonical declared
+    # runtime but Windows and some minimal Linux installs only ship
+    # ``python.exe`` / ``python``. Fall back to ``python`` so a skill
+    # declaring ``runtime: python3`` works on every supported OS.
+    "python": ("python", "python3"),
+    "python3": ("python3", "python"),
+    "bash": ("bash",),
+    "node": ("node",),
+    # v5.7.0: declared additional runtimes. Resolution still happens via
+    # ``shutil.which`` so the skill subprocess fails closed with a clear
+    # ``SKILL_EXEC_ERROR: runtime <foo> is not in the allowlist or the
+    # matching binary is not on PATH`` if the operator has not installed
+    # the runtime locally. The runtime allowlist + subprocess sandbox
+    # invariants (cwd=skill_dir, scrubbed env, byte caps, panic-tracked
+    # process group) apply identically.
+    "deno": ("deno",),
+    "ruby": ("ruby",),
+    "go": ("go",),
+}
+
+# Environment keys that are always passed through to a skill subprocess
+# regardless of ``env_from_settings``. These are OS-level, not application
+# state, and removing them would break basic ``python`` / ``node`` / ``bash``
+# invocations on many systems. Keys absent from the parent env are silently
+# skipped in ``_scrub_env`` so mixing Unix + Windows spellings in the same
+# set is safe (on Unix ``USERPROFILE`` / ``APPDATA`` simply don't exist;
+# on Windows ``HOME`` usually doesn't).
+_ALWAYS_FORWARDED_ENV = frozenset(
+    {
+        "PATH",
+        "HOME",            # Unix home dir
+        "USERPROFILE",     # Windows equivalent of HOME
+        "APPDATA",         # Windows roaming app data (e.g. pip cache)
+        "LOCALAPPDATA",    # Windows local app data
+        "LANG",
+        "LC_ALL",
+        "LC_CTYPE",
+        "SYSTEMROOT",      # Windows
+        "TMPDIR",
+        "TMP",
+        "TEMP",
+    }
+)
+
+# Core settings keys that require explicit, content-bound owner grants
+# before they can be forwarded through ``env_from_settings``. The first
+# layer of defence is the tri-model skill review, but the runtime still
+# refuses to pass these values unless the reviewed script skill carries a
+# matching grant.
+_FORBIDDEN_ENV_FORWARD_KEYS = FORBIDDEN_SKILL_SETTINGS
+
+
+def _resolve_runtime_binary(runtime: str) -> Optional[str]:
+    """Return the absolute path to the binary implementing the runtime.
+
+    Uses ``shutil.which`` first (the common case on developer machines
+    where ``python3`` / ``node`` / ``bash`` live on PATH). For
+    packaged / frozen builds (``_FROZEN_TOOL_MODULES`` now includes
+    ``skill_exec`` so the tool ships inside the app bundle too), we
+    additionally fall back to ``sys.executable`` for ``python`` /
+    ``python3`` requests so skills declaring the default Python
+    runtime still work even when the bundled ``python-standalone``
+    interpreter is not on PATH.
+    """
+    import sys
+    candidates = _ALLOWED_RUNTIMES.get(runtime or "", ())
+    for candidate in candidates:
+        resolved = shutil.which(candidate)
+        if resolved:
+            return resolved
+    # Packaged-build fallback: the bundled Python interpreter is always
+    # available via ``sys.executable`` even when not on PATH. Mirrors
+    # ``claude_code_edit`` / ``NEILA/platform_layer.py`` which use
+    # the same trick for the app-managed Claude runtime.
+    if runtime in ("python", "python3") and sys.executable:
+        resolved = pathlib.Path(sys.executable)
+        if resolved.is_file():
+            return str(resolved)
+    return None
+
+
+def _scrub_env(
+    manifest_env_keys: List[str],
+    skill_state_dir_path: pathlib.Path,
+    skill_name: str,
+    granted_keys: List[str] | None = None,
+) -> Dict[str, str]:
+    """Build a minimal env for the subprocess.
+
+    Starts empty, adds always-forwarded OS keys, then copies user-approved
+    settings keys listed in the manifest's ``env_from_settings`` (loaded
+    live from settings.json so key-rotation propagates without a restart).
+    Also exposes the per-skill state directory under
+    ``NEILA_SKILL_STATE_DIR`` so scripts have a documented writable
+    location.
+    """
+    env: Dict[str, str] = {}
+    for key in _ALWAYS_FORWARDED_ENV:
+        val = os.environ.get(key)
+        if val is not None:
+            env[key] = val
+    if manifest_env_keys:
+        settings = load_settings()
+        # Case-insensitive denylist comparison: the canonical form of
+        # FORBIDDEN_SKILL_SETTINGS is uppercase (``OPENROUTER_API_KEY`` etc.)
+        # but a future settings.get implementation may lowercase keys
+        # before lookup. Compare on the upper form so a manifest that
+        # tries to sneak in ``openrouter_api_key`` (lowercase) is still
+        # refused.
+        forbidden_upper = {k.upper() for k in _FORBIDDEN_ENV_FORWARD_KEYS}
+        granted_upper = {str(k).strip().upper() for k in (granted_keys or []) if str(k).strip()}
+        allow = {str(k).strip() for k in manifest_env_keys if str(k).strip()}
+        for key in allow:
+            canonical = key.upper()
+            if canonical in forbidden_upper and canonical not in granted_upper:
+                log.warning(
+                    "Skill %s asked env_from_settings for %s; refusing without explicit grant.",
+                    skill_name, key,
+                )
+                continue
+            val = settings.get(canonical) if canonical in forbidden_upper else settings.get(key)
+            if val is None or val == "":
+                continue
+            env[canonical if canonical in forbidden_upper else key] = str(val)
+    env["NEILA_SKILL_NAME"] = skill_name
+    env["NEILA_SKILL_STATE_DIR"] = str(skill_state_dir_path)
+    return env
+
+
+def _drain_pipe_with_cap(pipe, cap: int, buf: bytearray, overflow_flag: Dict[str, bool], label: str) -> None:
+    """Read from ``pipe`` into ``buf`` up to ``cap`` bytes.
+
+    Stops reading (and flips ``overflow_flag[label]``) the moment the
+    buffer exceeds the cap so a pathological skill that writes
+    gigabytes to stdout cannot exhaust runtime memory. The caller is
+    expected to terminate the subprocess once either overflow flag
+    fires (skill_exec does exactly that via ``_kill_process_group``).
+    """
+    try:
+        while True:
+            chunk = pipe.read(4096)
+            if not chunk:
+                return
+            remaining = cap - len(buf)
+            if remaining <= 0:
+                overflow_flag[label] = True
+                return
+            if len(chunk) > remaining:
+                buf.extend(chunk[:remaining])
+                overflow_flag[label] = True
+                return
+            buf.extend(chunk)
+    except (OSError, ValueError):
+        # Pipe closed mid-read — normal during kill.
+        return
+
+
+def _run_skill_subprocess(
+    cmd: List[str],
+    *,
+    cwd: str,
+    env: Dict[str, str],
+    timeout_sec: int,
+    stdout_cap: int,
+    stderr_cap: int,
+) -> Tuple[int, bytes, bytes, bool]:
+    """Spawn a skill subprocess with byte-capped stdout/stderr streaming.
+
+    Returns ``(returncode, stdout_bytes, stderr_bytes, overflowed)``.
+    ``overflowed`` is True when either stream's cap was hit — in that
+    case the process tree was killed; ``returncode`` is whatever the
+    OS returned (often a negative signal number on SIGKILL / SIGTERM).
+
+    Raises ``subprocess.TimeoutExpired`` on wall-clock timeout (with
+    the partial stdout/stderr available via ``exc.stdout``/``exc.stderr``).
+    Raises ``FileNotFoundError`` when the runtime binary disappears
+    between resolution and spawn, matching ``subprocess.run`` semantics.
+    """
+    popen_kwargs: Dict[str, Any] = {
+        "cwd": cwd,
+        "env": env,
+        "stdout": subprocess.PIPE,
+        "stderr": subprocess.PIPE,
+        "stdin": subprocess.DEVNULL,
+    }
+    popen_kwargs.update(subprocess_new_group_kwargs())
+    # Suppress the ugly per-skill console window on Windows. ``merge_hidden_kwargs``
+    # is a no-op on Unix and bitwise-ORs ``creationflags`` on Windows so the
+    # process-group flag from ``subprocess_new_group_kwargs`` is preserved.
+    popen_kwargs = merge_hidden_kwargs(popen_kwargs)
+    proc = Popen(cmd, **popen_kwargs)  # noqa: S603 — cmd is a vetted list, not shell
+    with _subprocess_lock:
+        _active_subprocesses.add(proc)
+
+    stdout_buf = bytearray()
+    stderr_buf = bytearray()
+    overflow_flag = {"stdout": False, "stderr": False}
+
+    stdout_thread = threading.Thread(
+        target=_drain_pipe_with_cap,
+        args=(proc.stdout, stdout_cap, stdout_buf, overflow_flag, "stdout"),
+        daemon=True,
+    )
+    stderr_thread = threading.Thread(
+        target=_drain_pipe_with_cap,
+        args=(proc.stderr, stderr_cap, stderr_buf, overflow_flag, "stderr"),
+        daemon=True,
+    )
+    stdout_thread.start()
+    stderr_thread.start()
+
+    deadline = time.monotonic() + max(1, int(timeout_sec))
+    overflowed = False
+    timed_out = False
+    try:
+        while True:
+            # Overflow? Kill the tree immediately so a noisy/malicious
+            # skill cannot keep filling dropped-on-the-floor pipes.
+            if overflow_flag["stdout"] or overflow_flag["stderr"]:
+                overflowed = True
+                _kill_process_group(proc)
+                break
+            if proc.poll() is not None:
+                break
+            if time.monotonic() >= deadline:
+                timed_out = True
+                _kill_process_group(proc)
+                break
+            time.sleep(0.05)
+        # Wait briefly for pipe drain / reaper; don't block forever
+        # even if something went sideways.
+        try:
+            proc.wait(timeout=5)
+        except subprocess.TimeoutExpired:
+            _kill_process_group(proc)
+            proc.wait(timeout=2)
+        stdout_thread.join(timeout=2)
+        stderr_thread.join(timeout=2)
+    finally:
+        with _subprocess_lock:
+            _active_subprocesses.discard(proc)
+        try:
+            if proc.stdout:
+                proc.stdout.close()
+            if proc.stderr:
+                proc.stderr.close()
+        except OSError:
+            pass
+
+    if timed_out:
+        raise subprocess.TimeoutExpired(
+            cmd=cmd,
+            timeout=timeout_sec,
+            output=bytes(stdout_buf),
+            stderr=bytes(stderr_buf),
+        )
+    return proc.returncode or 0, bytes(stdout_buf), bytes(stderr_buf), overflowed
+
+
+def _bound_timeout(requested_sec: Any) -> int:
+    try:
+        timeout = int(requested_sec)
+    except (TypeError, ValueError):
+        timeout = _DEFAULT_TIMEOUT_SEC
+    if timeout <= 0:
+        timeout = _DEFAULT_TIMEOUT_SEC
+    return min(timeout, _HARD_TIMEOUT_CEILING_SEC)
+
+
+def _cap(data: bytes, limit: int, label: str) -> str:
+    text = data.decode("utf-8", errors="replace")
+    if len(data) <= limit:
+        return text
+    return (
+        text[:limit]
+        + f"\n\n⚠️ OMISSION NOTE: skill_exec truncated {label} at "
+        f"{limit} bytes (total {len(data)})."
+    )
+
+
+def _resolve_script_path(
+    skill_dir: pathlib.Path,
+    script_rel: str,
+    *,
+    reviewed_paths: Optional[List[pathlib.Path]] = None,
+) -> Optional[pathlib.Path]:
+    """Resolve ``script_rel`` against ``skill_dir``, blocking path escape.
+
+    When ``reviewed_paths`` is supplied, the resolved script must also be
+    a member of that set. This is the "executable surface == reviewed
+    surface" invariant: the content hash + the review pack cover the
+    manifest + manifest-declared ``entry`` + ``scripts/`` + ``assets/``,
+    so ``skill_exec`` must refuse to execute anything outside those
+    reviewed files (e.g. a stray ``skill_dir/helper.py`` the user dropped
+    post-review). Without the match the PASS verdict would cover code
+    that never went through tri-model review.
+
+    Returns ``None`` on any failure (escape, missing file, or not in the
+    reviewed set).
+    """
+    rel = (script_rel or "").strip()
+    if not rel or rel.startswith("/") or rel.startswith("~"):
+        return None
+    if ".." in pathlib.PurePosixPath(rel).parts:
+        return None
+    candidate = (skill_dir / rel).resolve()
+    try:
+        candidate.relative_to(skill_dir.resolve())
+    except ValueError:
+        return None
+    if not candidate.is_file():
+        return None
+    if reviewed_paths is not None:
+        reviewed = {p.resolve() for p in reviewed_paths}
+        if candidate not in reviewed:
+            return None
+    return candidate
+
+
+# ---------------------------------------------------------------------------
+# Tool handlers
+# ---------------------------------------------------------------------------
+
+
+def _skill_tool_preflight(
+    ctx: ToolContext,
+) -> Optional[str]:
+    """Return an error string when the skill surface is unavailable.
+
+    The tools work whenever ANY skill is discoverable — that's either
+    the bundled ``repo/skills/`` reference set or the user's configured
+    ``NEILA_SKILLS_REPO_PATH`` checkout. Only when both are empty
+    do we surface the "point at a checkout" hint.
+    """
+    repo_path = get_skills_repo_path()
+    if repo_path:
+        return None
+    # No external path — fall back to checking whether the bundled
+    # reference directory is present and non-empty.
+    from neila.skill_loader import _bundled_skills_dir
+    bundled = _bundled_skills_dir()
+    if bundled is not None and any(bundled.iterdir()):
+        return None
+    return (
+        "⚠️ SKILLS_UNAVAILABLE: No skills are discoverable. Point "
+        "NEILA_SKILLS_REPO_PATH at a local checkout in Settings → "
+        "Behavior → External Skills Repo, or ensure the bundled "
+        "skills directory ships with the build."
+    )
+
+
+def _handle_list_skills(ctx: ToolContext, **_kwargs: Any) -> str:
+    err = _skill_tool_preflight(ctx)
+    if err:
+        return err
+    drive_root = pathlib.Path(ctx.drive_root)
+    summary = summarize_skills(drive_root)
+    return json.dumps(summary, ensure_ascii=False, indent=2)
+
+
+def _handle_review_skill(ctx: ToolContext, skill: str = "", **_kwargs: Any) -> str:
+    err = _skill_tool_preflight(ctx)
+    if err:
+        return err
+    skill_name = str(skill or "").strip()
+    if not skill_name:
+        return "⚠️ SKILL_REVIEW_ERROR: 'skill' argument is required."
+    from neila.skill_review_runner import run_skill_review_lifecycle_blocking
+
+    payload = run_skill_review_lifecycle_blocking(
+        ctx,
+        skill_name,
+        source="tool",
+        review_impl=_review_skill_impl,
+    )
+    return json.dumps(payload, ensure_ascii=False, indent=2)
+
+
+def _skill_deps_exec_block(drive_root: pathlib.Path, loaded: Any) -> str:
+    """Return a SKILL_EXEC_BLOCKED string when isolated deps are not ready.
+
+    Toggle guards prevent future enables, but already-enabled script skills
+    still need an execution-time check because deps.json can become stale,
+    corrupted, or failed after enablement.
+    """
+    try:
+        from neila.marketplace.install_specs import install_specs_hash as _specs_hash
+        from neila.marketplace.isolated_deps import read_deps_state
+        from neila.skill_dependencies import auto_install_specs_for_skill
+
+        auto_specs = auto_install_specs_for_skill(drive_root, loaded)
+        if not auto_specs:
+            return ""
+        deps_state = read_deps_state(drive_root, loaded.name)
+        deps_status = str(deps_state.get("status") or "pending")
+        if deps_status == "installed" and deps_state.get("specs_hash") == _specs_hash(auto_specs):
+            return ""
+        return (
+            f"⚠️ SKILL_EXEC_BLOCKED: skill {loaded.name!r} isolated "
+            f"dependencies are not ready (status={deps_status!r}). "
+            "Re-run review_skill so PASS review can reinstall dependencies."
+        )
+    except Exception:
+        log.debug("skill_exec deps readiness probe failed", exc_info=True)
+        return ""
+
+
+def _handle_skill_exec(
+    ctx: ToolContext,
+    skill: str = "",
+    script: str = "",
+    args: Optional[List[str]] = None,
+    **_kwargs: Any,
+) -> str:
+    err = _skill_tool_preflight(ctx)
+    if err:
+        return err
+
+    # v5.1.2 light reframed: ``light`` blocks repo self-modification but
+    # ALLOWS reviewed + enabled skills to execute. Skills already have
+    # their own independent safety stack (tri-model review PASS verdict
+    # + ``enabled.json`` toggle + content-hash freshness + sandboxed
+    # subprocess with cwd / scrubbed env / runtime allowlist / 300s
+    # ceiling / byte caps + ``FORBIDDEN_SKILL_SETTINGS`` denylist), so
+    # gating execution by ``runtime_mode`` would only deny owner-
+    # approved capabilities. Repo-mutation tools and the elevation
+    # ratchet (``save_settings`` / ``_data_write`` to settings.json)
+    # remain blocked; that is what ``light`` is for.
+
+    skill_name = str(skill or "").strip()
+    script_rel = str(script or "").strip()
+    if not skill_name or not script_rel:
+        return "⚠️ SKILL_EXEC_ERROR: both 'skill' and 'script' are required."
+
+    drive_root = pathlib.Path(ctx.drive_root)
+    loaded = find_skill(drive_root, skill_name)
+    if loaded is None:
+        return (
+            f"⚠️ SKILL_EXEC_ERROR: skill {skill_name!r} not found in "
+            "NEILA_SKILLS_REPO_PATH."
+        )
+    if loaded.load_error:
+        return (
+            f"⚠️ SKILL_EXEC_ERROR: skill {skill_name!r} manifest is broken "
+            f"({loaded.load_error}). Fix the skill package and re-review."
+        )
+    if loaded.manifest.is_extension():
+        # Extension plugins execute in-process through PluginAPI, not through
+        # the script subprocess substrate. Their registered tools, routes, and
+        # WS handlers are already dispatched by ToolRegistry / extensions_api /
+        # server.py when the extension is live.
+        return (
+            f"⚠️ SKILL_EXEC_EXTENSION: skill {skill_name!r} is a "
+            "type=extension plugin and does not execute through the "
+            "subprocess substrate. Its ``register(api)`` has already "
+            "been called; the loader registered whatever ``plugin.py`` "
+            "declared (inspect via the snapshot produced by "
+            "``neila.extension_loader.snapshot()``). Use its "
+            "provider-safe ``ext_<len>_<token>_*`` tools, "
+            "``/api/extensions/<skill>/...`` routes, or provider-safe "
+            "extension WebSocket handlers instead."
+        )
+    # Phase 3 ``skill_exec`` only executes ``type: script`` skills.
+    # ``instruction`` skills are catalogued + reviewable but have no
+    # executable payload by design (their manifest declares no scripts).
+    # Refusing here keeps the executable surface == ``manifest.scripts``
+    # and prevents the reviewer-executor mismatch the scope reviewer
+    # flagged in Phase 3 round 4.
+    if not loaded.manifest.is_script():
+        return (
+            f"⚠️ SKILL_EXEC_ERROR: skill {skill_name!r} has type "
+            f"{loaded.manifest.type!r}. Only 'script' skills can execute "
+            "via skill_exec in Phase 3."
+        )
+    if not loaded.enabled:
+        return (
+            f"⚠️ SKILL_EXEC_BLOCKED: skill {skill_name!r} is disabled. "
+            "Enable it after review in the Skills UI (Phase 5) or via "
+            "the dedicated enable tool."
+        )
+    try:
+        current_hash = compute_content_hash(
+            loaded.skill_dir,
+            manifest_entry=loaded.manifest.entry,
+            manifest_scripts=loaded.manifest.scripts,
+        )
+    except SkillPayloadUnreadable as exc:
+        return (
+            f"⚠️ SKILL_EXEC_ERROR: skill {skill_name!r} payload became unreadable "
+            f"({exc}). Fix the skill package and re-run review_skill before "
+            "executing."
+        )
+    if loaded.review.is_stale_for(current_hash):
+        return (
+            f"⚠️ SKILL_EXEC_BLOCKED: skill {skill_name!r} was edited since "
+            f"the last review. Re-run review_skill(skill={skill_name!r}) "
+            "before executing."
+        )
+    if loaded.review.status != "pass":
+        return (
+            f"⚠️ SKILL_EXEC_BLOCKED: skill {skill_name!r} review status is "
+            f"'{loaded.review.status}', not 'pass'. Run review_skill and "
+            "resolve findings before executing."
+        )
+    deps_block = _skill_deps_exec_block(drive_root, loaded)
+    if deps_block:
+        return deps_block
+
+    runtime = (loaded.manifest.runtime or "").strip().lower()
+    runtime_binary = _resolve_runtime_binary(runtime)
+    try:
+        from neila.marketplace.isolated_deps import python_runtime_binary
+
+        if runtime in {"python", "python3"}:
+            isolated_python = python_runtime_binary(loaded.skill_dir)
+            if isolated_python is not None:
+                runtime_binary = str(isolated_python)
+    except Exception:
+        log.debug("Could not resolve isolated Python runtime", exc_info=True)
+    if runtime_binary is None:
+        return (
+            f"⚠️ SKILL_EXEC_ERROR: skill {skill_name!r} declared runtime "
+            f"{runtime!r} is not in the allowlist {sorted(set(_ALLOWED_RUNTIMES))} "
+            "or the matching binary is not on PATH."
+        )
+
+    # Keep the executable surface identical to the manifest-declared
+    # ``scripts`` list — NOT the full reviewed file set. SKILL.md body and
+    # assets/* are part of the reviewed content hash (so editing them
+    # correctly invalidates the PASS verdict), but they are not executable
+    # payload and must not be invokable via ``skill_exec``. Resolve each
+    # declared script ``name`` against the skill directory once, up-front.
+    # Manifest authors may write either a bare filename (``fetch.py``,
+    # expected under ``scripts/``) or an explicit relative path
+    # (``scripts/fetch.py``); both forms are accepted here.
+    # Canonicalise a manifest ``scripts[].name`` to exactly one resolved
+    # filesystem path. A bare name (``fetch.py``) always means
+    # ``scripts/fetch.py`` — never a top-level shadow file of the same
+    # name — so execution cannot depend on an accidentally-present
+    # top-level ``hello.py`` sitting next to the real ``scripts/hello.py``.
+    # Explicit paths (``name: bin/run.sh``) resolve verbatim. If BOTH
+    # forms would resolve for a given declared name (e.g. ``hello.py``
+    # exists both at top level and under ``scripts/``), we pick the
+    # ``scripts/`` form and keep a note that the top-level file is
+    # reviewed content but NOT executable.
+    def _canonical_declared_path(declared_name: str) -> Optional[pathlib.Path]:
+        name = declared_name.strip()
+        if not name:
+            return None
+        if "/" in name or name.startswith("."):
+            return _resolve_script_path(loaded.skill_dir, name)
+        # Bare name — mandate the ``scripts/`` prefix.
+        return _resolve_script_path(loaded.skill_dir, f"scripts/{name}")
+
+    declared_scripts: List[pathlib.Path] = []
+    declared_by_name: Dict[str, pathlib.Path] = {}
+    for entry in loaded.manifest.scripts or []:
+        if not isinstance(entry, dict):
+            continue
+        declared_name = str(entry.get("name") or "").strip()
+        if not declared_name:
+            continue
+        canonical = _canonical_declared_path(declared_name)
+        if canonical is None:
+            continue
+        if canonical not in declared_scripts:
+            declared_scripts.append(canonical)
+        declared_by_name[declared_name] = canonical
+        # Also index by the explicit ``scripts/<name>`` spelling so a
+        # caller that passes ``script="scripts/hello.py"`` matches the
+        # same canonical target.
+        if "/" not in declared_name:
+            declared_by_name[f"scripts/{declared_name}"] = canonical
+
+    # Look up the caller's script argument in the declared-name index
+    # first, then fall back to the path-based check for callers that
+    # pass an explicit relative path that happens to coincide with a
+    # declared script path.
+    script_path: Optional[pathlib.Path] = declared_by_name.get(script_rel.strip())
+    if script_path is None:
+        script_path = _resolve_script_path(
+            loaded.skill_dir, script_rel, reviewed_paths=declared_scripts
+        )
+    if script_path is None:
+        return (
+            f"⚠️ SKILL_EXEC_ERROR: script {script_rel!r} is not a declared "
+            "script for this skill. Only names listed under the manifest's "
+            "``scripts:`` array can execute via skill_exec (assets/* and "
+            "SKILL.md body are reviewed content but not executable payload). "
+            "Add the script to the manifest and re-run review_skill."
+        )
+
+    cmd = [runtime_binary, str(script_path)]
+    if args is None:
+        extra_args: List[Any] = []
+    elif isinstance(args, str):
+        # Mis-serialized by the caller (``args="alpha"`` would expand to
+        # per-char argv under ``list(args)``). Reject explicitly.
+        return (
+            "⚠️ SKILL_EXEC_ERROR: 'args' must be a list of scalar "
+            "strings/numbers, not a single string. Wrap as ['alpha'] "
+            "for a one-element argv."
+        )
+    elif isinstance(args, (list, tuple)):
+        extra_args = list(args)
+    else:
+        return (
+            "⚠️ SKILL_EXEC_ERROR: 'args' must be a list of scalar "
+            f"strings/numbers. Got {type(args).__name__}={args!r}."
+        )
+    for arg in extra_args:
+        if not isinstance(arg, (str, int, float)) or isinstance(arg, bool):
+            return (
+                "⚠️ SKILL_EXEC_ERROR: args must be a list of scalar "
+                f"strings/numbers. Element {arg!r} ({type(arg).__name__}) "
+                "is not allowed."
+            )
+        cmd.append(str(arg))
+
+    timeout = _bound_timeout(loaded.manifest.timeout_sec)
+    from neila.skill_loader import grant_status_for_skill, skill_state_dir
+
+    state_dir = skill_state_dir(drive_root, loaded.name)
+    grants = grant_status_for_skill(drive_root, loaded)
+    missing_core = list(grants.get("missing_keys") or [])
+    if missing_core:
+        return (
+            "⚠️ SKILL_EXEC_GRANT_REQUIRED: skill "
+            f"{loaded.name!r} requests core settings keys {missing_core}. "
+            "Grant them from the Skills UI after a fresh PASS review before execution."
+        )
+    env = _scrub_env(
+        manifest_env_keys=list(loaded.manifest.env_from_settings or []),
+        skill_state_dir_path=state_dir,
+        skill_name=loaded.name,
+        granted_keys=list(grants.get("granted_keys") or []),
+    )
+    try:
+        from neila.marketplace.isolated_deps import augment_env_for_skill_deps
+
+        env = augment_env_for_skill_deps(env, loaded.skill_dir)
+    except Exception:
+        log.debug("Could not augment skill env with isolated dependencies", exc_info=True)
+
+    try:
+        returncode, stdout_bytes, stderr_bytes, overflowed = _run_skill_subprocess(
+            cmd,
+            cwd=str(loaded.skill_dir),
+            env=env,
+            timeout_sec=timeout,
+            stdout_cap=_MAX_STDOUT_BYTES,
+            stderr_cap=_MAX_STDERR_BYTES,
+        )
+    except subprocess.TimeoutExpired as exc:
+        return (
+            f"⚠️ SKILL_EXEC_TIMEOUT: skill {skill_name!r} script "
+            f"{script_rel!r} exceeded {timeout}s limit.\n"
+            f"stdout_partial:\n{_cap(exc.stdout or b'', _MAX_STDOUT_BYTES, 'stdout')}\n"
+            f"stderr_partial:\n{_cap(exc.stderr or b'', _MAX_STDERR_BYTES, 'stderr')}"
+        )
+    except FileNotFoundError:
+        return (
+            f"⚠️ SKILL_EXEC_ERROR: runtime binary {runtime_binary!r} is no "
+            "longer available."
+        )
+    except OSError as exc:
+        return f"⚠️ SKILL_EXEC_ERROR: OS error running skill: {exc}"
+
+    # ``overflowed`` means we killed the skill because it exceeded the
+    # per-stream byte cap. The buffers are already bounded by that cap,
+    # so ``_cap()`` below is a no-op safety net that ALSO appends the
+    # human-readable OMISSION NOTE the downstream consumer expects.
+    payload = {
+        "skill": loaded.name,
+        "script": script_rel,
+        "runtime": runtime,
+        "exit_code": int(returncode),
+        "timeout_sec": timeout,
+        "output_overflow": overflowed,
+        "stdout": _cap(stdout_bytes, _MAX_STDOUT_BYTES, "stdout"),
+        "stderr": _cap(stderr_bytes, _MAX_STDERR_BYTES, "stderr"),
+    }
+    rendered = json.dumps(payload, ensure_ascii=False, indent=2)
+    if overflowed:
+        # Process was killed for flooding stdout/stderr — surface a
+        # dedicated sentinel so the model does not confuse it with a
+        # normal successful run.
+        return (
+            f"⚠️ SKILL_EXEC_OVERFLOW: skill {loaded.name!r} script "
+            f"{script_rel!r} exceeded stdout/stderr byte caps "
+            f"(stdout<={_MAX_STDOUT_BYTES}B, stderr<={_MAX_STDERR_BYTES}B) "
+            "and was killed.\n\n" + rendered
+        )
+    if returncode != 0:
+        return (
+            f"⚠️ SKILL_EXEC_FAILED: skill {loaded.name!r} script "
+            f"{script_rel!r} exited with code {returncode}.\n\n"
+            + rendered
+        )
+    return rendered
+
+
+_TRUE_LITERALS = {"true", "yes", "on", "1"}
+_FALSE_LITERALS = {"false", "no", "off", "0"}
+
+
+def _coerce_bool_arg(value: Any) -> Optional[bool]:
+    """Strictly coerce an LLM tool argument to a bool.
+
+    Returns ``None`` for values that are not unambiguously boolean — so
+    the handler can reject malformed input instead of silently running
+    ``bool("false") == True`` and flipping enabled ON.
+    """
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, int) and value in (0, 1):
+        return bool(value)
+    if isinstance(value, str):
+        lowered = value.strip().lower()
+        if lowered in _TRUE_LITERALS:
+            return True
+        if lowered in _FALSE_LITERALS:
+            return False
+    return None
+
+
+def _handle_toggle_skill(
+    ctx: ToolContext,
+    skill: str = "",
+    enabled: Any = None,
+    **_kwargs: Any,
+    ) -> str:
+    err = _skill_tool_preflight(ctx)
+    if err:
+        return err
+    skill_name = str(skill or "").strip()
+    if not skill_name:
+        return "⚠️ SKILL_TOGGLE_ERROR: 'skill' argument is required."
+    if enabled is None:
+        return "⚠️ SKILL_TOGGLE_ERROR: 'enabled' (true|false) is required."
+    coerced = _coerce_bool_arg(enabled)
+    if coerced is None:
+        return (
+            "⚠️ SKILL_TOGGLE_ERROR: 'enabled' must be a boolean or one of "
+            f"{sorted(_TRUE_LITERALS | _FALSE_LITERALS)}. "
+            f"Got {enabled!r} ({type(enabled).__name__})."
+        )
+
+    drive_root = pathlib.Path(ctx.drive_root)
+    from neila.skill_lifecycle_queue import skill_lifecycle_file_lock
+
+    with skill_lifecycle_file_lock(drive_root):
+        loaded = find_skill(drive_root, skill_name)
+        if loaded is None:
+            return (
+                f"⚠️ SKILL_TOGGLE_ERROR: skill {skill_name!r} not found in "
+                "NEILA_SKILLS_REPO_PATH."
+            )
+        collision_load_error = loaded.load_error.lower().startswith("skill name collision:")
+        if coerced and loaded.load_error:
+            return (
+                f"⚠️ SKILL_TOGGLE_ERROR: skill {skill_name!r} cannot be enabled "
+                f"— loader rejected it ({loaded.load_error})."
+            )
+        if coerced:
+            stale = loaded.review.is_stale_for(loaded.content_hash)
+            grants = grant_status_for_skill(drive_root, loaded)
+            if loaded.review.status != "pass" or stale:
+                return (
+                    "⚠️ SKILL_TOGGLE_ERROR: cannot enable until review status is "
+                    f"fresh PASS (status={loaded.review.status!r}, stale={stale}). "
+                    "Run review_skill first."
+                )
+            if not grants.get("all_granted", True):
+                missing = ", ".join(grants.get("missing_keys") or [])
+                return (
+                    "⚠️ SKILL_TOGGLE_ERROR: cannot enable until requested key grants "
+                    f"are approved{f' ({missing})' if missing else ''}."
+                )
+            # v5.7.0: refuse enable when the skill declared isolated
+            # ``install_specs`` but the deps are not actually installed
+            # (status != "installed") OR are stale relative to the
+            # current provenance specs_hash. Without this guard a user
+            # could toggle an extension whose ``import requests`` would
+            # ImportError mid-dispatch.
+            try:
+                from neila.marketplace.install_specs import install_specs_hash as _specs_hash
+                from neila.marketplace.isolated_deps import read_deps_state
+                from neila.skill_dependencies import auto_install_specs_for_skill
+                auto_specs = auto_install_specs_for_skill(drive_root, loaded)
+                if auto_specs:
+                    deps_state = read_deps_state(drive_root, loaded.name)
+                    deps_status = str(deps_state.get("status") or "pending")
+                    expected_hash = _specs_hash(auto_specs)
+                    actual_hash = str(deps_state.get("specs_hash") or "")
+                    if deps_status != "installed":
+                        return (
+                            f"⚠️ SKILL_TOGGLE_ERROR: skill {loaded.name!r} declares "
+                            f"isolated dependencies (status={deps_status!r}). "
+                            "Re-run review_skill (PASS triggers a deps re-install) "
+                            "before enabling."
+                        )
+                    if actual_hash != expected_hash:
+                        return (
+                            f"⚠️ SKILL_TOGGLE_ERROR: skill {loaded.name!r} dependency "
+                            "fingerprint is stale (provenance changed since last "
+                            "install). Re-run review_skill before enabling."
+                        )
+            except Exception:
+                # Defense-in-depth: never block enable on a probe error;
+                # log and continue. The other guards above + skill_exec's
+                # own freshness checks still apply.
+                log.debug("toggle_skill deps probe failed", exc_info=True)
+        if not coerced and collision_load_error:
+            extension_action = None
+            extension_reason = "name_collision"
+            from neila import extension_loader
+            if loaded.name in extension_loader.snapshot()["extensions"]:
+                extension_loader.unload_extension(loaded.name)
+                extension_action = "extension_unloaded"
+            return json.dumps({"skill": loaded.name, "enabled": False, "review_status": loaded.review.status, "extension_action": extension_action, "extension_reason": extension_reason, "message": f"Skill {loaded.name!r} was not persisted as disabled because its sanitized identity collides with another skill directory. Rename one of the directories first."}, ensure_ascii=False, indent=2)
+        save_enabled(drive_root, loaded.name, coerced)
+        extension_action = None
+        extension_reason = "not_extension"
+        from neila import extension_loader
+        if loaded.manifest.is_extension() or loaded.name in extension_loader.snapshot()["extensions"]:
+            from neila.config import load_settings as _load_settings
+            live_state = extension_loader.reconcile_extension(loaded.name, drive_root, _load_settings, retry_load_error=True)
+            extension_action = live_state.get("action")
+            extension_reason = str(live_state.get("reason") or "")
+        return json.dumps({"skill": loaded.name, "enabled": coerced, "review_status": loaded.review.status, "extension_action": extension_action, "extension_reason": extension_reason, "message": f"Skill {loaded.name!r} enabled={coerced}"}, ensure_ascii=False, indent=2)
+
+
+
+# Tool registrations
+# ---------------------------------------------------------------------------
+
+_LIST_SCHEMA = {
+    "name": "list_skills",
+    "description": (
+        "List external skill packages discovered in NEILA_SKILLS_REPO_PATH. "
+        "Returns counts + per-skill metadata (name, type, enabled, review_status, "
+        "available_for_execution). Read-only."
+    ),
+    "parameters": {"type": "object", "properties": {}, "required": []},
+}
+
+_REVIEW_SCHEMA = {
+    "name": "review_skill",
+    "description": (
+        "Run tri-model skill review on one external skill package using the "
+        "same review infrastructure as repo commits but scored against the "
+        "Skill Review Checklist section in docs/CHECKLISTS.md. Persists the "
+        "verdict to data/state/skills/<name>/review.json with a content "
+        "hash so a later edit invalidates the review automatically."
+    ),
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "skill": {
+                "type": "string",
+                "description": "Skill name (directory name in NEILA_SKILLS_REPO_PATH).",
+            },
+        },
+        "required": ["skill"],
+    },
+}
+
+_EXEC_SCHEMA = {
+    "name": "skill_exec",
+    "description": (
+        "Execute a script from an external skill package. The skill must be "
+        "enabled and carry a fresh PASS review verdict. Only type=script "
+        "skills execute via this substrate — type=instruction skills are "
+        "catalogued + reviewable but have no executable payload by "
+        "design; type=extension skills run IN-PROCESS via the Phase 4 "
+        "extension_loader (calling skill_exec on an extension returns "
+        "SKILL_EXEC_EXTENSION pointing at that surface). The ``script`` "
+        "argument must match a "
+        "``name`` entry in the manifest's ``scripts:`` array (SKILL.md "
+        "body and assets/* are reviewed content but not executable). "
+        "Runtime allowlist: python/python3/bash/node/deno/ruby/go. The subprocess "
+        "runs with cwd=skill_dir, a scrubbed env (env_from_settings "
+        "keys only), panic-kill tracking, and a timeout from the "
+        "manifest (capped at 300s). v5.1.2 Frame A: NEILA_RUNTIME_MODE "
+        "no longer gates execution — light, advanced, and pro all let "
+        "reviewed + enabled skills run. Light still blocks repo "
+        "self-modification and the runtime_mode elevation ratchet."
+    ),
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "skill": {
+                "type": "string",
+                "description": "Skill name (directory name in NEILA_SKILLS_REPO_PATH).",
+            },
+            "script": {
+                "type": "string",
+                "description": (
+                    "Relative path of the script inside the skill directory "
+                    "(e.g. 'scripts/fetch.py'). Absolute paths and '..' "
+                    "traversal are rejected."
+                ),
+            },
+            "args": {
+                "type": "array",
+                "items": {"type": "string"},
+                "description": "Optional argv for the script.",
+            },
+        },
+        "required": ["skill", "script"],
+    },
+}
+
+_TOGGLE_SCHEMA = {
+    "name": "toggle_skill",
+    "description": (
+        "Enable or disable a skill. Disabled skills are excluded from "
+        "skill_exec regardless of review status. Enabling requires a fresh "
+        "PASS review and any requested core-key grants."
+    ),
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "skill": {
+                "type": "string",
+                "description": "Skill name.",
+            },
+            "enabled": {
+                "type": "boolean",
+                "description": "True to enable, False to disable.",
+            },
+        },
+        "required": ["skill", "enabled"],
+    },
+}
+
+
+def get_tools() -> List[ToolEntry]:
+    return [
+        ToolEntry(
+            name="list_skills",
+            schema=_LIST_SCHEMA,
+            handler=_handle_list_skills,
+            is_code_tool=False,
+            timeout_sec=30,
+        ),
+        ToolEntry(
+            name="review_skill",
+            schema=_REVIEW_SCHEMA,
+            handler=_handle_review_skill,
+            is_code_tool=False,
+            timeout_sec=_SKILL_REVIEW_TOOL_TIMEOUT_SEC,
+        ),
+        ToolEntry(
+            name="skill_exec",
+            schema=_EXEC_SCHEMA,
+            handler=_handle_skill_exec,
+            is_code_tool=False,
+            timeout_sec=_HARD_TIMEOUT_CEILING_SEC,
+        ),
+        ToolEntry(
+            name="toggle_skill",
+            schema=_TOGGLE_SCHEMA,
+            handler=_handle_toggle_skill,
+            is_code_tool=False,
+            timeout_sec=15,
+        ),
+    ]
+
+__all__ = [
+    "get_tools",
+    "_ALLOWED_RUNTIMES",
+    "_HARD_TIMEOUT_CEILING_SEC",
+    "_SKILL_REVIEW_TOOL_TIMEOUT_SEC",
+]
+
+

@@ -1,11 +1,11 @@
-"""Neila — Desktop Agent Runtime for Prady OS
+"""neila — Desktop Agent Runtime for Prady OS
 
-Neila is the renamed ouroboros-desktop integration for Prady OS.
+neila is the renamed neila-desktop integration for Prady OS.
 It provides the AI-powered desktop supervisor, skill routing, and
-autonomous workflow execution layer, formerly known as Ouroboros Desktop.
+autonomous workflow execution layer, formerly known as neila Desktop.
 
 Integration path: compositor/neila (submodule) → ai-core/neila (service)
-Renamed from: ouroboros-desktop
+Renamed from: neila-desktop
 Maintained by: prady4the4bady
 """
 
@@ -28,12 +28,12 @@ NEILA_SUBMODULE_PATH = os.environ.get("NEILA_SUBMODULE_PATH", "/app/compositor/n
 
 
 def get_health() -> dict:
-    """Health check for Neila service."""
+    """Health check for neila service."""
     return {
         "service": "neila",
         "status": "ok",
         "version": "1.0.0",
-        "formerly": "ouroboros-desktop",
+        "formerly": "neila-desktop",
         "model_gateway": MODEL_GATEWAY_URL,
         "ahnis_memory": AHNIS_URL,
     }
@@ -43,7 +43,7 @@ def run_skill(
     skill_name: str,
     payload: Optional[dict] = None,
 ) -> dict:
-    """Execute a named skill from the Neila skill registry.
+    """Execute a named skill from the neila skill registry.
 
     Args:
         skill_name: Name of the skill (e.g. 'weather', 'search', 'code').
@@ -53,7 +53,7 @@ def run_skill(
         Skill execution result dict.
     """
     logger.info("Running skill: %s", skill_name)
-    # Skill dispatch will delegate to compositor/neila (ouroboros-desktop) skills
+    # Skill dispatch will delegate to compositor/neila (neila-desktop) skills
     # at runtime via the mounted submodule path.
     return {
         "skill": skill_name,
@@ -68,5 +68,6 @@ if __name__ == "__main__":
     from app import create_app  # type: ignore[import]
 
     app = create_app(model_gateway_url=MODEL_GATEWAY_URL, ahnis_url=AHNIS_URL)
-    logger.info("Neila service starting on %s:%s", NEILA_HOST, NEILA_PORT)
+    logger.info("neila service starting on %s:%s", NEILA_HOST, NEILA_PORT)
     uvicorn.run(app, host=NEILA_HOST, port=NEILA_PORT, log_level="info")
+

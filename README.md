@@ -7,7 +7,7 @@
 ![Version](https://img.shields.io/badge/version-1.0.0-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Kernel](https://img.shields.io/badge/kernel-prady4the4bady%2Flinux-orange)
-![Services](https://img.shields.io/badge/services-44-purple)
+![Services](https://img.shields.io/badge/services-46-purple)
 ![Release](https://img.shields.io/badge/release-v1.0.0-brightgreen)
 
 ## What Prady OS is
@@ -92,7 +92,14 @@ cd ui/desktop-shell && npm install && npm run dev
 ## Run the tests
 
 ```bash
-python -m pytest platform/ -W error::DeprecationWarning -q
+# Canonical command — runs all suites via subprocess to avoid import collisions
+python scripts/run_all_tests.py
+
+# Individual suites:
+python -m pytest ai-core/neila/tests/ -W error::DeprecationWarning -q
+python -m pytest ai-core/ahnis/tests/ -W error::DeprecationWarning -q
+python -m pytest platform/agent-runtime/tests/ -W error::DeprecationWarning -q
+python -m pytest platform/tests/test_feature_claims.py -W error::DeprecationWarning -q
 ```
 
 ## Service map (44 services)
@@ -120,9 +127,64 @@ python -m pytest platform/ -W error::DeprecationWarning -q
 | 8112 | audit-log | Append-only event log |
 | 8117 | security-policy | Permission enforcement |
 | 8118 | ebpf-hardening | Kernel syscall sandbox |
+| 8027 | neila (deprecated) | Old port — now 8090 |
+| 8028 | ahnis (deprecated) | Old port — now 8091 |
+| 8090 | neila | Ouroboros background daemon (A2A, skill marketplace, retry queue, dead-letter) |
+| 8091 | ahnis | MemPalace-Aya pluggable semantic memory + vector store |
 | 8120 | kryos-researcher | Problem discovery agent |
 | 8121 | proposal-gate | User approval gateway |
 | +21 more | +21 more services | See docker-compose.dev.yml |
+
+## AI Core Services
+
+### Neila (Desktop Agent Runtime)
+- **Source**: Forked from [joi-lab/ouroboros-desktop](https://github.com/joi-lab/ouroboros-desktop) via prady4the4bady/ouroboros-desktop
+- **Location**: `ai-core/neila/`
+- **Port**: 8090
+- **Role**: Autonomous desktop agent with A2A protocol, skill marketplace, retry queue with dead-letter management
+- **Renamed**: ouroboros → Neila throughout codebase
+- **Key files**: `app/main.py` (FastAPI service), `neila/` (full Ouroboros agent package), `server.py` (Starlette agent server)
+
+### Ahnis (Memory Palace)
+- **Source**: Forked from [milla-jovovich/mempalace-Aya-fork](https://github.com/milla-jovovich/mempalace-Aya-fork)
+- **Location**: `ai-core/ahnis/`
+- **Port**: 8091
+- **Role**: AI memory system with SQLite persistence, vector embeddings, category-based memory storage, knowledge graph, MCP server
+- **Renamed**: mempalace/aya → Ahnis throughout codebase
+- **Key files**: `app/main.py` (FastAPI service), `ahnis/` (full MemPalace memory engine package)
+
+## Semantic memory local testing (Ahnis + Neila)
+
+```bash
+# Start Ahnis (no Qdrant needed — local-hash fallback works out of the box)
+cd ai-core/ahnis
+pip install -r requirements.txt
+python -m uvicorn app.main:app --port 8091
+
+# Optional: enable sentence-transformer embeddings
+export AHNIS_EMBEDDING_MODE=sentence-transformer
+pip install sentence-transformers  # requires PyTorch (~2GB)
+python -m uvicorn app.main:app --port 8091
+
+# Start Neila (SQLite persistence at /data/neila.db)
+cd ai-core/neila
+pip install -r requirements.txt
+python -m uvicorn app.main:app --port 8090
+
+# Verify embedding provider
+curl http://localhost:8091/ahnis/embeddings/provider
+# → {"provider_name":"local-hash","dimension":64,"backend_capability":"local","available":true}
+
+# Write a memory
+curl -X POST http://localhost:8091/memory/write \
+  -H "Content-Type: application/json" \
+  -d '{"category":"conversation","content":"Hello from semantic memory"}'
+
+# Search
+curl -X POST http://localhost:8091/memory/search \
+  -H "Content-Type: application/json" \
+  -d '{"query":"hello","limit":5}'
+```
 
 ## License
 

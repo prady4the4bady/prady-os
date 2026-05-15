@@ -1004,6 +1004,7 @@ services:
     environment:
       PORT: "8027"
       NEILA_TICK_INTERVAL: "60"
+      NEILA_DB_PATH: /data/neila.db
       INVENTOR_ENGINE_URL: http://inventor-engine:8022
       AUDIT_LOG_URL: http://audit-log:8112
       NOTIFICATION_BUS_URL: http://notification-bus:8111
@@ -1011,6 +1012,8 @@ services:
       AHNIS_URL: http://ahnis:8028
       MODEL_GATEWAY_URL: http://model-gateway:11430
       LOG_LEVEL: INFO
+    volumes:
+      - neila-data:/data
 
   ahnis:
     image: prady/ahnis:1.0.0
@@ -1025,11 +1028,16 @@ services:
       - "8028:8028"
     environment:
       PORT: "8028"
+      AHNIS_DB_PATH: /data/ahnis.db
       QDRANT_HOST: "${QDRANT_HOST:-}"
       QDRANT_PORT: "6333"
+      AHNIS_EMBEDDING_MODE: "${AHNIS_EMBEDDING_MODE:-auto}"
+      AHNIS_ST_MODEL: "${AHNIS_ST_MODEL:-all-MiniLM-L6-v2}"
       AUDIT_LOG_URL: http://audit-log:8112
       MODEL_GATEWAY_URL: http://model-gateway:11430
       LOG_LEVEL: INFO
+    volumes:
+      - ahnis-data:/data
 
   system-organizer:
     image: prady/system-organizer:1.0.0
@@ -1093,6 +1101,8 @@ volumes:
   sdk-registry-data:
   sdk-apps-workspace:
   oobe-config:
+  neila-data:
+  ahnis-data:
 
 secrets:
   kryos-jwt-private:

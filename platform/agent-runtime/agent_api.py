@@ -123,8 +123,8 @@ SOCIAL_PUBLISHER_URL = os.getenv("SOCIAL_PUBLISHER_URL", "http://social-publishe
 MARKET_INTEL_URL = os.getenv("MARKET_INTEL_URL", "http://market-intel:8024")
 BIZ_DOCS_URL = os.getenv("BIZ_DOCS_URL", "http://biz-docs:8025")
 SYSTEM_ORGANIZER_URL = os.getenv("SYSTEM_ORGANIZER_URL", "http://system-organizer:8026")
-NEILA_URL = os.getenv("NEILA_URL", "http://neila:8027")
-AHNIS_URL = os.getenv("AHNIS_URL", "http://ahnis:8028")
+NEILA_URL = os.getenv("NEILA_URL", "http://neila:8090")
+AHNIS_URL = os.getenv("AHNIS_URL", "http://ahnis:8091")
 
 
 async def _notify_self_learning(
@@ -1494,6 +1494,49 @@ async def neila_scheduled() -> Response:
     return Response(content=r.content, media_type="application/json")
 
 
+@app.post("/api/neila/followup")
+async def neila_followup(request: Request) -> Response:
+    body = await request.json()
+    async with httpx.AsyncClient(timeout=10.0) as c:
+        r = await c.post(f"{NEILA_URL}/neila/followup", json=body)
+    return Response(content=r.content, media_type="application/json", status_code=r.status_code)
+
+
+@app.get("/api/neila/followups")
+async def neila_followups(limit: int = 20) -> Response:
+    async with httpx.AsyncClient(timeout=10.0) as c:
+        r = await c.get(f"{NEILA_URL}/neila/followups", params={"limit": limit})
+    return Response(content=r.content, media_type="application/json")
+
+
+@app.post("/api/neila/followups/{fid}/processed")
+async def neila_followup_processed(fid: str) -> Response:
+    async with httpx.AsyncClient(timeout=10.0) as c:
+        r = await c.post(f"{NEILA_URL}/neila/followups/{fid}/processed")
+    return Response(content=r.content, media_type="application/json", status_code=r.status_code)
+
+
+@app.get("/api/neila/digests")
+async def neila_digests(limit: int = 10) -> Response:
+    async with httpx.AsyncClient(timeout=10.0) as c:
+        r = await c.get(f"{NEILA_URL}/neila/digests", params={"limit": limit})
+    return Response(content=r.content, media_type="application/json")
+
+
+@app.get("/api/ahnis/embeddings/provider")
+async def ahnis_embedding_provider() -> Response:
+    async with httpx.AsyncClient(timeout=10.0) as c:
+        r = await c.get(f"{AHNIS_URL}/ahnis/embeddings/provider")
+    return Response(content=r.content, media_type="application/json")
+
+
+@app.get("/api/ahnis/metrics")
+async def ahnis_metrics() -> Response:
+    async with httpx.AsyncClient(timeout=10.0) as c:
+        r = await c.get(f"{AHNIS_URL}/ahnis/metrics")
+    return Response(content=r.content, media_type="application/json")
+
+
 @app.delete("/api/memory/{entry_id}")
 async def memory_delete(entry_id: str) -> Response:
     async with httpx.AsyncClient(timeout=10.0) as c:
@@ -1506,6 +1549,73 @@ async def memory_consolidate() -> Response:
     async with httpx.AsyncClient(timeout=30.0) as c:
         r = await c.post(f"{AHNIS_URL}/memory/consolidate")
     return Response(content=r.content, media_type="application/json", status_code=r.status_code)
+
+
+@app.get("/api/system/memory-loop/status")
+async def memory_loop_status() -> dict:
+    """Aggregate health of the Prax–Ahnis–Neila memory/orchestration loop."""
+    async with httpx.AsyncClient(timeout=10.0) as c:
+        neila_ok = True
+        ahnis_ok = True
+        neila_metrics_data: dict = {}
+        ahnis_metrics_data: dict = {}
+        neila_health_ok = True
+        ahnis_health_ok = True
+        try:
+            r = await c.get(f"{NEILA_URL}/health", timeout=5.0)
+            neila_health_ok = r.status_code == 200
+        except Exception:
+            neila_health_ok = False
+        try:
+            r = await c.get(f"{NEILA_URL}/neila/metrics", timeout=5.0)
+            if r.status_code == 200:
+                neila_metrics_data = r.json()
+        except Exception:
+            neila_ok = False
+        try:
+            r = await c.get(f"{AHNIS_URL}/health", timeout=5.0)
+            ahnis_health_ok = r.status_code == 200
+        except Exception:
+            ahnis_health_ok = False
+        try:
+            r = await c.get(f"{AHNIS_URL}/ahnis/metrics", timeout=5.0)
+            if r.status_code == 200:
+                ahnis_metrics_data = r.json()
+        except Exception:
+            ahnis_ok = False
+
+    deadletter_count = neila_metrics_data.get("deadletter_count", 0)
+    persistence_available = ahnis_metrics_data.get("persisted_entry_count", 0) >= 0
+
+    degraded = bool(deadletter_count > 0) or (
+        ahnis_metrics_data.get("persisted_entry_count", 0) == 0
+        and ahnis_metrics_data.get("total_entries", 0) > 0
+        and False  # not necessarily degraded without persistence
+    )
+    failed = not neila_health_ok or not ahnis_health_ok
+
+    if failed:
+        status = "failed"
+    elif degraded:
+        status = "degraded"
+    else:
+        status = "ok"
+
+    return {
+        "status": status,
+        "neila": {
+            "health_ok": neila_health_ok,
+            "deadletter_count": deadletter_count,
+            "retry_queue_depth": neila_metrics_data.get("retry_queue_depth", 0),
+            "digests_generated_total": neila_metrics_data.get("digests_generated_total", 0),
+        },
+        "ahnis": {
+            "health_ok": ahnis_health_ok,
+            "total_entries": ahnis_metrics_data.get("total_entries", 0),
+            "persisted_entry_count": ahnis_metrics_data.get("persisted_entry_count", 0),
+            "backend_mode": ahnis_metrics_data.get("backend_mode", "unknown"),
+        },
+    }
 
 
 @app.get("/health")

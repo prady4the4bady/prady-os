@@ -1,13 +1,13 @@
 """Ahnis — AI Memory Service for Prady OS
 
-Ahnis is the renamed mempalace-Aya-fork integration for Prady OS.
+Ahnis is the renamed AHNIS-Aya-fork integration for Prady OS.
 It provides the AI memory palace — vector storage, semantic retrieval,
 and persistent context for all agents and services in the Prady OS stack.
 
 Integration path: compositor/ahnis (submodule) → ai-core/ahnis (service)
-Renamed from: mempalace-Aya-fork
+Renamed from: AHNIS-Aya-fork
 Maintained by: prady4the4bady
-Upstream: milla-jovovich/mempalace-Aya-fork
+Upstream: milla-jovovich/AHNIS-Aya-fork
 """
 
 import os
@@ -40,7 +40,7 @@ def get_health() -> dict:
         "service": "ahnis",
         "status": "ok",
         "version": "1.0.0",
-        "formerly": "mempalace-Aya-fork",
+        "formerly": "AHNIS-Aya-fork",
         "backend": MEMORY_BACKEND,
         "model_gateway": MODEL_GATEWAY_URL,
         "neila_agent": NEILA_URL,

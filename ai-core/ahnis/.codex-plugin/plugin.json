@@ -1,0 +1,48 @@
+{
+  "name": "AHNIS",
+  "version": "3.3.3",
+  "description": "Give your AI a memory — mine projects and conversations into a searchable palace. 19 MCP tools, auto-save hooks, and guided setup.",
+  "author": {
+    "name": "milla-jovovich"
+  },
+  "homepage": "https://github.com/AHNIS/AHNIS",
+  "repository": "https://github.com/AHNIS/AHNIS",
+  "license": "MIT",
+  "keywords": [
+    "memory",
+    "ai",
+    "rag",
+    "mcp",
+    "chromadb",
+    "palace",
+    "search"
+  ],
+  "skills": "./skills/",
+  "hooks": "./hooks.json",
+  "mcpServers": {
+    "AHNIS": {
+      "command": "AHNIS-mcp"
+    }
+  },
+  "interface": {
+    "displayName": "AHNIS",
+    "shortDescription": "AI memory system for Codex",
+    "longDescription": "Give your AI a persistent memory — mine projects and conversations into a searchable palace backed by ChromaDB, with 19 MCP tools, auto-save hooks, and guided skills.",
+    "developerName": "milla-jovovich",
+    "category": "Coding",
+    "capabilities": [
+      "Interactive",
+      "Read",
+      "Write"
+    ],
+    "websiteURL": "https://github.com/AHNIS/AHNIS",
+    "privacyPolicyURL": "https://github.com/AHNIS/AHNIS",
+    "termsOfServiceURL": "https://github.com/AHNIS/AHNIS",
+    "defaultPrompt": [
+      "Search my memories for recent decisions",
+      "Mine this project into my memory palace",
+      "Show my palace status and room counts"
+    ],
+    "brandColor": "#7C3AED"
+  }
+}

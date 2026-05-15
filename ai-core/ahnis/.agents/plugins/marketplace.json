@@ -1,0 +1,20 @@
+{
+  "name": "AHNIS",
+  "interface": {
+    "displayName": "AHNIS"
+  },
+  "plugins": [
+    {
+      "name": "AHNIS",
+      "source": {
+        "source": "local",
+        "path": "./.codex-plugin"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "NONE"
+      },
+      "category": "Coding"
+    }
+  ]
+}
