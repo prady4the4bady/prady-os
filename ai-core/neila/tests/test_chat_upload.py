@@ -113,7 +113,7 @@ def test_upload_lifecycle_delete_removes_file(client, tmp_path):
     del_resp = client.request(
         "DELETE",
         "/api/chat/upload",
-        data=__import__("json").dumps({"filename": stored_name}),
+        content=__import__("json").dumps({"filename": stored_name}),
         headers={"Content-Type": "application/json"},
     )
     assert del_resp.status_code == 200
@@ -144,12 +144,18 @@ def test_upload_size_limit(client, tmp_path):
 
 
 def _delete(client, payload):
-    """Helper: send DELETE /api/chat/upload with JSON body."""
+    """Helper: send DELETE /api/chat/upload with JSON body.
+
+    httpx 0.28+ requires `content=` (not `data=`) for raw bytes/text. The
+    `data=` kwarg is reserved for form-encoded payloads and was deprecated
+    for raw content in earlier 0.27.x releases. Using `content=` here keeps
+    the test compatible with the strict DeprecationWarning filter in CI.
+    """
     import json as _json
     return client.request(
         "DELETE",
         "/api/chat/upload",
-        data=_json.dumps(payload),
+        content=_json.dumps(payload),
         headers={"Content-Type": "application/json"},
     )
 
