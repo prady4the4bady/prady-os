@@ -538,14 +538,35 @@ def _wing_from_transcript_path(transcript_path: str) -> str:
         encoded = match.group(1)
         project = encoded.rsplit("-", 1)[-1]
         if project:
-            return f"wing_{project.lower().replace(' ', '_')}"
+            return f"wing_{_normalize_wing_token(project)}"
     # Legacy fallback: explicit ``-Projects-<name>`` segment, useful for
     # transcripts not under the standard Claude Code projects dir.
     match = re.search(r"-Projects-([^/]+?)(?:/|$)", normalized)
     if match:
-        project = match.group(1).lower().replace(" ", "_")
+        project = _normalize_wing_token(match.group(1))
         return f"wing_{project}"
     return "wing_sessions"
+
+
+# Names that must preserve their canonical casing in wing identifiers.
+# AHNIS is the package's own name; lowercasing it to "ahnis" produces
+# "wing_ahnis" which contradicts the rest of the codebase, where the
+# canonical user-facing identifier is the uppercase form.
+_PRESERVE_CASE_TOKENS = {"AHNIS"}
+
+
+def _normalize_wing_token(name: str) -> str:
+    """Normalize a project-name token for use in a wing identifier.
+
+    Spaces become underscores. Casing is lowercased EXCEPT for tokens in
+    ``_PRESERVE_CASE_TOKENS`` (matched case-insensitively), which keep
+    their canonical form.
+    """
+    cleaned = name.replace(" ", "_")
+    for canonical in _PRESERVE_CASE_TOKENS:
+        if cleaned.lower() == canonical.lower():
+            return canonical
+    return cleaned.lower()
 
 
 def hook_stop(data: dict, harness: str):
