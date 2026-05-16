@@ -1,24 +1,42 @@
 name: Build Prady OS ISO
 
-# Two paths:
-# - push to main / manual dispatch: validate config + run fast ISO test suite
-#   (no Buildroot build — would take 2+ hours on every push).
-# - tag push `v*`: validate, then run the full Buildroot build and publish
-#   the ISO as a GitHub Release asset.
+# Triggers:
+# - push to main:        runs validate + smoke-test-iso (no Buildroot compile)
+# - push to a v* tag:    runs validate + smoke-test-iso + build-iso + publish-release
+# - workflow_dispatch:   runs validate + smoke-test-iso + build-iso (no publish)
+#                        Useful when ci.yml dispatches us after a green push,
+#                        and for manual rebuilds without cutting a tag.
+#
+# The full Buildroot compile takes 1-4 hours on first run, so it only runs
+# on tag pushes and manual dispatches - never on every push to main.
+
 on:
   push:
     branches: [main]
     tags: ['v*']
   workflow_dispatch:
+    inputs:
+      reason:
+        description: Free-form reason / dispatch source (logged in summary)
+        required: false
+        default: 'manual dispatch'
+
 permissions:
   contents: read
+
 env:
   PIP_DISABLE_PIP_VERSION_CHECK: "1"
   PYTHONDONTWRITEBYTECODE: "1"
+
 jobs:
+  # ---------------------------------------------------------------------
+  # validate - the canonical configuration check. Mirrors smoke-test-iso
+  # but is required as the gate for the heavy build-iso job.
+  # ---------------------------------------------------------------------
   validate:
     name: Validate ISO build configuration
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -29,7 +47,59 @@ jobs:
         with:
           python-version: "3.11"
       - name: Install Python test dependencies
-        run: python -m pip install --upgrade pip pytest pyyaml Pillow
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install pytest pyyaml Pillow
+      - name: Run ISO build config tests
+        run: python -m pytest build/iso/tests/ -W error::DeprecationWarning -q
+      - name: Validate production compose
+        run: docker compose -f build/iso/docker-compose.prod.yml config --quiet
+      - name: Validate development compose
+        run: docker compose -f docker-compose.dev.yml config --quiet
+      - name: Shell script syntax check
+        run: |
+          bash -n build/iso/scripts/build_iso.sh
+          bash -n build/iso/scripts/sign_iso.sh
+          bash -n build/iso/scripts/write_usb.sh
+      - name: Verify referenced rootfs files exist
+        run: |
+          set -euo pipefail
+          missing=0
+          for path in \
+            build/iso/Makefile \
+            build/iso/buildroot-config/kryos_defconfig \
+            build/iso/grub/grub.cfg \
+            build/iso/scripts/build_iso.sh \
+            build/iso/scripts/sign_iso.sh \
+            build/iso/scripts/write_usb.sh \
+            build/iso/docker-compose.prod.yml ; do
+            if [ ! -e "$path" ]; then
+              echo "::error file=$path::required ISO build input missing"
+              missing=$((missing+1))
+            fi
+          done
+          if [ "$missing" -gt 0 ]; then
+            exit 1
+          fi
+          echo "All required ISO build inputs present."
+
+  smoke-test-iso:
+    name: Smoke test ISO config (fast, every push)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          submodules: false
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install pytest pyyaml Pillow
       - name: Run ISO build config tests
         run: python -m pytest build/iso/tests/ -W error::DeprecationWarning -q
       - name: Validate production compose
@@ -42,29 +112,15 @@ jobs:
           bash -n build/iso/scripts/sign_iso.sh
           bash -n build/iso/scripts/write_usb.sh
 
-  smoke-test-iso:
-    name: Smoke test ISO config (fast, every push)
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v5
-        with:
-          submodules: false
-      - uses: actions/setup-python@v6
-        with:
-          python-version: "3.11"
-      - run: python -m pip install --upgrade pip pytest pyyaml Pillow
-      - run: python -m pytest build/iso/tests/ -W error::DeprecationWarning -q
-      - run: docker compose -f build/iso/docker-compose.prod.yml config --quiet
-      - run: docker compose -f docker-compose.dev.yml config --quiet
-      - run: |
-          bash -n build/iso/scripts/build_iso.sh
-          bash -n build/iso/scripts/sign_iso.sh
-          bash -n build/iso/scripts/write_usb.sh
-
+  # ---------------------------------------------------------------------
+  # build-iso - full Buildroot compile + GRUB ISO assembly.
+  # Runs ONLY on v* tag pushes or manual workflow_dispatch.
+  # On a normal push to main this job is skipped by design.
+  # ---------------------------------------------------------------------
   build-iso:
     name: Build and publish ISO
     if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
-    needs: validate
+    needs: [validate, smoke-test-iso]
     runs-on: ubuntu-latest
     timeout-minutes: 240
     permissions:
@@ -88,13 +144,21 @@ jobs:
       - name: Install Buildroot dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y \
+          sudo apt-get install -y --no-install-recommends \
             build-essential libncurses-dev bison flex libssl-dev libelf-dev \
             wget rsync bc cpio unzip python3 python3-pip \
-            grub-pc-bin grub-efi-amd64-bin xorriso squashfs-tools mtools
+            grub-pc-bin grub-efi-amd64-bin xorriso squashfs-tools mtools \
+            jq
+
+      - name: Setup Python (build host)
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
 
       - name: Install Python build dependencies
-        run: python3 -m pip install --upgrade pip pytest pyyaml Pillow
+        run: |
+          python3 -m pip install --upgrade pip
+          python3 -m pip install pytest pyyaml Pillow
 
       - name: Pre-build sanity tests
         run: python3 -m pytest build/iso/tests/ -W error::DeprecationWarning -q
@@ -102,36 +166,148 @@ jobs:
       - name: Validate production compose
         run: docker compose -f build/iso/docker-compose.prod.yml config --quiet
 
-      - name: Install prax-brain into rootfs overlay
+      - name: Install AI stack into rootfs overlay
+        # build_iso.sh stages the rest of the overlay (UI dist, GRUB,
+        # docker-compose.prod.yml). We add the autonomous AI stack on
+        # top so it ships at /opt/<name> on the booted system.
+        # Note: `cp -r src/. dest/` copies CONTENTS into dest; without
+        # the trailing /. cp would create dest/src instead.
         run: |
-          mkdir -p build/iso/rootfs_overlay/opt/prax-brain
-          cp -r ai-core/prax-brain/ build/iso/rootfs_overlay/opt/prax-brain/
-          mkdir -p build/iso/rootfs_overlay/opt/neila
-          cp -r ai-core/neila/ build/iso/rootfs_overlay/opt/neila/
-          mkdir -p build/iso/rootfs_overlay/opt/ahnis
-          cp -r ai-core/ahnis/ build/iso/rootfs_overlay/opt/ahnis/
+          set -euo pipefail
+          OVERLAY="build/iso/buildroot-config/overlay"
+          mkdir -p "$OVERLAY/opt/prax-brain" "$OVERLAY/opt/neila" "$OVERLAY/opt/ahnis"
+          cp -r ai-core/prax-brain/. "$OVERLAY/opt/prax-brain/"
+          cp -r ai-core/neila/.      "$OVERLAY/opt/neila/"
+          cp -r ai-core/ahnis/.      "$OVERLAY/opt/ahnis/"
+          # Strip caches so they do not bloat the squashfs
+          find "$OVERLAY/opt" -name '__pycache__' -type d -prune -exec rm -rf {} +
+          find "$OVERLAY/opt" -name '*.pyc' -delete
+          find "$OVERLAY/opt" -name '.pytest_cache' -type d -prune -exec rm -rf {} +
+          find "$OVERLAY/opt" -name '.mypy_cache'   -type d -prune -exec rm -rf {} +
+          echo "AI stack staged into rootfs overlay:"
+          du -sh "$OVERLAY/opt/"*
 
       - name: Build ISO
-        run: SIGN_ISO=1 make -C build/iso iso-fast
+        # SIGN_ISO=1 generates the SHA256 sidecar + release-checksums.txt
+        # via sign_iso.sh; GPG signing only happens if KRYOS_GPG_KEY_ID
+        # is set (it is not, in CI by default - that is fine).
+        run: SIGN_ISO=1 make -C build/iso iso-fast 2>&1 | tee build-iso-${{ github.run_id }}.log
 
-      - name: Emit SHA256 summary
+      - name: Verify ISO outputs
+        # Hard-fail if the ISO is missing or empty. build_iso.sh writes
+        # to <repo_root>/output/prady-os.iso, so we check that path only.
         run: |
+          set -euo pipefail
           ISO=output/prady-os.iso
           if [ ! -f "$ISO" ]; then
-            echo "ERROR: ISO not found at $ISO" >&2
+            echo "::error::ISO not found at $ISO"
             ls -la output/ || true
             exit 1
           fi
+          ISO_SIZE=$(stat -c%s "$ISO")
+          if [ "$ISO_SIZE" -lt 10485760 ]; then  # 10 MiB lower bound
+            echo "::error::ISO size $ISO_SIZE bytes is implausibly small"
+            exit 1
+          fi
+          ACTUAL=$(sha256sum "$ISO" | awk '{print $1}')
+          EXPECTED=$(awk '{print $1}' output/prady-os.sha256)
+          if [ "$ACTUAL" != "$EXPECTED" ]; then
+            echo "::error::ISO checksum mismatch (got $ACTUAL, expected $EXPECTED)"
+            exit 1
+          fi
+          echo "ISO verified: ${ISO_SIZE} bytes, sha256=${ACTUAL}"
+
+      - name: Generate build manifest
+        # Single source of truth for what shipped, with file sizes,
+        # checksums, and build provenance. Consumed by the publish step
+        # and downstream tooling.
+        run: |
+          set -euo pipefail
+          ISO=output/prady-os.iso
+          ISO_SIZE=$(stat -c%s "$ISO")
+          ISO_SHA=$(sha256sum "$ISO" | awk '{print $1}')
+          REF_NAME='${{ github.ref_name }}'
+          jq -n \
+            --arg version       "$REF_NAME" \
+            --arg ref           '${{ github.ref }}' \
+            --arg sha           '${{ github.sha }}' \
+            --arg run_id        '${{ github.run_id }}' \
+            --arg run_url       "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" \
+            --arg built_at      "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            --arg iso_name      "prady-os.iso" \
+            --argjson iso_size  "$ISO_SIZE" \
+            --arg iso_sha256    "$ISO_SHA" \
+            '{
+               product: "Prady OS",
+               version: $version,
+               git: { ref: $ref, commit: $sha, run_id: $run_id, run_url: $run_url },
+               built_at: $built_at,
+               artifacts: {
+                 iso: { name: $iso_name, size_bytes: $iso_size, sha256: $iso_sha256 }
+               }
+             }' > output/build-manifest.json
+          echo "Manifest:"
+          cat output/build-manifest.json
+
+      - name: Generate SBOM (CycloneDX)
+        # Best-effort SBOM of Python deps shipped under /opt. Buildroot
+        # itself emits a manifest.csv; we attach both. Failure is
+        # non-fatal - SBOM generation tools are noisy and the ISO
+        # release does not block on it.
+        continue-on-error: true
+        run: |
+          set -euo pipefail
+          mkdir -p output/sbom
+          python3 -m pip install --upgrade pip cyclonedx-bom
+          # Aggregate every requirements.txt under ai-core/* into one file
+          # then emit a CycloneDX SBOM for the union.
+          AGG=output/sbom/aggregate-requirements.txt
+          : > "$AGG"
+          for r in ai-core/*/requirements.txt; do
+            if [ -f "$r" ]; then
+              echo "# from $r" >> "$AGG"
+              cat "$r" >> "$AGG"
+              echo "" >> "$AGG"
+            fi
+          done
+          cyclonedx-py requirements -i "$AGG" -o output/sbom/prady-os.cdx.json || true
+          # Buildroot manifest if available
+          if [ -f .buildroot/output/legal-info/manifest.csv ]; then
+            cp .buildroot/output/legal-info/manifest.csv output/sbom/buildroot-manifest.csv
+          fi
+          ls -la output/sbom/ || true
+
+      - name: Emit build summary
+        run: |
+          set -euo pipefail
+          ISO=output/prady-os.iso
+          ISO_SIZE_HUMAN=$(du -h "$ISO" | cut -f1)
           SHA256=$(sha256sum "$ISO" | awk '{print $1}')
           {
             echo "## Prady OS ISO Build"
+            echo ""
             echo "| Field | Value |"
             echo "|-------|-------|"
-            echo "| ISO | prady-os.iso |"
-            echo "| SHA256 | \`${SHA256}\` |"
+            echo "| Version | ${{ github.ref_name }} |"
+            echo "| Commit  | \`${{ github.sha }}\` |"
+            echo "| ISO     | output/prady-os.iso (${ISO_SIZE_HUMAN}) |"
+            echo "| SHA256  | \`${SHA256}\` |"
+            echo "| Manifest | output/build-manifest.json |"
             if [ -f output/prady-os.iso.sig ]; then
-              echo "| Signature | prady-os.iso.sig |"
+              echo "| Signature | output/prady-os.iso.sig |"
             fi
+            if [ -f output/sbom/prady-os.cdx.json ]; then
+              echo "| SBOM | output/sbom/prady-os.cdx.json |"
+            fi
+            echo ""
+            echo "### Output tree"
+            echo '```'
+            ls -la output/
+            if [ -d output/sbom ]; then
+              echo "output/sbom:"
+              ls -la output/sbom/
+            fi
+            echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload ISO artifact
@@ -143,9 +319,25 @@ jobs:
             output/prady-os.sha256
             output/release-checksums.txt
             output/prady-os.iso.sig
+            output/build-manifest.json
+            output/sbom/**
           if-no-files-found: warn
           retention-days: 30
 
+      - name: Upload build log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: prady-os-build-log
+          path: build-iso-${{ github.run_id }}.log
+          if-no-files-found: warn
+          retention-days: 14
+
+  # ---------------------------------------------------------------------
+  # publish-release - uploads ISO + sidecars to the GitHub Release for
+  # the v* tag that triggered the build. Only runs for tag pushes.
+  # workflow_dispatch builds produce artifacts but no release.
+  # ---------------------------------------------------------------------
   publish-release:
     name: Publish GitHub Release
     if: startsWith(github.ref, 'refs/tags/v')
@@ -159,13 +351,56 @@ jobs:
         with:
           name: prady-os-iso
           path: output
+
+      - name: Verify required release files
+        run: |
+          set -euo pipefail
+          for f in output/prady-os.iso output/prady-os.sha256 output/build-manifest.json; do
+            if [ ! -f "$f" ]; then
+              echo "::error file=$f::required release artifact missing"
+              exit 1
+            fi
+          done
+
       - name: Publish release assets
         uses: softprops/action-gh-release@v2
         with:
+          name: "Prady OS ${{ github.ref_name }}"
+          tag_name: ${{ github.ref_name }}
+          generate_release_notes: true
+          fail_on_unmatched_files: false
           files: |
             output/prady-os.iso
             output/prady-os.sha256
             output/release-checksums.txt
             output/prady-os.iso.sig
-          fail_on_unmatched_files: false
-          generate_release_notes: true
+            output/build-manifest.json
+            output/sbom/prady-os.cdx.json
+          body: |
+            ## Prady OS ${{ github.ref_name }}
+
+            ### Download
+            ```bash
+            wget https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/prady-os.iso
+            sha256sum -c prady-os.sha256
+            ```
+
+            ### Boot
+            ```bash
+            # Write to USB (find the right device with: lsblk)
+            sudo bash build/iso/scripts/write_usb.sh /dev/sdX
+
+            # Or boot in QEMU
+            qemu-system-x86_64 -m 4G -smp 4 -boot d -cdrom prady-os.iso -enable-kvm
+            ```
+
+            ### Includes
+            - Prax - autonomous AI stack
+            - NEILA desktop AI agent (port 8090)
+            - AHNIS semantic memory (port 8091)
+            - Ollama local LLM server (port 11434)
+            - prax-brain - research → propose → build loop
+
+            Full provenance in `build-manifest.json`.
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
