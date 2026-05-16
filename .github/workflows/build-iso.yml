@@ -216,18 +216,26 @@ jobs:
         run: |
           set -euo pipefail
           ISO=output/prady-os.iso
-          if [ ! -f "$ISO" ]; then
-            echo "::error::ISO not found at $ISO"
-            ls -la output/ || true
-            exit 1
-          fi
+          SHA_SIDE=output/prady-os.sha256
+          CHECKSUMS=output/release-checksums.txt
+          for f in "$ISO" "$SHA_SIDE" "$CHECKSUMS"; do
+            if [ ! -f "$f" ]; then
+              echo "::error file=$f::required output missing after build"
+              ls -la output/ || true
+              exit 1
+            fi
+            if [ ! -s "$f" ]; then
+              echo "::error file=$f::output file is zero bytes"
+              exit 1
+            fi
+          done
           ISO_SIZE=$(stat -c%s "$ISO")
           if [ "$ISO_SIZE" -lt 10485760 ]; then  # 10 MiB lower bound
             echo "::error::ISO size $ISO_SIZE bytes is implausibly small"
             exit 1
           fi
           ACTUAL=$(sha256sum "$ISO" | awk '{print $1}')
-          EXPECTED=$(awk '{print $1}' output/prady-os.sha256)
+          EXPECTED=$(awk '{print $1}' "$SHA_SIDE")
           if [ "$ACTUAL" != "$EXPECTED" ]; then
             echo "::error::ISO checksum mismatch (got $ACTUAL, expected $EXPECTED)"
             exit 1
@@ -266,18 +274,46 @@ jobs:
           echo "Manifest:"
           cat output/build-manifest.json
 
+      - name: Verify build manifest
+        run: |
+          set -euo pipefail
+          MANIFEST=output/build-manifest.json
+          if [ ! -s "$MANIFEST" ]; then
+            echo "::error file=$MANIFEST::manifest missing or zero bytes"
+            exit 1
+          fi
+          # The manifest must be valid JSON and contain the iso entry
+          # we just generated. Mismatched checksum here means the
+          # manifest emitter and the actual ISO disagree.
+          jq -e '.product == "Prady OS"' "$MANIFEST" >/dev/null
+          jq -e '.artifacts.iso.sha256' "$MANIFEST" >/dev/null
+          MANIFEST_SHA=$(jq -r '.artifacts.iso.sha256' "$MANIFEST")
+          ACTUAL_SHA=$(sha256sum output/prady-os.iso | awk '{print $1}')
+          if [ "$MANIFEST_SHA" != "$ACTUAL_SHA" ]; then
+            echo "::error::manifest sha256 ($MANIFEST_SHA) does not match ISO ($ACTUAL_SHA)"
+            exit 1
+          fi
+          echo "Manifest verified."
+
       - name: Generate SBOM (CycloneDX)
-        # Best-effort SBOM of Python deps shipped under /opt. Buildroot
-        # itself emits a manifest.csv; we attach both. Failure is
-        # non-fatal - SBOM generation tools are noisy and the ISO
-        # release does not block on it.
-        continue-on-error: true
+        # Aggregate every requirements.txt under ai-core/* into one file
+        # then emit a CycloneDX 1.6 JSON SBOM for the union.
+        #
+        # Root cause of the previous empty-file bug: the command was
+        #     cyclonedx-py requirements -i "$AGG" -o ...
+        # but `-i` is `--index-url` (PyPI base URL), NOT the input
+        # file flag. The requirements file is a POSITIONAL argument.
+        # The tool tried to use the local aggregate path as a PEP 503
+        # repository URL, --validate rejected the empty parse, the
+        # exit code was non-zero, and `|| true` swallowed the error,
+        # leaving a 0-byte output. Fixed below by passing the file
+        # positionally, dropping the silent || true, and explicitly
+        # requesting JSON output.
         run: |
           set -euo pipefail
           mkdir -p output/sbom
-          python3 -m pip install --upgrade pip cyclonedx-bom
-          # Aggregate every requirements.txt under ai-core/* into one file
-          # then emit a CycloneDX SBOM for the union.
+          python3 -m pip install --upgrade pip
+          python3 -m pip install 'cyclonedx-bom>=4.6,<5'
           AGG=output/sbom/aggregate-requirements.txt
           : > "$AGG"
           for r in ai-core/*/requirements.txt; do
@@ -287,43 +323,135 @@ jobs:
               echo "" >> "$AGG"
             fi
           done
-          cyclonedx-py requirements -i "$AGG" -o output/sbom/prady-os.cdx.json || true
-          # Buildroot manifest if available
+          if [ ! -s "$AGG" ]; then
+            echo "::error::aggregate requirements file is empty; cannot generate SBOM"
+            exit 1
+          fi
+          # --output-reproducible strips timestamps so identical inputs
+          # produce identical SBOMs across builds. --no-validate avoids
+          # rejecting the SBOM for unpinned (>=) versions, which are
+          # legal but trigger validate warnings; the SBOM itself is
+          # still well-formed and we run a separate jq check below.
+          cyclonedx-py requirements \
+            --output-format JSON \
+            --output-reproducible \
+            --no-validate \
+            --output-file output/sbom/prady-os.cdx.json \
+            "$AGG"
+          # Buildroot manifest if available (best-effort; this file
+          # only exists if Buildroot's legal-info target was built).
           if [ -f .buildroot/output/legal-info/manifest.csv ]; then
             cp .buildroot/output/legal-info/manifest.csv output/sbom/buildroot-manifest.csv
           fi
-          ls -la output/sbom/ || true
+          ls -la output/sbom/
+
+      - name: Verify SBOM
+        # Fail the workflow if the SBOM is missing, zero bytes, or not
+        # valid CycloneDX JSON. The previous run produced a 0-byte
+        # output/sbom/prady-os.cdx.json that nothing caught.
+        run: |
+          set -euo pipefail
+          SBOM=output/sbom/prady-os.cdx.json
+          if [ ! -f "$SBOM" ]; then
+            echo "::error file=$SBOM::SBOM was not generated"
+            exit 1
+          fi
+          SBOM_SIZE=$(stat -c%s "$SBOM")
+          if [ "$SBOM_SIZE" -lt 256 ]; then
+            echo "::error file=$SBOM::SBOM is too small ($SBOM_SIZE bytes); generation likely failed silently"
+            exit 1
+          fi
+          # Must be valid JSON with the expected CycloneDX shape.
+          jq -e '.bomFormat == "CycloneDX"' "$SBOM" >/dev/null
+          jq -e '.components | type == "array" and length > 0' "$SBOM" >/dev/null
+          SBOM_COMPONENTS=$(jq -r '.components | length' "$SBOM")
+          echo "SBOM verified: ${SBOM_SIZE} bytes, ${SBOM_COMPONENTS} components"
+
+      - name: Final artifact preflight
+        # Last guard before upload. Confirms every file we promise to
+        # ship exists and is non-empty. Failing here means the upload
+        # bundle is incomplete; we'd rather fail the workflow than
+        # publish a half-baked artifact.
+        run: |
+          set -euo pipefail
+          required=(
+            output/prady-os.iso
+            output/prady-os.sha256
+            output/release-checksums.txt
+            output/build-manifest.json
+            output/sbom/prady-os.cdx.json
+            output/sbom/aggregate-requirements.txt
+          )
+          missing=0
+          for f in "${required[@]}"; do
+            if [ ! -s "$f" ]; then
+              echo "::error file=$f::required artifact missing or empty"
+              missing=$((missing+1))
+            fi
+          done
+          if [ "$missing" -gt 0 ]; then
+            echo "::error::$missing required artifact(s) missing/empty; refusing to upload"
+            exit 1
+          fi
+          echo "All required artifacts present:"
+          ls -la output/ output/sbom/
 
       - name: Emit build summary
+        # Single human-readable summary at the end of the run.
+        # Lists every artifact with absolute path, size, and (where
+        # applicable) checksum, plus whether publish-release will run.
         run: |
           set -euo pipefail
           ISO=output/prady-os.iso
+          MANIFEST=output/build-manifest.json
+          SBOM=output/sbom/prady-os.cdx.json
           ISO_SIZE_HUMAN=$(du -h "$ISO" | cut -f1)
-          SHA256=$(sha256sum "$ISO" | awk '{print $1}')
+          ISO_SIZE_BYTES=$(stat -c%s "$ISO")
+          ISO_SHA=$(sha256sum "$ISO" | awk '{print $1}')
+          MANIFEST_SIZE=$(stat -c%s "$MANIFEST")
+          SBOM_SIZE_HUMAN=$(du -h "$SBOM" | cut -f1)
+          SBOM_SIZE_BYTES=$(stat -c%s "$SBOM")
+          SBOM_COMPONENTS=$(jq -r '.components | length' "$SBOM")
+          # publish-release runs only on v* tag pushes. Surface the
+          # decision explicitly in the summary so it is never a
+          # surprise that a workflow_dispatch run did not produce a
+          # GitHub Release.
+          if [[ "${{ github.ref }}" == refs/tags/v* ]]; then
+            RELEASE_STATUS="will publish to GitHub Release **${{ github.ref_name }}**"
+          else
+            RELEASE_STATUS="not publishing (this run was triggered by **${{ github.event_name }}** on \`${{ github.ref }}\`; releases only fire on \`refs/tags/v*\`)"
+          fi
           {
             echo "## Prady OS ISO Build"
             echo ""
             echo "| Field | Value |"
             echo "|-------|-------|"
-            echo "| Version | ${{ github.ref_name }} |"
+            echo "| Version | \`${{ github.ref_name }}\` |"
             echo "| Commit  | \`${{ github.sha }}\` |"
-            echo "| ISO     | output/prady-os.iso (${ISO_SIZE_HUMAN}) |"
-            echo "| SHA256  | \`${SHA256}\` |"
-            echo "| Manifest | output/build-manifest.json |"
+            echo "| Trigger | \`${{ github.event_name }}\` |"
+            echo "| ISO     | \`output/prady-os.iso\` (${ISO_SIZE_HUMAN}, ${ISO_SIZE_BYTES} bytes) |"
+            echo "| ISO SHA256 | \`${ISO_SHA}\` |"
+            echo "| Checksum sidecar | \`output/prady-os.sha256\` |"
+            echo "| Release checksums | \`output/release-checksums.txt\` |"
+            echo "| Manifest | \`output/build-manifest.json\` (${MANIFEST_SIZE} bytes) |"
+            echo "| SBOM | \`output/sbom/prady-os.cdx.json\` (${SBOM_SIZE_HUMAN}, ${SBOM_COMPONENTS} components) |"
             if [ -f output/prady-os.iso.sig ]; then
-              echo "| Signature | output/prady-os.iso.sig |"
+              SIG_SIZE=$(stat -c%s output/prady-os.iso.sig)
+              echo "| GPG signature | \`output/prady-os.iso.sig\` (${SIG_SIZE} bytes) |"
+            else
+              echo "| GPG signature | not generated (set KRYOS_GPG_KEY_ID secret to enable) |"
             fi
-            if [ -f output/sbom/prady-os.cdx.json ]; then
-              echo "| SBOM | output/sbom/prady-os.cdx.json |"
+            if [ -f output/sbom/buildroot-manifest.csv ]; then
+              BR_SIZE=$(stat -c%s output/sbom/buildroot-manifest.csv)
+              echo "| Buildroot manifest | \`output/sbom/buildroot-manifest.csv\` (${BR_SIZE} bytes) |"
             fi
+            echo "| Release publication | ${RELEASE_STATUS} |"
             echo ""
             echo "### Output tree"
             echo '```'
             ls -la output/
-            if [ -d output/sbom ]; then
-              echo "output/sbom:"
-              ls -la output/sbom/
-            fi
+            echo "output/sbom:"
+            ls -la output/sbom/
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
 
@@ -338,7 +466,15 @@ jobs:
             output/prady-os.iso.sig
             output/build-manifest.json
             output/sbom/**
-          if-no-files-found: warn
+          # `error` is correct here because the preflight step above
+          # already verified every required file exists. If upload-
+          # artifact still cannot find them, that is a real
+          # infrastructure failure we want to surface, not warn on.
+          # The optional .iso.sig is only present when KRYOS_GPG_KEY_ID
+          # is set; the upload pattern lists each file individually so
+          # the missing-sig case does not trip `error` (the action only
+          # fails if the entire `path` set yields zero matches).
+          if-no-files-found: error
           retention-days: 30
 
       - name: Upload build log
@@ -355,8 +491,19 @@ jobs:
 
   # ---------------------------------------------------------------------
   # publish-release - uploads ISO + sidecars to the GitHub Release for
-  # the v* tag that triggered the build. Only runs for tag pushes.
-  # workflow_dispatch builds produce artifacts but no release.
+  # the v* tag that triggered the build.
+  #
+  # SKIP CONDITIONS (intentional):
+  # - workflow_dispatch runs (manual rebuilds): produce artifacts but
+  #   no Release. The artifacts live on the Actions run page for 30
+  #   days. To get a permanent Release, push a v* tag.
+  # - push to main: same; only the validate + smoke-test-iso jobs
+  #   actually run on a plain main push, so this job's `needs:` chain
+  #   is not satisfied either way.
+  # - any failure in build-iso: `needs: build-iso` requires success.
+  #
+  # The Build summary step in build-iso emits "Release publication"
+  # so the skip is never silent.
   # ---------------------------------------------------------------------
   publish-release:
     name: Publish GitHub Release
@@ -375,12 +522,25 @@ jobs:
       - name: Verify required release files
         run: |
           set -euo pipefail
-          for f in output/prady-os.iso output/prady-os.sha256 output/build-manifest.json; do
-            if [ ! -f "$f" ]; then
-              echo "::error file=$f::required release artifact missing"
-              exit 1
+          required=(
+            output/prady-os.iso
+            output/prady-os.sha256
+            output/release-checksums.txt
+            output/build-manifest.json
+            output/sbom/prady-os.cdx.json
+          )
+          missing=0
+          for f in "${required[@]}"; do
+            if [ ! -s "$f" ]; then
+              echo "::error file=$f::required release artifact missing or empty"
+              missing=$((missing+1))
             fi
           done
+          if [ "$missing" -gt 0 ]; then
+            exit 1
+          fi
+          echo "Release bundle:"
+          ls -la output/ output/sbom/
 
       - name: Publish release assets
         uses: softprops/action-gh-release@v3
@@ -388,12 +548,14 @@ jobs:
           name: "Prady OS ${{ github.ref_name }}"
           tag_name: ${{ github.ref_name }}
           generate_release_notes: true
-          fail_on_unmatched_files: false
+          # Strict: every file we list must be present. The preflight
+          # step above already confirmed this; failing here would mean
+          # something deleted them between steps, which is a real bug.
+          fail_on_unmatched_files: true
           files: |
             output/prady-os.iso
             output/prady-os.sha256
             output/release-checksums.txt
-            output/prady-os.iso.sig
             output/build-manifest.json
             output/sbom/prady-os.cdx.json
           body: |
@@ -422,5 +584,18 @@ jobs:
             - prax-brain - research → propose → build loop
 
             Full provenance in `build-manifest.json`.
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Attach optional GPG signature
+        # Signature is only generated when KRYOS_GPG_KEY_ID is set in
+        # repo secrets. When absent, this step is a no-op so the main
+        # publish step above can stay strict (fail_on_unmatched_files).
+        if: hashFiles('output/prady-os.iso.sig') != ''
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: ${{ github.ref_name }}
+          fail_on_unmatched_files: true
+          files: output/prady-os.iso.sig
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
