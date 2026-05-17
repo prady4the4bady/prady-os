@@ -1,0 +1,9 @@
+#!/bin/sh
+# xinitrc for Prady OS desktop session
+# Launched by /etc/init.d/S99kryos after Xorg starts on tty1.
+# Keeps X running; Chromium is launched separately by the init script.
+
+xsetroot -solid "#0a0e1a"
+
+# Keep X server alive until S99kryos launches the browser
+exec sleep infinity

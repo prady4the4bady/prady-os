@@ -68,11 +68,17 @@ jobs:
           for path in \
             build/iso/Makefile \
             build/iso/buildroot-config/kryos_defconfig \
+            build/iso/buildroot-config/overlay/etc/prady/xinitrc \
             build/iso/grub/grub.cfg \
             build/iso/scripts/build_iso.sh \
             build/iso/scripts/sign_iso.sh \
             build/iso/scripts/write_usb.sh \
-            build/iso/docker-compose.prod.yml ; do
+            build/iso/docker-compose.prod.yml \
+            build/iso/rootfs_overlay/etc/os-release \
+            build/iso/rootfs_overlay/etc/systemd/system/prax.target \
+            build/iso/rootfs_overlay/etc/systemd/system/prax-brain.service \
+            build/iso/rootfs_overlay/etc/systemd/system/neila.service \
+            build/iso/rootfs_overlay/etc/systemd/system/ahnis.service ; do
             if [ ! -e "$path" ]; then
               echo "::error file=$path::required ISO build input missing"
               missing=$((missing+1))
@@ -183,26 +189,45 @@ jobs:
       - name: Validate production compose
         run: docker compose -f build/iso/docker-compose.prod.yml config --quiet
 
-      - name: Install AI stack into rootfs overlay
-        # build_iso.sh stages the rest of the overlay (UI dist, GRUB,
-        # docker-compose.prod.yml). We add the autonomous AI stack on
-        # top so it ships at /opt/<name> on the booted system.
-        # Note: `cp -r src/. dest/` copies CONTENTS into dest; without
-        # the trailing /. cp would create dest/src instead.
+      - name: Stage rootfs overlay
+        # Merges three sources into the Buildroot overlay:
+        #   1. buildroot-config/overlay/ — init script, xinitrc (already in place)
+        #   2. ai-core/*/ — prax-brain, neila, ahnis Python packages
+        #   3. rootfs_overlay/ — systemd units, os-release, var/prax/
+        #
+        # build_iso.sh also adds UI dist, GRUB config, docker-compose.prod.yml.
         run: |
           set -euo pipefail
           OVERLAY="build/iso/buildroot-config/overlay"
+
+          # ── AI stack (ai-core/) ──
           mkdir -p "$OVERLAY/opt/prax-brain" "$OVERLAY/opt/neila" "$OVERLAY/opt/ahnis"
           cp -r ai-core/prax-brain/. "$OVERLAY/opt/prax-brain/"
           cp -r ai-core/neila/.      "$OVERLAY/opt/neila/"
           cp -r ai-core/ahnis/.      "$OVERLAY/opt/ahnis/"
+
+          # ── Systemd units + os-release + var/prax (rootfs_overlay/) ──
+          ROOTFS_OVERLAY="build/iso/rootfs_overlay"
+          if [ -d "$ROOTFS_OVERLAY" ]; then
+            rsync -a "$ROOTFS_OVERLAY/" "$OVERLAY/"
+            echo "Merged rootfs_overlay/ → overlay/"
+          else
+            echo "::warning::rootfs_overlay/ not found; systemd units and var/prax will be missing"
+          fi
+
+          # Make init scripts executable
+          chmod +x "$OVERLAY/etc/init.d/S99kryos" 2>/dev/null || true
+          chmod +x "$OVERLAY/etc/prady/xinitrc"   2>/dev/null || true
+
           # Strip caches so they do not bloat the squashfs
           find "$OVERLAY/opt" -name '__pycache__' -type d -prune -exec rm -rf {} +
           find "$OVERLAY/opt" -name '*.pyc' -delete
           find "$OVERLAY/opt" -name '.pytest_cache' -type d -prune -exec rm -rf {} +
           find "$OVERLAY/opt" -name '.mypy_cache'   -type d -prune -exec rm -rf {} +
-          echo "AI stack staged into rootfs overlay:"
+          echo "Rootfs overlay staged:"
           du -sh "$OVERLAY/opt/"*
+          echo "Systemd units:"
+          ls -la "$OVERLAY/etc/systemd/system/" 2>/dev/null || echo "(none)"
 
       - name: Build ISO
         # SIGN_ISO=1 generates the SHA256 sidecar + release-checksums.txt

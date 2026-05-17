@@ -30,6 +30,13 @@ BUILD_ISO_SH = BUILD_ISO / "scripts" / "build_iso.sh"
 SIGN_ISO_SH  = BUILD_ISO / "scripts" / "sign_iso.sh"
 WRITE_USB_SH = BUILD_ISO / "scripts" / "write_usb.sh"
 MAKEFILE     = BUILD_ISO / "Makefile"
+# Systemd / rootfs overlay files
+PRAX_TARGET   = BUILD_ISO / "rootfs_overlay" / "etc" / "systemd" / "system" / "prax.target"
+PRAX_BRAIN_SVC = BUILD_ISO / "rootfs_overlay" / "etc" / "systemd" / "system" / "prax-brain.service"
+NEILA_SVC     = BUILD_ISO / "rootfs_overlay" / "etc" / "systemd" / "system" / "neila.service"
+AHNIS_SVC     = BUILD_ISO / "rootfs_overlay" / "etc" / "systemd" / "system" / "ahnis.service"
+OS_RELEASE    = BUILD_ISO / "rootfs_overlay" / "etc" / "os-release"
+XINITRC       = BUILD_ISO / "buildroot-config" / "overlay" / "etc" / "prady" / "xinitrc"
 
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
@@ -135,6 +142,16 @@ class TestGrubConfig:
 
     def test_default_timeout_set(self) -> None:
         assert "set timeout=" in _read(GRUB_CFG)
+
+    def test_serial_console_present(self) -> None:
+        content = _read(GRUB_CFG)
+        assert "insmod serial" in content, "grub.cfg must load serial module"
+        assert "console=ttyS0,115200n8" in content, (
+            "grub.cfg must include serial console kernel parameter"
+        )
+        assert "terminal_output serial gfxterm" in content, (
+            "grub.cfg must output to both serial and gfxterm"
+        )
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -396,3 +413,62 @@ class TestMakefile:
 
     def test_makefile_has_test_qemu_target(self) -> None:
         assert "test-qemu:" in _read(MAKEFILE)
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# Rootfs overlay files (os-release, systemd units, xinitrc)
+# ══════════════════════════════════════════════════════════════════════════════
+
+class TestRootfsOverlay:
+    """Validate the rootfs_overlay files ship in the ISO."""
+
+    def test_os_release_exists(self) -> None:
+        assert OS_RELEASE.exists(), f"Missing: {OS_RELEASE}"
+
+    def test_os_release_has_prady_os_name(self) -> None:
+        content = _read(OS_RELEASE)
+        assert 'NAME="Prady OS"' in content
+        assert 'ID=prady-os' in content
+        assert 'VERSION="1.0.0"' in content
+
+    def test_prax_target_exists(self) -> None:
+        assert PRAX_TARGET.exists(), f"Missing: {PRAX_TARGET}"
+
+    def test_prax_target_wants_ai_services(self) -> None:
+        content = _read(PRAX_TARGET).lower()
+        assert "wants=" in content
+        assert "neila" in content
+        assert "ahnis" in content
+        assert "prax-brain" in content
+
+    def test_prax_brain_service_exists(self) -> None:
+        assert PRAX_BRAIN_SVC.exists(), f"Missing: {PRAX_BRAIN_SVC}"
+
+    def test_prax_brain_service_runs_autonomous_loop(self) -> None:
+        content = _read(PRAX_BRAIN_SVC)
+        assert "autonomous_loop" in content
+
+    def test_neila_service_exists(self) -> None:
+        assert NEILA_SVC.exists(), f"Missing: {NEILA_SVC}"
+
+    def test_neila_service_runs_uvicorn(self) -> None:
+        content = _read(NEILA_SVC)
+        assert "uvicorn" in content
+        assert "8090" in content
+
+    def test_ahnis_service_exists(self) -> None:
+        assert AHNIS_SVC.exists(), f"Missing: {AHNIS_SVC}"
+
+    def test_ahnis_service_runs_uvicorn(self) -> None:
+        content = _read(AHNIS_SVC)
+        assert "uvicorn" in content
+        assert "8091" in content
+
+    def test_xinitrc_exists(self) -> None:
+        assert XINITRC.exists(), f"Missing: {XINITRC}"
+
+    def test_xinitrc_has_shebang(self) -> None:
+        assert _read(XINITRC).startswith("#!/")
+
+    def test_xinitrc_sets_background(self) -> None:
+        assert "xsetroot" in _read(XINITRC)
